@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "54056629861",
+    "project_id": "test-f5cee",
+    "storage_bucket": "test-f5cee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54056629861:android:e6b1f4cf23890fa3a0788c",
+        "android_client_info": {
+          "package_name": "com.no_smoking.firebaseapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "54056629861-54qcvef3nl01arudal618ki08ntq1s5i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.no_smoking.firebaseapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "54056629861-kvdqlounugrj19fmsd4mf30sgsvo1kup.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP5Awxfvbg887rorhtbTuamHEgObNFDWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "54056629861-kvdqlounugrj19fmsd4mf30sgsvo1kup.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "54056629861-bq3hudlb2bbkpub5l3plpv7a0epgb25a.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nosmokeapp.firebase"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
