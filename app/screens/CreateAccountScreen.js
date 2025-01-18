@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  ImageBackground,
-  TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, TouchableOpacity } from 'react-native';
 import { FontAwesome, AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router'; // Importa useRouter
 
@@ -17,14 +11,8 @@ export default function CreateAccountScreen() {
   };
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://via.placeholder.com/400x800' }} // Cambia esto por el fondo real
-      style={styles.background}
-    >
-      <View style={styles.container}>
-        <View style={styles.logo}>
-          {/* Inserta aquí el logotipo (SVG o imagen) */}
-        </View>
+    <View style={styles.container}>
+      <View style={styles.overlay}>
         <Text style={styles.title}>Create an account</Text>
 
         <TouchableOpacity style={[styles.button, styles.emailButton]}>
@@ -58,24 +46,26 @@ export default function CreateAccountScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
   container: {
     flex: 1,
+    backgroundColor: '#000', // Fondo negro, igual al índice
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  logo: {
-    marginBottom: 30,
-    // Aquí puedes agregar un SVG o imagen
+  overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Añadimos opacidad al fondo para que el texto se vea bien
+    borderRadius: 15,
+    width: '100%',
   },
   title: {
     fontSize: 24,

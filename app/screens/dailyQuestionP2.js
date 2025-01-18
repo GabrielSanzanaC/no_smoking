@@ -1,15 +1,9 @@
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 
 export default function CigaretteTrackerScreen() {
-  const [count, setCount] = React.useState(8);
-
+  const [count, setCount] = React.useState(0);
 
   return (
     <View style={styles.container}>
@@ -18,10 +12,7 @@ export default function CigaretteTrackerScreen() {
         {['01', '02', '03'].map((step, index) => (
           <View
             key={index}
-            style={[
-              styles.stepCircle,
-              index === 1 && styles.activeStepCircle,
-            ]}
+            style={[styles.stepCircle, index === 1 && styles.activeStepCircle]}
           >
             <Text style={styles.stepText}>{step}</Text>
           </View>
@@ -33,7 +24,23 @@ export default function CigaretteTrackerScreen() {
 
       {/* Cigarette Display */}
       <View style={styles.cigaretteContainer}>
-        <View style={styles.cigarette} />
+        {/* Rectángulo vacío con ScrollView horizontal */}
+        <View style={styles.rectangle}>
+          <ScrollView
+            horizontal
+            contentContainerStyle={styles.cigaretteRow}
+            showsHorizontalScrollIndicator={true} // Muestra la barra de desplazamiento
+          >
+            {Array.from({ length: count }).map((_, index) => (
+              <Image
+                key={index}
+                source={require('../../assets/images/cigarro.png')}
+                style={styles.cigarette}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
         <Text style={styles.count}>{count.toString().padStart(2, '0')}</Text>
 
         {/* Controls */}
@@ -54,7 +61,7 @@ export default function CigaretteTrackerScreen() {
       </View>
 
       {/* Next Button */}
-      <TouchableOpacity style={styles.nextButton} >
+      <TouchableOpacity style={styles.nextButton}>
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
     </View>
@@ -102,13 +109,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  cigarette: {
-    width: 10,
-    height: 100,
-    backgroundColor: '#F5B95B',
-    borderColor: '#000',
+  rectangle: {
+    width: 300, // Ancho fijo del rectángulo
+    height: 120, // Altura fija del rectángulo
     borderWidth: 1,
+    borderColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 10,
+    overflow: 'hidden', // Evita que se vea fuera del rectángulo
+  },
+  cigaretteRow: {
+    flexDirection: 'row',
+    paddingVertical: 20, // Espacio vertical dentro del ScrollView
+  },
+  cigarette: {
+    width: 10, // Ajusta el tamaño de la imagen según sea necesario
+    height: 80,
+    marginHorizontal: 5, // Espacio entre los cigarros
   },
   count: {
     fontSize: 24,
