@@ -15,10 +15,13 @@ Sigue estos pasos para configurar la aplicación localmente:
 En el directorio raíz del proyecto, ejecuta el siguiente comando para instalar las dependencias:
 
 npm run install-deps
+
 Esto instalará las bibliotecas necesarias para la navegación y otros elementos del proyecto.
 
 2. Iniciar la aplicación
-Para iniciar la aplicación, usa el siguiente comando:
+Para iniciar la aplicación, usa el siguiente comando:a
+
+npm expo start
 
 Este comando iniciará el servidor de desarrollo de Expo. En la salida, encontrarás opciones para abrir la app en:
 
