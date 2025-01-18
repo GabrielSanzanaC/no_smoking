@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
-    "install-deps": "npm install @react-navigation/stack @react-navigation/native react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated"
+    "install-deps": "npm install && npm install @react-navigation/stack @react-navigation/native react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated"
   },
   "jest": {
     "preset": "jest-expo"
