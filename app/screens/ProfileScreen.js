@@ -1,8 +1,16 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from 'expo-router'; // Importa useRouter
 
 export default function ProfileScreen() {
+  const router = useRouter(); // Obtén el router con useRouter
+
+  // Mueve handleGoogleContinue dentro del componente
+  const handleGoogleContinue = () => {
+    router.push("./dailyQuestionP1"); // Navega a la pantalla
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
@@ -67,7 +75,7 @@ export default function ProfileScreen() {
           <Ionicons name="home-outline" size={28} color="white" />
           <Text style={styles.navText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleGoogleContinue}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Daily Question</Text>
         </TouchableOpacity>
@@ -79,7 +87,6 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
