@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router'; // Importa useRouter
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function CreateAccountScreen() {
   const [reason, setReason] = useState('');
@@ -71,104 +71,106 @@ export default function CreateAccountScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.overlay}>
-        {questionStep === 1 && (
-          <View style={styles.questionContainer}>
-            <Text style={styles.title}>¿Por qué quieres dejar de fumar?</Text>
-            <View style={styles.optionsContainer}>
-              {['Mi salud', 'Mi familia', 'Mejorar mi condición física', 'Ahorrar dinero', 'Mejorar mi respiración', 'Aumentar mi energía'].map((option, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.optionButton, reason === option && styles.selectedOption]}
-                  onPress={() => setReason(option)}
-                >
-                  <Text style={styles.optionText}>{option}</Text>
-                </TouchableOpacity>
-              ))}
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <View style={styles.container}>
+        <View style={styles.overlay}>
+          {questionStep === 1 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.title}>¿Por qué quieres dejar de fumar?</Text>
+              <View style={styles.optionsContainer}>
+                {['Mi salud', 'Mi familia', 'Mejorar mi condición física', 'Ahorrar dinero', 'Mejorar mi respiración', 'Aumentar mi energía'].map((option, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.optionButton, reason === option && styles.selectedOption]}
+                    onPress={() => setReason(option)}
+                  >
+                    <Text style={styles.optionText}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {questionStep === 2 && (
-          <View style={styles.questionContainer}>
-            <Text style={styles.title}>¿Cuántos años tienes?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Edad"
-              keyboardType="numeric"
-              value={age}
-              onChangeText={setAge}
-            />
-            <Text style={styles.title}>¿Cuántos años llevas fumando?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Años fumando"
-              keyboardType="numeric"
-              value={yearsSmoking}
-              onChangeText={setYearsSmoking}
-            />
-          </View>
-        )}
+          {questionStep === 2 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.title}>¿Cuántos años tienes?</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Edad"
+                keyboardType="numeric"
+                value={age}
+                onChangeText={setAge}
+              />
+              <Text style={styles.title}>¿Cuántos años llevas fumando?</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Años fumando"
+                keyboardType="numeric"
+                value={yearsSmoking}
+                onChangeText={setYearsSmoking}
+              />
+            </View>
+          )}
 
-        {questionStep === 3 && (
-          <View style={styles.questionContainer}>
-            <Text style={styles.title}>¿Cuántos cigarrillos fumas al día?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Cigarrillos al día"
-              keyboardType="numeric"
-              value={cigarettesPerDay}
-              onChangeText={setCigarettesPerDay}
-            />
-          </View>
-        )}
+          {questionStep === 3 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.title}>¿Cuántos cigarrillos fumas al día?</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Cigarrillos al día"
+                keyboardType="numeric"
+                value={cigarettesPerDay}
+                onChangeText={setCigarettesPerDay}
+              />
+            </View>
+          )}
 
-        {questionStep === 4 && (
-          <View style={styles.questionContainer}>
-            <Text style={styles.title}>¿Cuántos cigarrillos tenía la cajetilla?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Cigarrillos por cajetilla"
-              keyboardType="numeric"
-              value={cigarettesPerPack}
-              onChangeText={setCigarettesPerPack}
-            />
-          </View>
-        )}
+          {questionStep === 4 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.title}>¿Cuántos cigarrillos tenía la cajetilla?</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Cigarrillos por cajetilla"
+                keyboardType="numeric"
+                value={cigarettesPerPack}
+                onChangeText={setCigarettesPerPack}
+              />
+            </View>
+          )}
 
-        {questionStep === 5 && (
-          <View style={styles.questionContainer}>
-            <Text style={styles.title}>¿Cuánto costaba la cajetilla?</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Precio de la cajetilla ($)"
-              keyboardType="numeric"
-              value={packPrice}
-              onChangeText={setPackPrice}
-            />
-          </View>
-        )}
+          {questionStep === 5 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.title}>¿Cuánto costaba la cajetilla?</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Precio de la cajetilla ($)"
+                keyboardType="numeric"
+                value={packPrice}
+                onChangeText={setPackPrice}
+              />
+            </View>
+          )}
 
-        {questionStep === 6 && (
-          <View style={styles.resultContainer}>
-            <Text style={styles.title}>¡Felicidades por dar el primer paso!</Text>
-            <Text style={styles.resultText}>
-              Si dejas de fumar, podrías ahorrar aproximadamente:
-            </Text>
-            <Text style={styles.resultAmount}>${yearlySavings} al año</Text>
-            <Text style={styles.resultText}>¡Eso es un gran ahorro!</Text>
-            <Text style={styles.resultText}>
-              Además, dejarías de fumar aproximadamente {cigarettesPerYear} cigarrillos al año.
-            </Text>
-          </View>
-        )}
+          {questionStep === 6 && (
+            <View style={styles.resultContainer}>
+              <Text style={styles.title}>¡Felicidades por dar el primer paso!</Text>
+              <Text style={styles.resultText}>
+                Si dejas de fumar, podrías ahorrar aproximadamente:
+              </Text>
+              <Text style={styles.resultAmount}>${yearlySavings} al año</Text>
+              <Text style={styles.resultText}>¡Eso es un gran ahorro!</Text>
+              <Text style={styles.resultText}>
+                Además, dejarías de fumar aproximadamente {cigarettesPerYear} cigarrillos al año.
+              </Text>
+            </View>
+          )}
 
-        <TouchableOpacity style={styles.button} onPress={questionStep === 6 ? handleFinish : handleContinue}>
-          <Text style={styles.buttonText}>{questionStep === 6 ? 'Ir a Perfil' : 'Continuar'}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={questionStep === 6 ? handleFinish : handleContinue}>
+            <Text style={styles.buttonText}>{questionStep === 6 ? 'Ir a Perfil' : 'Continuar'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 }
 
