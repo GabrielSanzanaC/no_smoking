@@ -16,12 +16,12 @@ export default function TaskSelectorScreen() {
   };
 
   const tasks = [
-    { id: 'gym', label: 'Gym', icon: 'H' },
-    { id: 'travel', label: 'Travel', icon: '🌍' },
-    { id: 'study', label: 'Study', icon: '🔬' },
-    { id: 'game', label: 'Game', icon: '🎮' },
-    { id: 'music', label: 'Music', icon: '🎶' },
-    { id: 'friends', label: 'Friends', icon: '👥' },
+    { id: 'ansioso', label: 'ansioso', icon: '😰' },
+    { id: 'cansado', label: 'cansado', icon: '😔' },
+    { id: 'estresado', label: 'estresado', icon: '😩' },
+    { id: 'molesto', label: 'molesto', icon: '😠' },
+    { id: 'triste', label: 'triste', icon: '😞' },
+    { id: 'nervioso', label: 'nervioso', icon: '😬' },
   ];
 
   const toggleTaskSelection = (taskId) => {
@@ -50,7 +50,7 @@ export default function TaskSelectorScreen() {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>Which of your tasks did you do yesterday?</Text>
+      <Text style={styles.title}>Cómo te sientes hoy?</Text>
 
       {/* Task Buttons */}
       <View style={styles.taskContainer}>
