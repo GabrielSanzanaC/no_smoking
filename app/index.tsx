@@ -148,7 +148,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    marginTop: 20,
   },
   input: {
     backgroundColor: "#fff",
