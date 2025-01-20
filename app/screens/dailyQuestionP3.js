@@ -67,7 +67,7 @@ export default function DailyQuestionP3({ navigation }) {
 
       {/* Next Button */}
       <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextButtonText}>Finish</Text>
+        <Text style={styles.nextButtonText}>Terminar</Text>
       </TouchableOpacity>
     </View>
   );

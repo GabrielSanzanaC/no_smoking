@@ -1,31 +1,31 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { useRouter } from 'expo-router'; // Asegúrate de importar el hook useRouter
+import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from '../FirebaseConfig'; // Importa la configuración de Firebase
+import { auth } from "../FirebaseConfig";
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");  // Estado para el correo
-  const [password, setPassword] = useState("");  // Estado para la contraseña
-  const [error, setError] = useState("");  // Estado para almacenar errores
-  const router = useRouter(); // Inicializa el hook useRouter
+  const [email, setEmail] = useState("");
+  const [user, setUser] = useState(""); // Estado para el nombre del usuario
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleLogin = async () => {
     try {
-      // Intenta autenticar al usuario con email y contraseña
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('./screens/ProfileScreen'); // Navega a la pantalla ProfileScreen si la autenticación es exitosa
+      router.push("./screens/ProfileScreen");
     } catch (err) {
       setError("Error al iniciar sesión. Verifica tu correo y contraseña.");
     }
   };
 
   const handleContinue = () => {
-    // Navega a la pantalla CreateAccountScreen, pasando el correo y la contraseña como parámetros
+    // Navega a la pantalla CreateAccountScreen, pasando el correo, la contraseña y el usuario
     router.push({
-      pathname: './screens/CreateAccountScreen',
-      query: { email, password }
+      pathname: "./screens/CreateAccountScreen",
+      query: { email, password, user },
     });
   };
 
@@ -62,14 +62,14 @@ const App = () => {
               placeholder="Email"
               keyboardType="email-address"
               value={email}
-              onChangeText={setEmail} // Actualiza el estado del correo
+              onChangeText={setEmail}
             />
             <TextInput
               style={styles.input}
               placeholder="Password"
               secureTextEntry
               value={password}
-              onChangeText={setPassword} // Actualiza el estado de la contraseña
+              onChangeText={setPassword}
             />
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -80,20 +80,26 @@ const App = () => {
           <>
             <TextInput
               style={styles.input}
+              placeholder="Nombre de usuario"
+              value={user}
+              onChangeText={setUser}
+            />
+            <TextInput
+              style={styles.input}
               placeholder="Email"
               keyboardType="email-address"
               value={email}
-              onChangeText={setEmail} // Actualiza el estado del correo
+              onChangeText={setEmail}
             />
             <TextInput
               style={styles.input}
               placeholder="Password"
               secureTextEntry
               value={password}
-              onChangeText={setPassword} // Actualiza el estado de la contraseña
+              onChangeText={setPassword}
             />
             <TouchableOpacity style={styles.button} onPress={handleContinue}>
-              <Text style={styles.buttonText}>Continue</Text>
+              <Text style={styles.buttonText}>Continuar</Text>
             </TouchableOpacity>
           </>
         )}
@@ -105,7 +111,7 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#0F0F2D",
     padding: 20,
   },
   header: {

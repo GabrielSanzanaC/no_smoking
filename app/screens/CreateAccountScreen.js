@@ -177,7 +177,7 @@ export default function CreateAccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0F0F2D',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: '#0F0F2D',
     borderRadius: 15,
     width: '100%',
   },

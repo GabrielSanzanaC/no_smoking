@@ -10,7 +10,6 @@ export default function CigaretteTrackerScreen() {
   
   const handleGoogleContinue = () => {
     router.push("./dailyQuestionP3"); // Navega a la pantalla
-
   };
 
   return (
@@ -28,7 +27,7 @@ export default function CigaretteTrackerScreen() {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>How many cigarettes did you smoke yesterday?</Text>
+      <Text style={styles.title}>¿Cuantos cigarros fumaste hoy?</Text>
 
       {/* Cigarette Display */}
       <View style={styles.cigaretteContainer}>
@@ -70,7 +69,7 @@ export default function CigaretteTrackerScreen() {
 
       {/* Next Button */}
       <TouchableOpacity style={styles.nextButton} onPress={handleGoogleContinue}>
-        <Text style={styles.nextButtonText}>Next</Text>
+        <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
     </View>
   );

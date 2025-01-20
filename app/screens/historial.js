@@ -4,15 +4,15 @@ import {
   Text,
   View,
   TouchableOpacity,
-  FlatList,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const CalendarScreen = () => {
+  const router = useRouter(); // Para navegación
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-  // Ejemplo de datos del historial
   const history = {
     '2025-01-10': '2 cigarrillos',
     '2025-01-15': '5 cigarrillos',
@@ -68,6 +68,11 @@ const CalendarScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Botón para regresar */}
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push('./ProfileScreen')}>
+        <Text style={styles.backButtonText}>Volver</Text>
+      </TouchableOpacity>
+
       {/* Navegación del Mes */}
       <View style={styles.monthNavigation}>
         <TouchableOpacity onPress={handlePreviousMonth} style={styles.navButton}>
@@ -106,6 +111,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#0F0F2D',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+    backgroundColor: '#4F59FF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  backButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   monthNavigation: {
     flexDirection: 'row',

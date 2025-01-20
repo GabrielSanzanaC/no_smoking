@@ -16,12 +16,12 @@ export default function TaskSelectorScreen() {
   };
 
   const tasks = [
-    { id: 'ansioso', label: 'ansioso', icon: '😰' },
-    { id: 'cansado', label: 'cansado', icon: '😔' },
-    { id: 'estresado', label: 'estresado', icon: '😩' },
+    { id: 'ansioso', label: 'Ansioso', icon: '😰' },
+    { id: 'cansado', label: 'Cansado', icon: '😔' },
+    { id: 'estresado', label: 'Estresado', icon: '😩' },
     { id: 'molesto', label: 'molesto', icon: '😠' },
-    { id: 'triste', label: 'triste', icon: '😞' },
-    { id: 'nervioso', label: 'nervioso', icon: '😬' },
+    { id: 'triste', label: 'Triste', icon: '😞' },
+    { id: 'nervioso', label: 'Nervioso', icon: '😬' },
   ];
 
   const toggleTaskSelection = (taskId) => {
@@ -71,7 +71,7 @@ export default function TaskSelectorScreen() {
 
       {/* Next Button */}
       <TouchableOpacity style={styles.nextButton} onPress={handleGoogleContinue}>
-        <Text style={styles.nextButtonText}>Next</Text>
+        <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
     </View>
   );
