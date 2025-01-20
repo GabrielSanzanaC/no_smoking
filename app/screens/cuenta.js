@@ -14,12 +14,10 @@ const AccountDetailsScreen = () => {
   const router = useRouter();
 
   const handleEditProfilePicture = () => {
-    // Aquí agregar lógica para cambiar la foto de perfil
     console.log("Editar foto de perfil");
   };
 
   const handleChangePassword = () => {
-    // Aquí agregar lógica para cambiar la contraseña
     console.log("Cambiar contraseña");
   };
 
@@ -27,14 +25,22 @@ const AccountDetailsScreen = () => {
     router.push("./ProfileScreen");
   };
 
-  // Datos de ejemplo
+  const handleGoogleContinue = () => {
+    console.log("Ir a Diario");
+    router.push("./DiaryScreen");
+  };
+
+  const cuentaContinue = () => {
+    console.log("Ir a Cuenta");
+    router.push("./AccountDetailsScreen");
+  };
+
   const userDetails = {
     username: "JohnDoe",
     email: "johndoe@example.com",
     cigarrillosFumados: 50,
-    dineroAhorrado: 1000, // en pesos o la moneda que uses
-    fotoPerfil:
-      "https://example.com/user.jpg", // Reemplazar con la URL de la foto de perfil
+    dineroAhorrado: 1000,
+    fotoPerfil: "https://example.com/user.jpg",
   };
 
   return (
@@ -84,6 +90,19 @@ const AccountDetailsScreen = () => {
         <Ionicons name="lock-closed-outline" size={16} color="white" />
         <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
+
+      {/* Navigation Bar */}
+      <View style={styles.navBar}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./ProfileScreen")}>
+          <Ionicons name="home-outline" size={28} color="white" />
+          <Text style={styles.navText}>Inicio</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./dailyQuestionP1")}>
+          <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
+          <Text style={styles.navText}>Diario</Text>
+        </TouchableOpacity>
+        
+      </View>
     </ScrollView>
   );
 };
@@ -166,11 +185,27 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     justifyContent: "center",
+    marginBottom: 20,
   },
   actionButtonText: {
     color: "white",
     fontSize: 16,
     marginLeft: 10,
+  },
+  navBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#33334D",
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  navButton: {
+    alignItems: "center",
+  },
+  navText: {
+    color: "white",
+    fontSize: 12,
+    marginTop: 5,
   },
 });
 
