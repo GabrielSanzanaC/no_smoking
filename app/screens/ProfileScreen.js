@@ -10,6 +10,10 @@ export default function ProfileScreen() {
   const handleGoogleContinue = () => {
     router.push("./dailyQuestionP1"); // Navega a la pantalla
   };
+  const historialContinue = () => {
+    router.push("./historial"); // Navega a la pantalla
+  };
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -27,7 +31,7 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.tab}>
           <Text style={styles.tabText}>Library</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tab}>
+        <TouchableOpacity style={styles.tab} onPress={historialContinue}>
           <Text style={styles.tabText}>History</Text>
         </TouchableOpacity>
       </View>
