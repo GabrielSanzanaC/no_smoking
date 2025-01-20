@@ -41,6 +41,11 @@ const HistoryScreen = () => {
       setCurrentMonth(currentMonth + 1);
     }
   };
+  const history = {
+    '2025-01-20': 'Ejemplo: fumaste 2 cigarrillos',
+    '2025-01-21': 'Ejemplo: fumaste 1 cigarrillo',
+  };
+  
 
   const renderDay = (day) => {
     const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
