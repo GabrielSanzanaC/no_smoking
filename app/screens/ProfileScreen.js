@@ -1,19 +1,18 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from 'expo-router'; // Importa useRouter
+import { useRouter } from "expo-router"; // Importa useRouter
 
 export default function ProfileScreen() {
   const router = useRouter(); // Obtén el router con useRouter
 
-  // Mueve handleGoogleContinue dentro del componente
   const handleGoogleContinue = () => {
     router.push("./dailyQuestionP1"); // Navega a la pantalla
   };
+
   const historialContinue = () => {
     router.push("./historial"); // Navega a la pantalla
   };
-
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -27,9 +26,6 @@ export default function ProfileScreen() {
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, styles.activeTab]}>
           <Text style={[styles.tabText, styles.activeTabText]}>Dashboard</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tab}>
-          <Text style={styles.tabText}>Library</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tab} onPress={historialContinue}>
           <Text style={styles.tabText}>History</Text>
@@ -75,15 +71,15 @@ export default function ProfileScreen() {
 
       {/* Navigation Bar */}
       <View style={styles.navBar}>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
           <Ionicons name="home-outline" size={28} color="white" />
           <Text style={styles.navText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleGoogleContinue}>
+        <TouchableOpacity style={styles.navButton} onPress={handleGoogleContinue}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Daily Question</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
           <Ionicons name="person-outline" size={28} color="white" />
           <Text style={styles.navText}>Account</Text>
         </TouchableOpacity>
@@ -91,6 +87,7 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -119,6 +116,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
+    flex: 1,
+    alignItems: "center",
   },
   activeTab: {
     backgroundColor: "white",
@@ -192,6 +191,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     paddingVertical: 10,
     backgroundColor: "#0C2B80",
+  },
+  navButton: {
+    alignItems: "center",
   },
   navText: {
     color: "white",
