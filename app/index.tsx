@@ -1,15 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from 'expo-router'; // Asegúrate de importar el hook useRouter
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../FirebaseConfig'; // Importa la configuración de Firebase
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState(""); // Estado para el correo
-  const [password, setPassword] = useState(""); // Estado para la contraseña
+  const [email, setEmail] = useState("");  // Estado para el correo
+  const [password, setPassword] = useState("");  // Estado para la contraseña
+  const [error, setError] = useState("");  // Estado para almacenar errores
   const router = useRouter(); // Inicializa el hook useRouter
 
-  const handleLogin = () => {
-    router.push('./screens/ProfileScreen'); // Navega a la pantalla ProfileScreen
+  const handleLogin = async () => {
+    try {
+      // Intenta autenticar al usuario con email y contraseña
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('./screens/ProfileScreen'); // Navega a la pantalla ProfileScreen si la autenticación es exitosa
+    } catch (err) {
+      setError("Error al iniciar sesión. Verifica tu correo y contraseña.");
+    }
   };
 
   const handleContinue = () => {
@@ -21,10 +30,7 @@ const App = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={styles.container}>
       {/* Encabezado con botones de login y register */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -65,6 +71,7 @@ const App = () => {
               value={password}
               onChangeText={setPassword} // Actualiza el estado de la contraseña
             />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Iniciar sesión</Text>
             </TouchableOpacity>
@@ -91,7 +98,7 @@ const App = () => {
           </>
         )}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -141,8 +148,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    justifyContent: "flex-start", // Coloca los elementos más hacia arriba
-    marginTop: 20, // Ajusta este valor para controlar cuánto suben
+    justifyContent: "center",
   },
   input: {
     backgroundColor: "#fff",
@@ -160,8 +166,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginBottom: 10,
+  },
 });
 
 export default App;
-
 
