@@ -28,7 +28,7 @@ export default function ProfileScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Progreso</Text>
+        <Text style={styles.headerTitle}>No Smoke</Text>
         <Ionicons name="settings-outline" size={24} color="white" />
       </View>
 

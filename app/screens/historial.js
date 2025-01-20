@@ -54,10 +54,7 @@ const CalendarScreen = () => {
     return (
       <TouchableOpacity
         key={day}
-        style={[
-          styles.dayContainer,
-          isSelected && styles.selectedDay,
-        ]}
+        style={[styles.dayContainer, isSelected && styles.selectedDay]}
         onPress={() => setSelectedDate(day)}
       >
         <Text style={styles.dayText}>{day}</Text>
@@ -66,12 +63,22 @@ const CalendarScreen = () => {
     );
   };
 
+  // Función para redirigir a la pantalla de Historial
+  const historialContinue = () => {
+    router.push('./ProfileScreen'); // Ajusta la ruta según lo necesites
+  };
+
   return (
     <View style={styles.container}>
-      {/* Botón para regresar */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push('./ProfileScreen')}>
-        <Text style={styles.backButtonText}>Volver</Text>
-      </TouchableOpacity>
+      {/* Pestañas de Navegación */}
+      <View style={styles.tabs}>
+        <TouchableOpacity style={styles.tab}>
+          <Text style={styles.tabText} onPress={historialContinue}>Tablero</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+        <Text style={[styles.tabText, styles.activeTabText]}>Historial</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Navegación del Mes */}
       <View style={styles.monthNavigation}>
@@ -112,17 +119,32 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#0F0F2D',
   },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 20,
-    backgroundColor: '#4F59FF',
-    padding: 10,
-    borderRadius: 5,
+  tabs: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 10,
+    backgroundColor: "#0C2B80",
   },
-  backButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  tab: {
+    padding: 10,
+  },
+  tab: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    flex: 1,
+    alignItems: "center",
+  },
+  activeTab: {
+    backgroundColor: "white",
+  },
+  tabText: {
+    color: "white",
+    fontSize: 14,
+  },
+  activeTabText: {
+    color: "#0C2B80",
+    fontWeight: "bold",
   },
   monthNavigation: {
     flexDirection: 'row',
