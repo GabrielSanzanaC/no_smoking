@@ -8,7 +8,9 @@ export default function DailyQuestionP3({ navigation }) {
   const router = useRouter(); // Inicializa el router
 
   const handleNext = () => {
-    console.log(`Horas: ${hours}, Minutos: ${minutes}`);
+    console.log(`Horas: ${hours}, Minutos: ${minutes}`)
+    router.push("./ProfileScreen"); // Navega a la pantalla
+    ;
   };
 
   return (
