@@ -7,17 +7,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const CalendarScreen = () => {
+const HistoryScreen = () => {
   const router = useRouter(); // Para navegación
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-
-  const history = {
-    '2025-01-10': '2 cigarrillos',
-    '2025-01-15': '5 cigarrillos',
-    '2025-01-20': '1 cigarrillo',
-  };
 
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
 
@@ -63,8 +57,8 @@ const CalendarScreen = () => {
     );
   };
 
-  // Función para redirigir a la pantalla de Historial
-  const historialContinue = () => {
+  // Función para redirigir a la pantalla de Tablero
+  const handleNavigateToDashboard = () => {
     router.push('./ProfileScreen'); // Ajusta la ruta según lo necesites
   };
 
@@ -72,11 +66,11 @@ const CalendarScreen = () => {
     <View style={styles.container}>
       {/* Pestañas de Navegación */}
       <View style={styles.tabs}>
-        <TouchableOpacity style={styles.tab}>
-          <Text style={styles.tabText} onPress={historialContinue}>Tablero</Text>
+        <TouchableOpacity style={styles.tab} onPress={handleNavigateToDashboard}>
+          <Text style={styles.tabText}>Tablero</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-        <Text style={[styles.tabText, styles.activeTabText]}>Historial</Text>
+          <Text style={[styles.tabText, styles.activeTabText]}>Historial</Text>
         </TouchableOpacity>
       </View>
 
@@ -109,6 +103,7 @@ const CalendarScreen = () => {
           </Text>
         </View>
       )}
+      
     </View>
   );
 };
@@ -116,7 +111,7 @@ const CalendarScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 10,
     backgroundColor: '#0F0F2D',
   },
   tabs: {
@@ -124,9 +119,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     paddingVertical: 10,
     backgroundColor: "#0C2B80",
-  },
-  tab: {
-    padding: 10,
   },
   tab: {
     paddingVertical: 8,
@@ -207,4 +199,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CalendarScreen;
+export default HistoryScreen;
