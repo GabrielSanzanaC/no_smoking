@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router'; // Asegúrate de importar el hook useRo
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");  // Estado para el correo
+  const [password, setPassword] = useState("");  // Estado para la contraseña
   const router = useRouter(); // Inicializa el hook useRouter
 
   const handleLogin = () => {
@@ -11,7 +13,11 @@ const App = () => {
   };
 
   const handleContinue = () => {
-    router.push('./screens/CreateAccountScreen'); // Navega a la pantalla CreateAccountScreen
+    // Navega a la pantalla CreateAccountScreen, pasando el correo y la contraseña como parámetros
+    router.push({
+      pathname: './screens/CreateAccountScreen',
+      query: { email, password }
+    });
   };
 
   return (
@@ -42,16 +48,40 @@ const App = () => {
       <View style={styles.formContainer}>
         {isLogin ? (
           <>
-            <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-            <TextInput style={styles.input} placeholder="Password" secureTextEntry />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail} // Actualiza el estado del correo
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword} // Actualiza el estado de la contraseña
+            />
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Iniciar sesión</Text>
             </TouchableOpacity>
           </>
         ) : (
           <>
-            <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-            <TextInput style={styles.input} placeholder="Password" secureTextEntry />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail} // Actualiza el estado del correo
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword} // Actualiza el estado de la contraseña
+            />
             <TouchableOpacity style={styles.button} onPress={handleContinue}>
               <Text style={styles.buttonText}>Continue</Text>
             </TouchableOpacity>
