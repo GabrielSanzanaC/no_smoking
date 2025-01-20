@@ -1,9 +1,17 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useRouter } from 'expo-router'; // Importa useRouter
+
 
 export default function CigaretteTrackerScreen() {
   const [count, setCount] = React.useState(0);
+  const router = useRouter(); // Inicializa el router
+  
+  const handleGoogleContinue = () => {
+    router.push("./dailyQuestionP3"); // Navega a la pantalla
+
+  };
 
   return (
     <View style={styles.container}>
@@ -61,7 +69,7 @@ export default function CigaretteTrackerScreen() {
       </View>
 
       {/* Next Button */}
-      <TouchableOpacity style={styles.nextButton}>
+      <TouchableOpacity style={styles.nextButton} onPress={handleGoogleContinue}>
         <Text style={styles.nextButtonText}>Next</Text>
       </TouchableOpacity>
     </View>
