@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from 'expo-router'; // Asegúrate de importar el hook useRouter
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");  // Estado para el correo
-  const [password, setPassword] = useState("");  // Estado para la contraseña
+  const [email, setEmail] = useState(""); // Estado para el correo
+  const [password, setPassword] = useState(""); // Estado para la contraseña
   const router = useRouter(); // Inicializa el hook useRouter
 
   const handleLogin = () => {
@@ -21,7 +21,10 @@ const App = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       {/* Encabezado con botones de login y register */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -88,7 +91,7 @@ const App = () => {
           </>
         )}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -138,7 +141,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start", // Coloca los elementos más hacia arriba
+    marginTop: 20, // Ajusta este valor para controlar cuánto suben
   },
   input: {
     backgroundColor: "#fff",
@@ -159,3 +163,5 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
+
