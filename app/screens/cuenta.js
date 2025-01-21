@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "../FirebaseConfig"; // Asegúrate de que 'auth' y 'db' estén exportados correctamente
 
@@ -52,8 +52,18 @@ const AccountDetailsScreen = () => {
   const handleEditProfilePicture = () => {
     console.log("Editar foto de perfil");
   };
+
   const handleChangePassword = () => {
     console.log("Cambiar contraseña");
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push("/"); // Redirige a la pantalla de inicio de sesión
+    } catch (error) {
+      console.error("Error al cerrar sesión: ", error);
+    }
   };
 
   return (
@@ -96,6 +106,12 @@ const AccountDetailsScreen = () => {
       <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
         <Ionicons name="lock-closed-outline" size={16} color="white" />
         <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
+      </TouchableOpacity>
+
+      {/* Sign Out Button */}
+      <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
+        <Ionicons name="log-out-outline" size={16} color="white" />
+        <Text style={styles.actionButtonText}>Cerrar sesión</Text>
       </TouchableOpacity>
 
       {/* Navigation Bar */}
