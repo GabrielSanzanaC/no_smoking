@@ -48,33 +48,39 @@ const App = () => {
   };
   const handleContinue = async () => {
     let hasError = false;
-
+  
     if (!user.trim()) {
       setUserError(true);
       hasError = true;
     } else {
       setUserError(false);
     }
-
+  
+    // Validación de formato de correo electrónico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       setEmailError(true);
+      setError("El correo no puede estar vacío.");
+      hasError = true;
+    } else if (!emailRegex.test(email)) {
+      setEmailError(true);
+      setError("El formato del correo no es válido.");
       hasError = true;
     } else {
       setEmailError(false);
     }
-
+  
     if (!password.trim()) {
       setPasswordError(true);
       hasError = true;
     } else {
       setPasswordError(false);
     }
-
+  
     if (hasError) {
-      setError("Por favor completa los campos obligatorios.");
       return;
     }
-
+  
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
@@ -83,15 +89,13 @@ const App = () => {
         nombre: user,
         email: email,
       });
-    
+  
       setError("");
       router.push("./screens/CreateAccountScreen");
-      
     } catch (err) {
       console.error(err);
-      setError("Hubo un problema al iniciar sesión.");
+      setError("Hubo un problema al registrar la cuenta.");
     }
-  
   };
 
 
