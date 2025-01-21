@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { auth, db } from "./FirebaseConfig";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,8 +18,7 @@ const App = () => {
 
   const handleLogin = async () => {
     let hasError = false;
-
-    if (!email.trim()) {
+      if (!email.trim()) {
       setEmailError(true);
       hasError = true;
     } else {
@@ -35,11 +37,16 @@ const App = () => {
       return;
     }
 
-    setError(""); // Limpiar mensaje de error
-    router.push("./screens/ProfileScreen");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setError("");
+      router.push("./screens/ProfileScreen");
+    } catch (err) {
+      console.error(err);
+      setError("Hubo un problema al iniciar sesión.");
+    }
   };
-
-  const handleContinue = () => {
+  const handleContinue = async () => {
     let hasError = false;
 
     if (!user.trim()) {
@@ -68,21 +75,36 @@ const App = () => {
       return;
     }
 
-    setError("");
-    router.push({
-      pathname: "./screens/CreateAccountScreen",
-      query: { email, password, user },
-    });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+      await setDoc(doc(db, "usuarios", uid), {
+        uid: uid,
+        nombre: user,
+        email: email,
+      });
+    
+      setError("");
+      router.push("./screens/CreateAccountScreen");
+      
+    } catch (err) {
+      console.error(err);
+      setError("Hubo un problema al iniciar sesión.");
+    }
+  
   };
 
+
   // Limpiar el error al cambiar entre Login y Register
-  const handleTabChange = (isLoginTab) => {
+  const handleTabChange = (isLoginTab: boolean | ((prevState: boolean) => boolean)) => {
     setIsLogin(isLoginTab);
     setError(""); // Limpiar el error al cambiar de pestaña
     setUserError(false);
     setEmailError(false);
     setPasswordError(false);
   };
+    
+  
 
   return (
     <View style={styles.container}>
@@ -167,7 +189,7 @@ const App = () => {
             />
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={handleContinue}>
-              <Text style={styles.buttonText}>Continuar</Text>
+              <Text style={styles.buttonText}>Registrar</Text>
             </TouchableOpacity>
           </>
         )}

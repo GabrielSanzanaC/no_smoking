@@ -28,7 +28,7 @@ export default function ProfileScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>No Smoke</Text>
+        <Text style={styles.headerTitle}>Progreso</Text>
         <Ionicons name="settings-outline" size={24} color="white" />
       </View>
 
@@ -81,10 +81,6 @@ export default function ProfileScreen() {
 
       {/* Navigation Bar */}
       <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="home-outline" size={28} color="white" />
-          <Text style={styles.navText}>Inicio</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={handleGoogleContinue}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Diario</Text>
