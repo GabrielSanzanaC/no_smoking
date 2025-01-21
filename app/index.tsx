@@ -18,34 +18,48 @@ const App = () => {
 
   const handleLogin = async () => {
     let hasError = false;
-      if (!email.trim()) {
+  
+    if (!email.trim()) {
       setEmailError(true);
+      setError("Por favor ingresa tu correo.");
       hasError = true;
     } else {
       setEmailError(false);
     }
-
+  
     if (!password.trim()) {
       setPasswordError(true);
+      setError("Por favor ingresa tu contraseña.");
       hasError = true;
     } else {
       setPasswordError(false);
     }
-
+  
     if (hasError) {
-      setError("Por favor ingresa todos los campos obligatorios.");
       return;
     }
-
+  
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setError("");
       router.push("./screens/ProfileScreen");
-    } catch (err) {
-      console.error(err);
-      setError("Hubo un problema al iniciar sesión.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        // Manejo de errores específicos de Firebase
+        if ((err as any).code === "auth/user-not-found") {
+          setError("No se encontró un usuario con este correo.");
+        } else if ((err as any).code === "auth/wrong-password") {
+          setError("Contraseña incorrecta.");
+        } else {
+          setError("Hubo un problema al iniciar sesión.");
+        }
+      } else {
+        console.error("Error desconocido:", err);
+        setError("Ocurrió un error inesperado.");
+      }
     }
   };
+
   const handleContinue = async () => {
     let hasError = false;
   
@@ -70,8 +84,14 @@ const App = () => {
       setEmailError(false);
     }
   
+    // Validación de longitud de contraseña
     if (!password.trim()) {
       setPasswordError(true);
+      setError("La contraseña no puede estar vacía.");
+      hasError = true;
+    } else if (password.length < 6) {
+      setPasswordError(true);
+      setError("La contraseña debe tener al menos 6 caracteres.");
       hasError = true;
     } else {
       setPasswordError(false);
@@ -92,12 +112,25 @@ const App = () => {
   
       setError("");
       router.push("./screens/CreateAccountScreen");
-    } catch (err) {
-      console.error(err);
-      setError("Hubo un problema al registrar la cuenta.");
+    } catch (err: unknown) {
+      // Verificar si el error es una instancia de FirebaseError
+      if (err instanceof Error) {
+        // Manejo de errores específicos de Firebase
+        if ((err as any).code === "auth/email-already-in-use") {
+          setError("El correo electrónico ya está registrado.");
+        } else if ((err as any).code === "auth/invalid-email") {
+          setError("El correo electrónico no es válido.");
+        } else if ((err as any).code === "auth/weak-password") {
+          setError("La contraseña es demasiado débil. Debe tener al menos 6 caracteres.");
+        } else {
+          setError("Hubo un problema al registrar la cuenta.");
+        }
+      } else {
+        console.error("Error desconocido:", err);
+        setError("Ocurrió un error inesperado.");
+      }
     }
   };
-
 
   // Limpiar el error al cambiar entre Login y Register
   const handleTabChange = (isLoginTab: boolean | ((prevState: boolean) => boolean)) => {
