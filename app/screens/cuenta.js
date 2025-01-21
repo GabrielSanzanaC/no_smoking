@@ -198,6 +198,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#33334D",
     paddingVertical: 10,
     borderRadius: 10,
+    position: "absolute", // Hace que la barra sea fija
+    bottom: 0, // Coloca la barra en la parte inferior de la pantalla
+    left: 0,
+    right: 0,
   },
   navButton: {
     alignItems: "center",

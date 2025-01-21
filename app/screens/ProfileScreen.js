@@ -14,21 +14,21 @@ export default function ProfileScreen() {
     router.push("./historial"); // Navega a la pantalla
   };
 
-  const cuentaContinue =() =>  {
+  const cuentaContinue = () => {
     router.push("./cuenta");
-  }
+  };
 
   const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleDateString("es-ES",{
-  day: "numeric",
-  month: "long",
-});
+  const formattedDate = currentDate.toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+  });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>No Smoke</Text>
+        <Text style={styles.headerTitle}>Progreso</Text>
         <Ionicons name="settings-outline" size={24} color="white" />
       </View>
 
@@ -81,10 +81,6 @@ export default function ProfileScreen() {
 
       {/* Navigation Bar */}
       <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navButton}>
-          <Ionicons name="home-outline" size={28} color="white" />
-          <Text style={styles.navText}>Inicio</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={handleGoogleContinue}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Diario</Text>
@@ -137,7 +133,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   activeTabText: {
-    color: "#0C2B80",
+    color: "blue",
     fontWeight: "bold",
   },
   card: {
@@ -203,7 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0C2B80",
     position: "absolute", // Fija la posición
     bottom: 0,
-    width: "100%",       // Asegúrate de que ocupe todo el ancho
+    width: "100%", // Asegúrate de que ocupe todo el ancho
   },
   navButton: {
     alignItems: "center",
