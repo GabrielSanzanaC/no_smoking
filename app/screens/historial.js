@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     margin: 5,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#33334D',
+    backgroundColor: '#1F3A93',
     borderRadius: 5,
   },
   selectedDay: {
