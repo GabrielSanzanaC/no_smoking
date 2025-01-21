@@ -14,15 +14,15 @@ export default function ProfileScreen() {
     router.push("./historial"); // Navega a la pantalla
   };
 
-  const cuentaContinue =() =>  {
+  const cuentaContinue = () => {
     router.push("./cuenta");
-  }
+  };
 
   const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleDateString("es-ES",{
-  day: "numeric",
-  month: "long",
-});
+  const formattedDate = currentDate.toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+  });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   activeTabText: {
-    color: "#0C2B80",
+    color: "blue",
     fontWeight: "bold",
   },
   card: {
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0C2B80",
     position: "absolute", // Fija la posición
     bottom: 0,
-    width: "100%",       // Asegúrate de que ocupe todo el ancho
+    width: "100%", // Asegúrate de que ocupe todo el ancho
   },
   navButton: {
     alignItems: "center",
