@@ -54,7 +54,7 @@ const AccountDetailsScreen = () => {
   };
 
   const handleChangePassword = () => {
-    console.log("Cambiar contraseña");
+    router.push("./reestablecerContrasena");
   };
 
   const handleSignOut = async () => {
