@@ -1,24 +1,44 @@
-import React from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { auth, db } from "../FirebaseConfig"; // Asegúrate de que 'auth' y 'db' estén exportados correctamente
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
+  const [nombre, setNombre] = useState(null);
+  const [email, setEmail] = useState(null);
 
-  const handleEditProfilePicture = () => {
-    console.log("Editar foto de perfil");
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setEmail(user.email);
+        getUserData(user.email);
+      } else {
+        setNombre("Usuario invitado");
+        setEmail("No disponible");
+      }
+    });
 
-  const handleChangePassword = () => {
-    console.log("Cambiar contraseña");
+    return unsubscribe;
+  }, []);
+
+  const getUserData = async (email) => {
+    try {
+      const q = query(collection(db, "usuarios"), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setNombre(userData.nombre || "Usuario");
+      } else {
+        setNombre("Usuario desconocido");
+      }
+    } catch (error) {
+      setNombre("Error al obtener datos");
+    }
   };
 
   const handleBackToProfile = () => {
@@ -26,21 +46,14 @@ const AccountDetailsScreen = () => {
   };
 
   const handleGoogleContinue = () => {
-    console.log("Ir a Diario");
     router.push("./DiaryScreen");
   };
 
-  const cuentaContinue = () => {
-    console.log("Ir a Cuenta");
-    router.push("./AccountDetailsScreen");
+  const handleEditProfilePicture = () => {
+    console.log("Editar foto de perfil");
   };
-
-  const userDetails = {
-    username: "JohnDoe",
-    email: "johndoe@example.com",
-    cigarrillosFumados: 50,
-    dineroAhorrado: 1000,
-    fotoPerfil: "https://example.com/user.jpg",
+  const handleChangePassword = () => {
+    console.log("Cambiar contraseña");
   };
 
   return (
@@ -56,15 +69,12 @@ const AccountDetailsScreen = () => {
       {/* Profile Card */}
       <View style={styles.card}>
         <Image
-          source={{ uri: userDetails.fotoPerfil }}
+          source={{ uri: "https://example.com/user.jpg" }} // Foto de perfil predeterminada
           style={styles.profileImage}
         />
-        <Text style={styles.cardText}>{userDetails.username}</Text>
-        <Text style={styles.cardSubText}>{userDetails.email}</Text>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={handleEditProfilePicture}
-        >
+        <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
+        <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
+        <TouchableOpacity style={styles.editButton} onPress={handleEditProfilePicture}>
           <Ionicons name="camera-outline" size={16} color="white" />
           <Text style={styles.editButtonText}>Cambiar foto</Text>
         </TouchableOpacity>
@@ -74,19 +84,16 @@ const AccountDetailsScreen = () => {
       <View style={styles.stats}>
         <View style={styles.statCard}>
           <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-          <Text style={styles.statValue}>{userDetails.cigarrillosFumados}</Text>
+          <Text style={styles.statValue}>50</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statTitle}>Dinero ahorrado</Text>
-          <Text style={styles.statValue}>{userDetails.dineroAhorrado} CLP</Text>
+          <Text style={styles.statValue}>1000 CLP</Text>
         </View>
       </View>
 
       {/* Change Password Button */}
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={handleChangePassword}
-      >
+      <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
         <Ionicons name="lock-closed-outline" size={16} color="white" />
         <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
       </TouchableOpacity>
@@ -97,11 +104,10 @@ const AccountDetailsScreen = () => {
           <Ionicons name="home-outline" size={28} color="white" />
           <Text style={styles.navText}>Inicio</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./dailyQuestionP1")}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./DiaryScreen")}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Diario</Text>
         </TouchableOpacity>
-        
       </View>
     </ScrollView>
   );
