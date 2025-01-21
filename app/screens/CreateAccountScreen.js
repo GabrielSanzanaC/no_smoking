@@ -1,8 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export default function CreateAccountScreen() {
+
+export default function CreateAccountScreen () {
+  const router = useRouter();
+  const { userProfile } = router.params || {};
+
+  useEffect(() => {
+    const createAccount = async () => {
+      try {
+        // Llamar a la función `GuardarUsuario` con los datos
+        await GuardarUsuario({ email: userProfile.email, password: userProfile.password, name: userProfile.name });
+        setError("");
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Ocurrió un error inesperado.");
+        }
+      }
+    };
+
+    // Solo ejecutamos si hay datos de usuario
+    if (userProfile) {
+      createAccount();
+    }
+    else{
+      alert("userProfile esta vacio")
+    }
+  }, [userProfile, router]); 
+
+
+
   const [reason, setReason] = useState('');
   const [age, setAge] = useState('');
   const [yearsSmoking, setYearsSmoking] = useState('');
@@ -12,7 +42,6 @@ export default function CreateAccountScreen() {
   const [questionStep, setQuestionStep] = useState(1);
   const [yearlySavings, setYearlySavings] = useState(null);
   const [cigarettesPerYear, setCigarettesPerYear] = useState(null);
-  const router = useRouter();
 
   const handleContinue = () => {
     if (questionStep === 1) {

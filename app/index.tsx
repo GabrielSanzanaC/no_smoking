@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { auth, db } from "./FirebaseConfig";
+import { auth, db } from "../FirebaseConfig";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { GuardarUsuario } from "../components/GuardarUsuario";
+
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -70,7 +71,6 @@ const App = () => {
       setUserError(false);
     }
   
-    // Validación de formato de correo electrónico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       setEmailError(true);
@@ -84,7 +84,6 @@ const App = () => {
       setEmailError(false);
     }
   
-    // Validación de longitud de contraseña
     if (!password.trim()) {
       setPasswordError(true);
       setError("La contraseña no puede estar vacía.");
@@ -100,36 +99,22 @@ const App = () => {
     if (hasError) {
       return;
     }
-  
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-      await setDoc(doc(db, "usuarios", uid), {
-        uid: uid,
-        nombre: user,
-        email: email,
-      });
-  
-      setError("");
-      router.push("./screens/CreateAccountScreen");
-    } catch (err: unknown) {
-      // Verificar si el error es una instancia de FirebaseError
-      if (err instanceof Error) {
-        // Manejo de errores específicos de Firebase
-        if ((err as any).code === "auth/email-already-in-use") {
-          setError("El correo electrónico ya está registrado.");
-        } else if ((err as any).code === "auth/invalid-email") {
-          setError("El correo electrónico no es válido.");
-        } else if ((err as any).code === "auth/weak-password") {
-          setError("La contraseña es demasiado débil. Debe tener al menos 6 caracteres.");
-        } else {
-          setError("Hubo un problema al registrar la cuenta.");
-        }
-      } else {
-        console.error("Error desconocido:", err);
-        setError("Ocurrió un error inesperado.");
-      }
-    }
+
+    setError("");
+    
+    const userProfile = {
+      name: 'Kevin',
+      email: 'Kevin@gmail.com',
+      password: '123456',
+    };
+
+    const userProfileString = JSON.stringify(userProfile); // Serializar el objeto
+    router.push({
+      pathname: '/screens/CreateAccountScreen',
+      params: { userProfile: userProfileString }, // Pasar el objeto serializado
+    });
+
+
   };
 
   // Limpiar el error al cambiar entre Login y Register
