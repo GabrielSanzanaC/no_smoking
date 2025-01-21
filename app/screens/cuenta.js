@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { auth, db } from "../FirebaseConfig"; // Asegúrate de que 'auth' y 'db' estén exportados correctamente
+import { auth, db } from "../../FirebaseConfig"; // Asegúrate de que 'auth' y 'db' estén exportados correctamente
 
 const AccountDetailsScreen = () => {
   const router = useRouter();

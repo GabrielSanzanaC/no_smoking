@@ -64,6 +64,7 @@ const App = () => {
   const handleContinue = async () => {
     let hasError = false;
   
+    // Validación
     if (!user.trim()) {
       setUserError(true);
       hasError = true;
@@ -99,22 +100,23 @@ const App = () => {
     if (hasError) {
       return;
     }
-
+  
     setError("");
-    
+  
     const userProfile = {
-      name: 'Kevin',
-      email: 'Kevin@gmail.com',
-      password: '123456',
+      user: user,
+      email: email,
+      password: password,
     };
-
-    const userProfileString = JSON.stringify(userProfile); // Serializar el objeto
+  
+    // Serializar los datos del perfil del usuario
+    const userProfileString = JSON.stringify(userProfile);
+    
+    // Redirigir a la pantalla de detalles, pasando los parámetros
     router.push({
       pathname: '/screens/CreateAccountScreen',
-      params: { userProfile: userProfileString }, // Pasar el objeto serializado
+      params: { userProfile: userProfileString },
     });
-
-
   };
 
   // Limpiar el error al cambiar entre Login y Register

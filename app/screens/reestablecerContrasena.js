@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput } from "react-nativ
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from "firebase/auth";
-import { auth } from "../FirebaseConfig"; // Asegúrate de que 'auth' esté exportado correctamente
+import { auth } from "../../FirebaseConfig"; // Asegúrate de que 'auth' esté exportado correctamente
 
 const ResetPasswordScreen = () => {
   const router = useRouter();

@@ -1,38 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { GuardarUsuario } from "../../components/GuardarUsuario"
 
 export default function CreateAccountScreen () {
   const router = useRouter();
-  const { userProfile } = router.params || {};
-
-  useEffect(() => {
-    const createAccount = async () => {
-      try {
-        // Llamar a la función `GuardarUsuario` con los datos
-        await GuardarUsuario({ email: userProfile.email, password: userProfile.password, name: userProfile.name });
-        setError("");
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Ocurrió un error inesperado.");
-        }
-      }
-    };
-
-    // Solo ejecutamos si hay datos de usuario
-    if (userProfile) {
-      createAccount();
-    }
-    else{
-      alert("userProfile esta vacio")
-    }
-  }, [userProfile, router]); 
-
-
-
+  const { userProfile } = useLocalSearchParams();
+  const { user, email, password } = JSON.parse(userProfile);
   const [reason, setReason] = useState('');
   const [age, setAge] = useState('');
   const [yearsSmoking, setYearsSmoking] = useState('');
@@ -95,8 +69,15 @@ export default function CreateAccountScreen () {
     }
   };
 
-  const handleFinish = () => {
-    router.push('./ProfileScreen'); // Redirige a la pantalla de perfil
+  const handleFinish = async () => {
+    try {
+      await GuardarUsuario({ email, password, user });
+      router.push('./ProfileScreen'); // Redirigir a la pantalla de perfil
+    } catch (err) {
+      // Manejar el error si algo falla en la función GuardarUsuario
+      console.error('Error al guardar el usuario:', err);
+      Alert.alert('Ocurrió un error al guardar los datos. Inténtalo nuevamente.');
+    }
   };
 
   return (
