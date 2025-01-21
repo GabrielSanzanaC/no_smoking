@@ -1,17 +1,51 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router"; // Importa useRouter
+import { useRouter } from "expo-router";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "../FirebaseConfig"; // Asegúrate de que 'db' y 'auth' estén correctamente exportados
 
 export default function ProfileScreen() {
-  const router = useRouter(); // Obtén el router con useRouter
+  const router = useRouter();
+  const [nombre, setnombre] = useState(null); // Estado para almacenar el nombre del usuario
+  const [userEmail, setUserEmail] = useState(null); // Estado para almacenar el email del usuario
+
+  const getUserData = async (email) => {
+    try {
+      const q = query(collection(db, "usuarios"), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setnombre(userData.nombre || "Usuario");
+      } else {
+        setnombre("Usuario");
+      }
+    } catch (error) {
+      setnombre("Error al obtener datos");
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserEmail(user.email);
+        getUserData(user.email);
+      } else {
+        setnombre("Usuario invitado");
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const handleGoogleContinue = () => {
-    router.push("./dailyQuestionP1"); // Navega a la pantalla
+    router.push("./dailyQuestionP1");
   };
 
   const historialContinue = () => {
-    router.push("./historial"); // Navega a la pantalla
+    router.push("./historial");
   };
 
   const cuentaContinue = () => {
@@ -29,7 +63,7 @@ export default function ProfileScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Progreso</Text>
-        <Ionicons name="settings-outline" size={24} color="white" />
+        <Ionicons nombre="settings-outline" size={24} color="white" />
       </View>
 
       {/* Tabs */}
@@ -45,18 +79,18 @@ export default function ProfileScreen() {
       {/* Welcome Card */}
       <View style={styles.card}>
         <Image
-          source={{ uri: "https://example.com/user.jpg" }} // Reemplázalo con tu imagen
+          source={{ uri: "https://example.com/user.jpg" }}
           style={styles.profileImage}
         />
         <Text style={styles.cardText}>
-          Hola John! buen dia.
+          Hola {nombre || "Cargando..."}! buen día.
         </Text>
         <Text style={styles.cardDate}>{formattedDate}</Text>
       </View>
 
       {/* Statistics Section */}
       <View style={styles.statistics}>
-        <Text style={styles.sectionTitle}>Estadisticas</Text>
+        <Text style={styles.sectionTitle}>Estadísticas</Text>
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statTitle}>Dinero ahorrado en el mes</Text>
@@ -98,6 +132,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: "#071E50",
+    paddingBottom: 60,
   },
   header: {
     flexDirection: "row",
@@ -133,31 +168,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   activeTabText: {
-    color: "blue",
+    color: "#004080",
     fontWeight: "bold",
   },
   card: {
     backgroundColor: "#1F3A93",
     margin: 20,
     borderRadius: 10,
-    padding: 15,
+    padding: 20,
     alignItems: "center",
   },
   profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     marginBottom: 10,
   },
   cardText: {
     color: "white",
-    fontSize: 14,
+    fontSize: 16,
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   cardDate: {
     color: "#B0C4DE",
-    fontSize: 12,
+    fontSize: 14,
   },
   statistics: {
     marginHorizontal: 20,
@@ -165,7 +200,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
   },
@@ -178,28 +213,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#1F3A93",
     flex: 1,
     marginHorizontal: 5,
-    padding: 10,
+    padding: 15,
     borderRadius: 10,
     alignItems: "center",
   },
   statTitle: {
     color: "#B0C4DE",
-    fontSize: 12,
+    fontSize: 14,
+    textAlign: "center",
   },
   statValue: {
     color: "white",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    marginTop: 5,
+    marginTop: 10,
   },
   navBar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingVertical: 10,
+    paddingVertical: 15,
     backgroundColor: "#0C2B80",
-    position: "absolute", // Fija la posición
+    position: "absolute",
     bottom: 0,
-    width: "100%", // Asegúrate de que ocupe todo el ancho
+    width: "100%",
   },
   navButton: {
     alignItems: "center",
@@ -208,6 +244,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 12,
     marginTop: 5,
-    textAlign: "center",
   },
 });
