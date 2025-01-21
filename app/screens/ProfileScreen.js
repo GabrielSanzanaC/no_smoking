@@ -131,7 +131,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: "#071E50",
+    backgroundColor: "#0F0F2D",
     paddingBottom: 60,
   },
   header: {

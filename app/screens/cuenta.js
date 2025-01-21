@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   card: {
     alignItems: "center",
-    backgroundColor: "#33334D",
+    backgroundColor: "#1F3A93",
     padding: 20,
     borderRadius: 10,
     marginBottom: 20,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statCard: {
-    backgroundColor: "#33334D",
+    backgroundColor: "#1F3A93",
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   navBar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#33334D",
+    backgroundColor: "#0C2B80",
     paddingVertical: 10,
     borderRadius: 10,
     position: "absolute", // Hace que la barra sea fija
