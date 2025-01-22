@@ -10,6 +10,8 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [nombre, setnombre] = useState(null); // Estado para almacenar el nombre del usuario
   const [userEmail, setUserEmail] = useState(null); // Estado para almacenar el email del usuario
+  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Estado para almacenar el tiempo sin fumar en segundos
+  const [cigarettesSmoked, setCigarettesSmoked] = useState(0); // Estado para almacenar el número de cigarros fumados
 
   const getUserData = async (email) => {
     try {
@@ -40,6 +42,14 @@ export default function ProfileScreen() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeWithoutSmoking(prevTime => prevTime + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleGoogleContinue = () => {
     router.push("./dailyQuestionP1");
   };
@@ -50,6 +60,18 @@ export default function ProfileScreen() {
 
   const cuentaContinue = () => {
     router.push("./cuenta");
+  };
+
+  const handleSmokeButtonPress = () => {
+    setTimeWithoutSmoking(0);
+    setCigarettesSmoked(prevCount => prevCount + 1);
+  };
+
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h}h${m}m${s}s`;
   };
 
   const currentDate = new Date();
@@ -98,7 +120,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statTitle}>Tiempo sin fumar</Text>
-            <Text style={styles.statValue}>1h24m</Text>
+            <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
           </View>
         </View>
         <View style={styles.statsRow}>
@@ -108,9 +130,12 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statTitle}>Cigarros fumados</Text>
-            <Text style={styles.statValue}>23</Text>
+            <Text style={styles.statValue}>{cigarettesSmoked}</Text>
           </View>
         </View>
+        <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
+          <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Navigation Bar */}
@@ -227,6 +252,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginTop: 10,
+  },
+  smokeButton: {
+    backgroundColor: "#FF6347",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  smokeButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   navBar: {
     flexDirection: "row",
