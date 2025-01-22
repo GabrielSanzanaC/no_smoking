@@ -71,7 +71,7 @@ export default function CreateAccountScreen () {
 
   const handleFinish = async () => {
     try {
-      await GuardarUsuario({ email, password, user });
+      await GuardarUsuario({ email, password, user, reason,  age, yearsSmoking, cigarettesPerDay, cigarettesPerPack, packPrice, questionStep, yearlySavings, cigarettesPerYear});
       router.push('./ProfileScreen'); // Redirigir a la pantalla de perfil
     } catch (err) {
       // Manejar el error si algo falla en la función GuardarUsuario

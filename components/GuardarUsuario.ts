@@ -6,9 +6,15 @@ interface GuardarUsuarioProps {
   email: string;
   password: string;
   user: string;
+  reason: string;
+  age: number;
+  yearsSmoking: number;
+  cigarettesPerDay: number;
+  cigarettesPerPack: number;
+  packPrice: number;
 }
 
-export const GuardarUsuario = async ({ email, password, user }: GuardarUsuarioProps): Promise<void> => {
+export const GuardarUsuario = async ({ email, password, user, reason,  age, yearsSmoking, cigarettesPerDay, cigarettesPerPack, packPrice}: GuardarUsuarioProps): Promise<void> => {
   try {
     // Crear usuario en Firebase
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -19,6 +25,12 @@ export const GuardarUsuario = async ({ email, password, user }: GuardarUsuarioPr
       uid: uid,
       nombre: user,
       email: email,
+      motivo: reason, 
+      edad: age, 
+      añosFumando: yearsSmoking,
+      cigarrillosPorDía: cigarettesPerDay, 
+      cigarrillosPorPaquete: cigarettesPerPack,
+      precioPorPaquete: packPrice,
     });
   } catch (err: unknown) {
     if (err instanceof Error) {
