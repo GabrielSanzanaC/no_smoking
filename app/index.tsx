@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { GuardarUsuario } from "../components/GuardarUsuario";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 
 const App = () => {
@@ -100,23 +100,35 @@ const App = () => {
     if (hasError) {
       return;
     }
-  
-    setError("");
-  
-    const userProfile = {
-      user: user,
-      email: email,
-      password: password,
-    };
-  
-    // Serializar los datos del perfil del usuario
-    const userProfileString = JSON.stringify(userProfile);
-    
-    // Redirigir a la pantalla de detalles, pasando los parámetros
-    router.push({
-      pathname: '/screens/CreateAccountScreen',
-      params: { userProfile: userProfileString },
-    });
+
+    try {
+      // Verificar si el correo ya existe en la base de datos
+      const usersCollection = collection(db, "usuarios");
+      const emailQuery = query(usersCollection, where("email", "==", email));
+      const querySnapshot = await getDocs(emailQuery);
+
+      if (!querySnapshot.empty) {
+        setError("El correo ya está registrado. Usa otro correo.");
+        return;
+      }
+
+      const userProfile = {
+        user: user,
+        email: email,
+        password: password,
+      };
+
+      const userProfileString = JSON.stringify(userProfile);
+
+      setError("");
+      router.push({
+        pathname: '/screens/CreateAccountScreen',
+        params: { userProfile: userProfileString },
+      });
+    } catch (err) {
+      setError("Hubo un problema al registrar el usuario.");
+      console.error(err);
+    }
   };
 
   // Limpiar el error al cambiar entre Login y Register
