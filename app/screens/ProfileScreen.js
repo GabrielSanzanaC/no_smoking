@@ -11,7 +11,7 @@ export default function ProfileScreen() {
   const [nombre, setNombre] = useState(null); // Estado para almacenar el nombre del usuario
   const [userEmail, setUserEmail] = useState(null); // Estado para almacenar el email del usuario
   const [userId, setUserId] = useState(null); // Estado para almacenar el UID del usuario autenticado
-  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Tiempo sin fumar
+  const [timeWithoutSmoking] = useState(0); // Tiempo sin fumar
   const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(0); // Número de cigarros fumados hoy
 
   // Formatear fecha al formato "YYYY-MM-DD"
@@ -28,6 +28,7 @@ export default function ProfileScreen() {
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
+        setUserId(userData.uid); // Asignar el uid del usuario desde la colección 'usuarios'
       } else {
         setNombre("Usuario");
       }
@@ -40,9 +41,11 @@ export default function ProfileScreen() {
   const getCigarettesForToday = async (uid) => {
     try {
       const currentDate = getCurrentDate();
+      const userDocRef = doc(db, "usuarios", uid); // Referencia al documento del usuario
+      const cigarettesCollectionRef = collection(userDocRef, "cigaretteHistory"); // Colección anidada
+
       const q = query(
-        collection(db, "cigarettesHistory"),
-        where("userId", "==", uid),
+        cigarettesCollectionRef,
         where("fecha", "==", currentDate)
       );
 
@@ -79,11 +82,12 @@ export default function ProfileScreen() {
     if (!userId) return;
 
     const currentDate = getCurrentDate();
+    const userDocRef = doc(db, "usuarios", userId); // Referencia al documento del usuario
+    const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory"); // Colección anidada
 
     try {
       const q = query(
-        collection(db, "cigarettesHistory"),
-        where("userId", "==", userId),
+        cigarettesCollectionRef,
         where("fecha", "==", currentDate)
       );
 
@@ -99,8 +103,7 @@ export default function ProfileScreen() {
         setCigarettesSmokedToday(data.cigarettesSmoked + 1);
       } else {
         // Si no existe un registro, crea uno nuevo
-        await setDoc(doc(collection(db, "cigarettesHistory")), {
-          userId: userId,
+        await setDoc(doc(cigarettesCollectionRef), {
           fecha: currentDate,
           cigarettesSmoked: 1,
         });
