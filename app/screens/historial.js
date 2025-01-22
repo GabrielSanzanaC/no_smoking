@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,12 +6,35 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { collection, getDocs, doc } from 'firebase/firestore';
+import { auth, db } from '../../FirebaseConfig'; // Asegúrate de que la ruta sea correcta
 
 const HistoryScreen = () => {
-  const router = useRouter(); // Para navegación
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [history, setHistory] = useState({});
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "usuarios", user.uid);
+        const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+
+        const querySnapshot = await getDocs(cigarettesCollectionRef);
+        const historyData = {};
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          historyData[data.fecha] = `Fumaste ${data.cigarettesSmoked} cigarrillos`;
+        });
+        setHistory(historyData);
+      }
+    };
+
+    fetchHistory();
+  }, [currentMonth, currentYear]);
 
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
 
@@ -41,11 +64,6 @@ const HistoryScreen = () => {
       setCurrentMonth(currentMonth + 1);
     }
   };
-  const history = {
-    '2025-01-20': 'Ejemplo: fumaste 2 cigarrillos',
-    '2025-01-21': 'Ejemplo: fumaste 1 cigarrillo',
-  };
-  
 
   const renderDay = (day) => {
     const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -62,14 +80,12 @@ const HistoryScreen = () => {
     );
   };
 
-  // Función para redirigir a la pantalla de Tablero
   const handleNavigateToDashboard = () => {
-    router.push('./ProfileScreen'); // Ajusta la ruta según lo necesites
+    router.push('./ProfileScreen');
   };
 
   return (
     <View style={styles.container}>
-      {/* Pestañas de Navegación */}
       <View style={styles.tabs}>
         <TouchableOpacity style={styles.tab} onPress={handleNavigateToDashboard}>
           <Text style={styles.tabText}>Tablero</Text>
@@ -79,7 +95,6 @@ const HistoryScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Navegación del Mes */}
       <View style={styles.monthNavigation}>
         <TouchableOpacity onPress={handlePreviousMonth} style={styles.navButton}>
           <Text style={styles.navText}>{'<'}</Text>
@@ -92,12 +107,10 @@ const HistoryScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Días del Calendario */}
       <View style={styles.calendar}>
         {getDaysArray(currentMonth, currentYear).map(renderDay)}
       </View>
 
-      {/* Historial Seleccionado */}
       {selectedDate && (
         <View style={styles.historyContainer}>
           <Text style={styles.historyTitle}>
@@ -108,7 +121,6 @@ const HistoryScreen = () => {
           </Text>
         </View>
       )}
-      
     </View>
   );
 };
