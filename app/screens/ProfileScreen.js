@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../FirebaseConfig";
+import { auth, db } from "../../FirebaseConfig";
 
 export default function ProfileScreen() {
   const router = useRouter();
