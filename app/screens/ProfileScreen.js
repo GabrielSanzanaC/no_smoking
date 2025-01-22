@@ -2,16 +2,17 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, setDoc, doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../FirebaseConfig";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [nombre, setnombre] = useState(null); // Estado para almacenar el nombre del usuario
+  const [nombre, setNombre] = useState(null); // Estado para almacenar el nombre del usuario
   const [userEmail, setUserEmail] = useState(null); // Estado para almacenar el email del usuario
-  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Estado para almacenar el tiempo sin fumar en segundos
-  const [cigarettesSmoked, setCigarettesSmoked] = useState(0); // Estado para almacenar el número de cigarros fumados
+  const [userId, setUserId] = useState(null); // Estado para almacenar el UID del usuario autenticado
+  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Tiempo sin fumar
+  const [cigarettesSmoked, setCigarettesSmoked] = useState(0); // Número de cigarros fumados
 
   const getUserData = async (email) => {
     try {
@@ -20,12 +21,12 @@ export default function ProfileScreen() {
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
-        setnombre(userData.nombre || "Usuario");
+        setNombre(userData.nombre || "Usuario");
       } else {
-        setnombre("Usuario");
+        setNombre("Usuario");
       }
     } catch (error) {
-      setnombre("Error al obtener datos");
+      setNombre("Error al obtener datos");
     }
   };
 
@@ -33,45 +34,111 @@ export default function ProfileScreen() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
+        setUserId(user.uid);
         getUserData(user.email);
+        getCigarettesSmoked(user.uid); // Obtén los cigarros fumados al cargar el componente
       } else {
-        setnombre("Usuario invitado");
+        setNombre("Usuario invitado");
       }
     });
 
     return unsubscribe;
   }, []);
 
+  const getCigarettesSmoked = async (uid) => {
+    try {
+      const docRef = doc(db, "usuarios", uid); // Referencia al documento del usuario
+      const docSnap = await getDoc(docRef);
+  
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setCigarettesSmoked(data.cigarettesSmoked || 0); // Asigna el valor o 0 si no existe
+      } else {
+        console.log("No se encontró el documento del usuario.");
+      }
+    } catch (error) {
+      console.error("Error al obtener los cigarros fumados:", error);
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeWithoutSmoking(prevTime => prevTime + 1);
+      setTimeWithoutSmoking((prevTime) => prevTime + 1);
     }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
   const handleGoogleContinue = () => {
-    router.push("./dailyQuestionP1");
+    router.push("./dailyQuestionP1"); // Navega a la pantalla
   };
 
   const historialContinue = () => {
-    router.push("./historial");
+    router.push("./historial"); // Navega a la pantalla
   };
 
   const cuentaContinue = () => {
     router.push("./cuenta");
   };
 
+  const saveCigaretteToDB = async () => {
+    if (!userId) return;
+
+    const currentDate = new Date().toISOString().split("T")[0]; // Formato YYYY-MM-DD
+
+    try {
+      // Busca si ya existe un registro para el usuario y la fecha actual
+      const q = query(
+        collection(db, "cigarettesHistory"),
+        where("userId", "==", userId),
+        where("fecha", "==", currentDate)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Si ya existe un registro, actualiza el contador
+        const docRef = querySnapshot.docs[0].ref;
+        const data = querySnapshot.docs[0].data();
+        await updateDoc(docRef, {
+          cigarettesSmoked: data.cigarettesSmoked + 1,
+        });
+      } else {
+        // Si no existe un registro, crea uno nuevo
+        await setDoc(doc(collection(db, "cigarettesHistory")), {
+          userId: userId,
+          fecha: currentDate,
+          cigarettesSmoked: 1,
+        });
+      }
+
+      // También actualiza el número total de cigarros fumados en el documento del usuario
+      const userDocRef = doc(db, "usuarios", userId);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        await updateDoc(userDocRef, {
+          cigarettesSmoked: userData.cigarettesSmoked + 1,
+        });
+        setCigarettesSmoked(userData.cigarettesSmoked + 1); // Actualiza el estado con el nuevo valor
+      }
+    } catch (error) {
+      console.error("Error al guardar datos:", error);
+    }
+  };
+
   const handleSmokeButtonPress = () => {
     setTimeWithoutSmoking(0);
-    setCigarettesSmoked(prevCount => prevCount + 1);
+    setCigarettesSmoked((prevCount) => prevCount + 1);
+    saveCigaretteToDB(); // Guarda los datos en Firestore
   };
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    return `${h}h${m}m${s}s`;
+    return `${h}h ${m}m ${s}s`;
   };
 
   const currentDate = new Date();
@@ -85,7 +152,7 @@ export default function ProfileScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Progreso</Text>
-        <Ionicons nombre="settings-outline" size={24} color="white" />
+        <Ionicons name="settings-outline" size={24} color="white" />
       </View>
 
       {/* Tabs */}
@@ -115,18 +182,8 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>Estadísticas</Text>
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero ahorrado en el mes</Text>
-            <Text style={styles.statValue}>213.713</Text>
-          </View>
-          <View style={styles.statCard}>
             <Text style={styles.statTitle}>Tiempo sin fumar</Text>
             <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
-          </View>
-        </View>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Racha</Text>
-            <Text style={styles.statValue}>8</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statTitle}>Cigarros fumados</Text>
@@ -137,9 +194,8 @@ export default function ProfileScreen() {
           <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Navigation Bar */}
-      <View style={styles.navBar}>
+        {/* Navigation Bar */}
+            <View style={styles.navBar}>
         <TouchableOpacity style={styles.navButton} onPress={handleGoogleContinue}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Diario</Text>
@@ -152,6 +208,8 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
