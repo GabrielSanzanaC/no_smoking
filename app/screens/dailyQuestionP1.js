@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router'; // Importa useRouter
 
-export default function TaskSelectorScreen() {
-  const [selectedTasks, setSelectedTasks] = useState([]);
-
+export default function dailyQuestionP1() {
+  const [selectedOption, setSelectedOption] = useState(null); // Definir el estado para la opción seleccionada
   const router = useRouter(); // Inicializa el router
+
   const handleGoogleContinue = () => {
     router.push("./dailyQuestionP2"); // Navega a la pantalla
   };
@@ -19,24 +14,20 @@ export default function TaskSelectorScreen() {
     { id: 'ansioso', label: 'Ansioso', icon: '😰' },
     { id: 'cansado', label: 'Cansado', icon: '😔' },
     { id: 'estresado', label: 'Estresado', icon: '😩' },
-    { id: 'molesto', label: 'molesto', icon: '😠' },
+    { id: 'molesto', label: 'Molesto', icon: '😠' },
     { id: 'triste', label: 'Triste', icon: '😞' },
     { id: 'nervioso', label: 'Nervioso', icon: '😬' },
   ];
 
-  const toggleTaskSelection = (taskId) => {
-    setSelectedTasks((prevSelected) =>
-      prevSelected.includes(taskId)
-        ? prevSelected.filter((id) => id !== taskId)
-        : [...prevSelected, taskId]
-    );
+  const selectTask = (taskId) => {
+    setSelectedOption(taskId);
   };
 
   return (
     <View style={styles.container}>
       {/* Step Counter */}
       <View style={styles.stepContainer}>
-        {['01', '02', '03'].map((step, index) => (
+        {['01', '02', '03', '04', '05'].map((step, index) => (
           <View
             key={index}
             style={[
@@ -50,7 +41,7 @@ export default function TaskSelectorScreen() {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>Cómo te sientes hoy?</Text>
+      <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
 
       {/* Task Buttons */}
       <View style={styles.taskContainer}>
@@ -59,9 +50,9 @@ export default function TaskSelectorScreen() {
             key={task.id}
             style={[
               styles.taskButton,
-              selectedTasks.includes(task.id) && styles.selectedTaskButton,
+              selectedOption === task.id && styles.selectedTaskButton,
             ]}
-            onPress={() => toggleTaskSelection(task.id)}
+            onPress={() => selectTask(task.id)}
           >
             <Text style={styles.taskIcon}>{task.icon}</Text>
             <Text style={styles.taskLabel}>{task.label}</Text>
@@ -69,8 +60,18 @@ export default function TaskSelectorScreen() {
         ))}
       </View>
 
+      {/* Message */}
+      <Text style={styles.message}>Solo elegir una</Text>
+
       {/* Next Button */}
-      <TouchableOpacity style={styles.nextButton} onPress={handleGoogleContinue}>
+      <TouchableOpacity
+        style={[
+          styles.nextButton,
+          { opacity: selectedOption ? 1 : 0.5 }, // Cambia la opacidad según la selección
+        ]}
+        onPress={handleGoogleContinue}
+        disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
+      >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
     </View>
@@ -119,7 +120,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 10,
-    marginBottom: 30,
+    marginBottom: 10,
   },
   taskButton: {
     width: 100,
@@ -142,6 +143,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFF',
   },
+  message: {
+    fontSize: 14,
+    color: '#B0C4DE',
+    marginBottom: 20,
+  },
   nextButton: {
     width: '80%',
     padding: 15,
@@ -155,3 +161,4 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
+

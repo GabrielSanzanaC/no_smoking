@@ -3,24 +3,25 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router'; // Importa useRouter
 
-export default function DailyQuestionP2Screen() {
-  const [moodRating, setMoodRating] = useState(3); // Estado inicial en el medio de la escala
+export default function dailyQuestionP5() {
+  const [guiltRating, setGuiltRating] = useState(3); // Estado inicial en el medio de la escala
   const router = useRouter(); // Inicializa el router
   const [selectedOption, setSelectedOption] = useState(null);
 
 
-  const handleGoogleContinue = () => {
-    router.push("./dailyQuestionP3"); // Navega a la pantalla
+  const handleGoToProfile = () => {
+    // Navega a la pantalla de perfil
+    router.push("./ProfileScreen"); 
   };
 
   return (
     <View style={styles.container}>
       {/* Step Counter */}
       <View style={styles.stepContainer}>
-      {['01', '02', '03', '04', '05'].map((step, index) => (
+        {['01', '02', '03', '04', '05'].map((step, index) => (
           <View
             key={index}
-            style={[styles.stepCircle, index === 1 && styles.activeStepCircle]}
+            style={[styles.stepCircle, index === 4 && styles.activeStepCircle]}
           >
             <Text style={styles.stepText}>{step}</Text>
           </View>
@@ -28,7 +29,7 @@ export default function DailyQuestionP2Screen() {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>¿Cuánto crees que el cigarro ayudó a tu estado de ánimo?</Text>
+      <Text style={styles.title}>¿Te sentiste culpable después de fumar?</Text>
       <Text style={styles.subtitle}>(Escala del 1 al 5: 1 = Nada, 5 = Mucho)</Text>
 
       {/* Slider */}
@@ -38,8 +39,8 @@ export default function DailyQuestionP2Screen() {
           minimumValue={1}
           maximumValue={5}
           step={1}
-          value={moodRating}
-          onValueChange={setMoodRating}
+          value={guiltRating}
+          onValueChange={setGuiltRating}
           minimumTrackTintColor="#4F59FF"
           maximumTrackTintColor="#33334D"
           thumbTintColor="#4F59FF"
@@ -49,17 +50,17 @@ export default function DailyQuestionP2Screen() {
             <Text key={value} style={styles.sliderLabel}>{value}</Text>
           ))}
         </View>
-        <Text style={styles.moodRatingText}>Tu calificación: {moodRating}</Text>
+        <Text style={styles.guiltRatingText}>Tu calificación: {guiltRating}</Text>
       </View>
 
-      {/* Next Button */}
-      <TouchableOpacity
-        style={[
-          styles.nextButton,
+      {/* Go to Profile Button */}
+      <TouchableOpacity style={[
+          styles.nextButton
         ]}
-        onPress={handleGoogleContinue}
-      >
-        <Text style={styles.nextButtonText}>Siguiente</Text>
+        onPress={handleGoToProfile}> 
+        
+
+        <Text style={styles.nextButtonText}>Ir a Perfil</Text>
       </TouchableOpacity>
     </View>
   );
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
   stepContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 150,
+    width: 250,
     marginBottom: 20,
   },
   stepCircle: {
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 12,
   },
-  moodRatingText: {
+  guiltRatingText: {
     color: '#FFF',
     fontSize: 16,
     marginTop: 10,
@@ -144,3 +145,4 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
+
