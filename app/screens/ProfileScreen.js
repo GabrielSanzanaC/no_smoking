@@ -150,7 +150,7 @@ export default function ProfileScreen() {
             <Text style={styles.statTitle}>Cigarros fumados hoy</Text>
             {cigarettesSmokedToday === null ? (
               <Image
-                source={require("C:/Users/ageof/Documents/GitHub/no_smoking/assets/images/load.gif")}
+                source={require("../../assets/images/load.gif")}
                 style={styles.loader}
               />
             ) : (
