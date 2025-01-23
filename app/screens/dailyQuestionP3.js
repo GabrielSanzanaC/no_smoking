@@ -26,7 +26,7 @@ export default function dailyQuestionP3() {
     <View style={styles.container}>
       {/* Step Counter */}
       <View style={styles.stepContainer}>
-        {['01', '02', '03'].map((step, index) => (
+      {['01', '02', '03', '04', '05'].map((step, index) => (
           <View
             key={index}
             style={[styles.stepCircle, index === 2 && styles.activeStepCircle]}
@@ -58,7 +58,10 @@ export default function dailyQuestionP3() {
 
       {/* Next Button */}
       <TouchableOpacity
-        style={styles.nextButton}
+        style={[
+          styles.nextButton,
+          { opacity: selectedOption ? 1 : 0.5 }, // Cambia la opacidad según la selección
+        ]}
         onPress={handleGoogleContinue}
         disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
       >

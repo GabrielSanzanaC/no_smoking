@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router'; // Importa useRouter
 
-export default function DailyQuestionP2Screen() {
-  const [moodRating, setMoodRating] = useState(3); // Estado inicial en el medio de la escala
-  const router = useRouter(); // Inicializa el router
+export default function dailyQuestionP4() {
   const [selectedOption, setSelectedOption] = useState(null);
+  const router = useRouter(); // Inicializa el router
 
+  const options = [
+    { label: 'Trabajando', emoji: '💼' },
+    { label: 'Estudiando', emoji: '📚' },
+    { label: 'Descansando', emoji: '😌' },
+    { label: 'Otro', emoji: '❓' },
+  ];
+
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
+  };
 
   const handleGoogleContinue = () => {
-    router.push("./dailyQuestionP3"); // Navega a la pantalla
+    // Aquí puedes manejar la lógica de navegación o guardar la respuesta
+    router.push("./dailyQuestionP5"); // Navega a la siguiente pantalla
   };
 
   return (
@@ -20,7 +29,7 @@ export default function DailyQuestionP2Screen() {
       {['01', '02', '03', '04', '05'].map((step, index) => (
           <View
             key={index}
-            style={[styles.stepCircle, index === 1 && styles.activeStepCircle]}
+            style={[styles.stepCircle, index === 3 && styles.activeStepCircle]}
           >
             <Text style={styles.stepText}>{step}</Text>
           </View>
@@ -28,36 +37,33 @@ export default function DailyQuestionP2Screen() {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>¿Cuánto crees que el cigarro ayudó a tu estado de ánimo?</Text>
-      <Text style={styles.subtitle}>(Escala del 1 al 5: 1 = Nada, 5 = Mucho)</Text>
+      <Text style={styles.title}>¿Qué estabas haciendo antes de fumar?</Text>
 
-      {/* Slider */}
-      <View style={styles.sliderContainer}>
-        <Slider
-          style={styles.slider}
-          minimumValue={1}
-          maximumValue={5}
-          step={1}
-          value={moodRating}
-          onValueChange={setMoodRating}
-          minimumTrackTintColor="#4F59FF"
-          maximumTrackTintColor="#33334D"
-          thumbTintColor="#4F59FF"
-        />
-        <View style={styles.sliderLabels}>
-          {[1, 2, 3, 4, 5].map((value) => (
-            <Text key={value} style={styles.sliderLabel}>{value}</Text>
-          ))}
-        </View>
-        <Text style={styles.moodRatingText}>Tu calificación: {moodRating}</Text>
+      {/* Options */}
+      <View style={styles.optionsContainer}>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.optionButton,
+              selectedOption === option.label && styles.selectedOptionButton,
+            ]}
+            onPress={() => handleOptionSelect(option.label)}
+          >
+            <Text style={styles.optionEmoji}>{option.emoji}</Text>
+            <Text style={styles.optionText}>{option.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Next Button */}
       <TouchableOpacity
         style={[
           styles.nextButton,
+          { opacity: selectedOption ? 1 : 0.5 }, // Cambia la opacidad según la selección
         ]}
         onPress={handleGoogleContinue}
+        disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
       >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
@@ -76,7 +82,7 @@ const styles = StyleSheet.create({
   stepContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 150,
+    width: 200,
     marginBottom: 20,
   },
   stepCircle: {
@@ -100,36 +106,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#B0C4DE',
-    textAlign: 'center',
     marginBottom: 20,
   },
-  sliderContainer: {
-    width: '80%',
-    alignItems: 'center',
+  optionsContainer: {
+    width: '100%',
     marginBottom: 30,
   },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderLabels: {
+  optionButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#33334D',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
   },
-  sliderLabel: {
-    color: '#FFF',
-    fontSize: 12,
+  selectedOptionButton: {
+    backgroundColor: '#4F59FF',
   },
-  moodRatingText: {
-    color: '#FFF',
+  optionEmoji: {
+    fontSize: 24,
+    marginRight: 10,
+  },
+  optionText: {
     fontSize: 16,
-    marginTop: 10,
+    color: '#FFF',
   },
   nextButton: {
     width: '80%',
@@ -144,3 +145,4 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
+
