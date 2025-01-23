@@ -1,13 +1,12 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router'; // Importa useRouter
 
-
-export default function CigaretteTrackerScreen() {
-  const [count, setCount] = React.useState(0);
+export default function DailyQuestionP2Screen() {
+  const [moodRating, setMoodRating] = useState(3); // Estado inicial en el medio de la escala
   const router = useRouter(); // Inicializa el router
-  
+
   const handleGoogleContinue = () => {
     router.push("./dailyQuestionP3"); // Navega a la pantalla
   };
@@ -27,44 +26,28 @@ export default function CigaretteTrackerScreen() {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>¿Cuantos cigarros fumaste hoy?</Text>
+      <Text style={styles.title}>¿Cuánto crees que el cigarro ayudó a tu estado de ánimo?</Text>
+      <Text style={styles.subtitle}>(Escala del 1 al 5: 1 = Nada, 5 = Mucho)</Text>
 
-      {/* Cigarette Display */}
-      <View style={styles.cigaretteContainer}>
-        {/* Rectángulo vacío con ScrollView horizontal */}
-        <View style={styles.rectangle}>
-          <ScrollView
-            horizontal
-            contentContainerStyle={styles.cigaretteRow}
-            showsHorizontalScrollIndicator={true} // Muestra la barra de desplazamiento
-          >
-            {Array.from({ length: count }).map((_, index) => (
-              <Image
-                key={index}
-                source={require('../../assets/images/cigarro.png')}
-                style={styles.cigarette}
-              />
-            ))}
-          </ScrollView>
+      {/* Slider */}
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={5}
+          step={1}
+          value={moodRating}
+          onValueChange={setMoodRating}
+          minimumTrackTintColor="#4F59FF"
+          maximumTrackTintColor="#33334D"
+          thumbTintColor="#4F59FF"
+        />
+        <View style={styles.sliderLabels}>
+          {[1, 2, 3, 4, 5].map((value) => (
+            <Text key={value} style={styles.sliderLabel}>{value}</Text>
+          ))}
         </View>
-
-        <Text style={styles.count}>{count.toString().padStart(2, '0')}</Text>
-
-        {/* Controls */}
-        <View style={styles.controls}>
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={() => setCount(Math.max(0, count - 1))}
-          >
-            <AntDesign name="minus" size={20} color="#FFF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={() => setCount(count + 1)}
-          >
-            <AntDesign name="plus" size={20} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.moodRatingText}>Tu calificación: {moodRating}</Text>
       </View>
 
       {/* Next Button */}
@@ -110,48 +93,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#B0C4DE',
+    textAlign: 'center',
     marginBottom: 20,
   },
-  cigaretteContainer: {
+  sliderContainer: {
+    width: '80%',
     alignItems: 'center',
     marginBottom: 30,
   },
-  rectangle: {
-    width: 300, // Ancho fijo del rectángulo
-    height: 120, // Altura fija del rectángulo
-    borderWidth: 1,
-    borderColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-    overflow: 'hidden', // Evita que se vea fuera del rectángulo
-  },
-  cigaretteRow: {
-    flexDirection: 'row',
-    paddingVertical: 20, // Espacio vertical dentro del ScrollView
-  },
-  cigarette: {
-    width: 10, // Ajusta el tamaño de la imagen según sea necesario
-    height: 80,
-    marginHorizontal: 5, // Espacio entre los cigarros
-  },
-  count: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 10,
-  },
-  controls: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  controlButton: {
-    width: 40,
+  slider: {
+    width: '100%',
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4F59FF',
-    justifyContent: 'center',
-    alignItems: 'center',
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  sliderLabel: {
+    color: '#FFF',
+    fontSize: 12,
+  },
+  moodRatingText: {
+    color: '#FFF',
+    fontSize: 16,
+    marginTop: 10,
   },
   nextButton: {
     width: '80%',
