@@ -6,7 +6,6 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");

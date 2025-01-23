@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
 import { signOut, deleteUser } from "firebase/auth";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SettingsScreen = () => {
   const router = useRouter();
@@ -21,6 +22,8 @@ const SettingsScreen = () => {
     try {
       await signOut(auth);
       Alert.alert("Cerraste sesión correctamente.");
+      await AsyncStorage.removeItem('isLoggedIn'); // Eliminar estado de sesión
+      await AsyncStorage.removeItem('userData');
       router.push("/");
     } catch (error) {
       Alert.alert("Error al cerrar sesión:", error.message);
