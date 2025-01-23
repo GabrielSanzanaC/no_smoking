@@ -3,19 +3,26 @@ import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "rea
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, query, where } from "firebase/firestore";
 import { auth, db } from "../../FirebaseConfig"; // Asegúrate de que 'auth' y 'db' estén exportados correctamente
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
   const [nombre, setNombre] = useState(null);
   const [email, setEmail] = useState(null);
+  const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
+  const [totalMoneySpent, setTotalMoneySpent] = useState(0);
+  const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
+  const [totalMoneySpentSinceAccountCreation, setTotalMoneySpentSinceAccountCreation] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setEmail(user.email);
         getUserData(user.email);
+        getTotalCigarettesSmokedAndMoneySpent(user.uid);
+        calculateMoneySpentSinceSmoking(user.uid);
+        calculateMoneySpentSinceAccountCreation(user.uid);
       } else {
         setNombre("Usuario invitado");
         setEmail("No disponible");
@@ -38,6 +45,81 @@ const AccountDetailsScreen = () => {
       }
     } catch (error) {
       setNombre("Error al obtener datos");
+    }
+  };
+
+  const getTotalCigarettesSmokedAndMoneySpent = async (uid) => {
+    try {
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+
+      const querySnapshot = await getDocs(cigarettesCollectionRef);
+      let totalCigarettes = 0;
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        totalCigarettes += data.cigarettesSmoked;
+      });
+      setTotalCigarettesSmoked(totalCigarettes);
+
+      // Obtener datos del usuario para cálculos
+      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0].data();
+        const { añosFumando, cigarrillosPorDía, cigarrillosPorPaquete, precioPorPaquete } = userData;
+
+        // Calcular el costo total
+        const totalDaysSmoking = añosFumando * 365;
+        const totalCigarettesSmoked = totalDaysSmoking * cigarrillosPorDía;
+        const totalCost = (totalCigarettesSmoked / cigarrillosPorPaquete) * precioPorPaquete;
+        setTotalMoneySpent(totalCost);
+      }
+    } catch (error) {
+      console.error("Error al obtener el total de cigarrillos fumados y el costo total:", error);
+    }
+  };
+
+  const calculateMoneySpentSinceSmoking = async (uid) => {
+    try {
+      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0].data();
+        const { añosFumando, cigarrillosPorDía, cigarrillosPorPaquete, precioPorPaquete } = userData;
+
+        // Calcular el costo total desde que comenzó a fumar
+        const totalDaysSmoking = añosFumando * 365;
+        const totalCigarettesSmoked = totalDaysSmoking * cigarrillosPorDía;
+        const totalCost = (totalCigarettesSmoked / cigarrillosPorPaquete) * precioPorPaquete;
+        setTotalMoneySpentSinceSmoking(totalCost);
+      }
+    } catch (error) {
+      console.error("Error al calcular el dinero gastado desde que comenzó a fumar:", error);
+    }
+  };
+
+  const calculateMoneySpentSinceAccountCreation = async (uid) => {
+    try {
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+
+      const querySnapshot = await getDocs(cigarettesCollectionRef);
+      let totalCigarettes = 0;
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        totalCigarettes += data.cigarettesSmoked;
+      });
+
+      // Obtener datos del usuario para cálculos
+      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0].data();
+        const { cigarrillosPorPaquete, precioPorPaquete } = userData;
+
+        // Calcular el costo total desde la creación de la cuenta de cigaretteHistory
+        const totalCost = (totalCigarettes / cigarrillosPorPaquete) * precioPorPaquete;
+        setTotalMoneySpentSinceAccountCreation(totalCost);
+      }
+    } catch (error) {
+      console.error("Error al calcular el dinero gastado desde la creación de la cuenta:", error);
     }
   };
 
@@ -94,11 +176,15 @@ const AccountDetailsScreen = () => {
       <View style={styles.stats}>
         <View style={styles.statCard}>
           <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-          <Text style={styles.statValue}>50</Text>
+          <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statTitle}>Dinero ahorrado</Text>
-          <Text style={styles.statValue}>1000 CLP</Text>
+          <Text style={styles.statTitle}>Dinero gastado en fumar hasta la fecha de creación de la cuenta</Text>
+          <Text style={styles.statValue}>{totalMoneySpentSinceSmoking.toFixed(2)} CLP</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+          <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
         </View>
       </View>
 
