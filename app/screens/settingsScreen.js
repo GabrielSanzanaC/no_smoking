@@ -30,7 +30,7 @@ const SettingsScreen = () => {
   const handleDeleteAccount = async () => {
     Alert.alert(
       "Confirmación",
-      "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.",
+      "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer",
       [
         { text: "Cancelar", style: "cancel" },
         {
