@@ -1,16 +1,25 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router'; // Importa useRouter
 
-export default function DailyQuestionP3({ navigation }) {
-  const [hours, setHours] = React.useState(0);
-  const [minutes, setMinutes] = React.useState(0);
+export default function dailyQuestionP3() {
+  const [selectedOption, setSelectedOption] = useState(null);
   const router = useRouter(); // Inicializa el router
 
-  const handleNext = () => {
-    console.log(`Horas: ${hours}, Minutos: ${minutes}`)
-    router.push("./ProfileScreen"); // Navega a la pantalla
-    ;
+  const options = [
+    { label: 'Casa', emoji: '🏠' },
+    { label: 'Trabajo', emoji: '🏢' },
+    { label: 'Auto', emoji: '🚗' },
+    { label: 'Exterior', emoji: '🌳' },
+  ];
+
+  const handleOptionSelect = (option) => {
+    setSelectedOption(option);
+  };
+
+  const handleGoogleContinue = () => {
+    // Aquí puedes manejar la lógica de navegación o guardar la respuesta
+    router.push("./dailyQuestionP4"); // Navega a la siguiente pantalla
   };
 
   return (
@@ -28,46 +37,32 @@ export default function DailyQuestionP3({ navigation }) {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>¿Cuánto tiempo llevas sin fumar?</Text>
+      <Text style={styles.title}>¿Dónde fumaste?</Text>
 
-      {/* Time Display */}
-      <Text style={styles.time}>{hours} horas y {minutes} minutos</Text>
-
-      {/* Controls for Hours */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={() => setHours(Math.max(0, hours - 1))}
-        >
-          <Text style={styles.controlButtonText}>- Hora</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={() => setHours(hours + 1)}
-        >
-          <Text style={styles.controlButtonText}>+ Hora</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Controls for Minutes */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={() => setMinutes(Math.max(0, minutes - 1))}
-        >
-          <Text style={styles.controlButtonText}>- Minuto</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={() => setMinutes(minutes + 1)}
-        >
-          <Text style={styles.controlButtonText}>+ Minuto</Text>
-        </TouchableOpacity>
+      {/* Options */}
+      <View style={styles.optionsContainer}>
+        {options.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.optionButton,
+              selectedOption === option.label && styles.selectedOptionButton,
+            ]}
+            onPress={() => handleOptionSelect(option.label)}
+          >
+            <Text style={styles.optionEmoji}>{option.emoji}</Text>
+            <Text style={styles.optionText}>{option.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Next Button */}
-      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextButtonText}>Terminar</Text>
+      <TouchableOpacity
+        style={styles.nextButton}
+        onPress={handleGoogleContinue}
+        disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
+      >
+        <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
     </View>
   );
@@ -84,22 +79,23 @@ const styles = StyleSheet.create({
   stepContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: 150,
     marginBottom: 20,
   },
   stepCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFF',
+    backgroundColor: '#33334D',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
   },
   activeStepCircle: {
     backgroundColor: '#4F59FF',
   },
   stepText: {
-    color: '#0F0F2D',
+    color: '#FFF',
+    fontSize: 14,
     fontWeight: 'bold',
   },
   title: {
@@ -109,29 +105,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  time: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
+  optionsContainer: {
+    width: '100%',
     marginBottom: 30,
   },
-  controls: {
+  optionButton: {
     flexDirection: 'row',
-    marginBottom: 30,
-  },
-  controlButton: {
-    width: 100,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4F59FF',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
+    justifyContent: 'flex-start',
+    backgroundColor: '#33334D',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
   },
-  controlButtonText: {
-    color: '#FFF',
+  selectedOptionButton: {
+    backgroundColor: '#4F59FF',
+  },
+  optionEmoji: {
+    fontSize: 24,
+    marginRight: 10,
+  },
+  optionText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    color: '#FFF',
   },
   nextButton: {
     width: '80%',
@@ -139,6 +135,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFF',
     alignItems: 'center',
+    opacity: 1,
   },
   nextButtonText: {
     fontSize: 16,

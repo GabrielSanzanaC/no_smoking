@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -149,8 +149,7 @@ const AccountDetailsScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBackToProfile}>
           <Ionicons name="arrow-back-outline" size={24} color="white" />
@@ -158,7 +157,6 @@ const AccountDetailsScreen = () => {
         <Text style={styles.headerTitle}>Detalles de la Cuenta</Text>
       </View>
 
-      {/* Profile Card */}
       <View style={styles.card}>
         <Image
           source={{ uri: "https://example.com/user.jpg" }} // Foto de perfil predeterminada
@@ -172,35 +170,34 @@ const AccountDetailsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Account Stats */}
-      <View style={styles.stats}>
-        <View style={styles.statCard}>
-          <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-          <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.stats}>
+          <View style={styles.statCard}>
+            <Text style={styles.statTitle}>Cigarrillos fumados</Text>
+            <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
+          </View>
+          
+          <View style={styles.statCard}>
+            <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
+            <Text style={styles.statValue}>{totalMoneySpentSinceSmoking.toFixed(2)} CLP</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+            <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
+          </View>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statTitle}>Dinero gastado en fumar hasta la fecha de creación de la cuenta</Text>
-          <Text style={styles.statValue}>{totalMoneySpentSinceSmoking.toFixed(2)} CLP</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-          <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
-        </View>
-      </View>
 
-      {/* Change Password Button */}
-      <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
-        <Ionicons name="lock-closed-outline" size={16} color="white" />
-        <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
+          <Ionicons name="lock-closed-outline" size={16} color="white" />
+          <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
+        </TouchableOpacity>
 
-      {/* Sign Out Button */}
-      <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
-        <Ionicons name="log-out-outline" size={16} color="white" />
-        <Text style={styles.actionButtonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
+          <Ionicons name="log-out-outline" size={16} color="white" />
+          <Text style={styles.actionButtonText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
-      {/* Navigation Bar */}
       <View style={styles.navBar}>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./ProfileScreen")}>
           <Ionicons name="home-outline" size={28} color="white" />
@@ -211,13 +208,13 @@ const AccountDetailsScreen = () => {
           <Text style={styles.navText}>Diario</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1, // Asegúrate de que el contenedor principal ocupe todo el espacio disponible
     backgroundColor: "#0F0F2D",
     padding: 20,
   },
@@ -266,6 +263,9 @@ const styles = StyleSheet.create({
     color: "white",
     marginLeft: 5,
     fontSize: 12,
+  },
+  scrollContainer: {
+    flexGrow: 1, // Permitir que el contenido crezca y sea desplazable
   },
   stats: {
     marginBottom: 20,

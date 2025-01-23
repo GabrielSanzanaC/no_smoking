@@ -143,11 +143,6 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Progreso</Text>
-        <Ionicons name="settings-outline" size={24} color="white" />
-      </View>
-
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, styles.activeTab]}>
           <Text style={[styles.tabText, styles.activeTabText]}>Tablero</Text>
