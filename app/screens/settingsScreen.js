@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Alert, Switch } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Switch, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
@@ -8,29 +8,29 @@ import { signOut, deleteUser } from "firebase/auth";
 const SettingsScreen = () => {
   const router = useRouter();
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [language, setLanguage] = useState("es"); // Idioma por defecto: español
+  const [language, setLanguage] = useState("es");
+  const [notifications, setNotifications] = useState(true);
+  const [isPrivacyModalVisible, setPrivacyModalVisible] = useState(false);
 
-  // Restablecer contraseña
+  // Funciones básicas
   const handlePasswordReset = () => {
     router.push("./reestablecerContrasena");
   };
 
-  // Cerrar sesión
   const handleSignOut = async () => {
     try {
       await signOut(auth);
       Alert.alert("Cerraste sesión correctamente.");
-      router.push("/"); // Redirige a la pantalla de inicio de sesión
+      router.push("/");
     } catch (error) {
       Alert.alert("Error al cerrar sesión:", error.message);
     }
   };
 
-  // Eliminar cuenta
   const handleDeleteAccount = async () => {
     Alert.alert(
       "Confirmación",
-      "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer",
+      "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -42,7 +42,7 @@ const SettingsScreen = () => {
               if (user) {
                 await deleteUser(user);
                 Alert.alert("Tu cuenta ha sido eliminada.");
-                router.push("/"); // Redirige a la pantalla de inicio
+                router.push("/");
               }
             } catch (error) {
               Alert.alert("Error al eliminar la cuenta:", error.message);
@@ -53,23 +53,34 @@ const SettingsScreen = () => {
     );
   };
 
-  // Cambiar tema
   const toggleDarkMode = () => {
     setIsDarkMode((prevMode) => !prevMode);
     Alert.alert(`Tema cambiado a ${isDarkMode ? "claro" : "oscuro"}.`);
   };
 
-  // Cambiar idioma
   const handleChangeLanguage = () => {
     const newLanguage = language === "es" ? "en" : "es";
     setLanguage(newLanguage);
     Alert.alert(`Idioma cambiado a ${newLanguage === "es" ? "Español" : "Inglés"}.`);
   };
 
+  const toggleNotifications = () => {
+    setNotifications((prev) => !prev);
+    Alert.alert(`Notificaciones ${notifications ? "desactivadas" : "activadas"}.`);
+  };
+
+  const handleEditProfile = () => {
+    router.push("./EditProfileScreen");
+  };
+
+  const handleSupport = () => {
+    router.push("./SupportScreen");
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("./cuenta")}>
+        <TouchableOpacity onPress={() => router.push("./AccountDetailsScreen")}>
           <Ionicons name="arrow-back-outline" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Configuración</Text>
@@ -93,11 +104,55 @@ const SettingsScreen = () => {
         <Text style={styles.buttonText}>Cambiar idioma</Text>
       </TouchableOpacity>
 
-      {/* Cerrar sesión */}
-      <TouchableOpacity style={styles.button} onPress={handleSignOut}>
-        <Ionicons name="log-out-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Cerrar sesión</Text>
+      {/* Activar/Desactivar notificaciones */}
+      <View style={styles.option}>
+        <Text style={styles.optionText}>Notificaciones</Text>
+        <Switch value={notifications} onValueChange={toggleNotifications} />
+      </View>
+
+      {/* Editar perfil */}
+      <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
+        <Ionicons name="person-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Editar perfil</Text>
       </TouchableOpacity>
+
+      {/* Soporte técnico */}
+      <TouchableOpacity style={styles.button} onPress={handleSupport}>
+        <Ionicons name="help-circle-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Soporte técnico</Text>
+      </TouchableOpacity>
+
+      {/* Mostrar políticas de privacidad */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => setPrivacyModalVisible(true)}
+      >
+        <Ionicons name="document-text-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Políticas de privacidad</Text>
+      </TouchableOpacity>
+
+      {/* Modal de políticas de privacidad */}
+      <Modal
+        visible={isPrivacyModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Políticas de privacidad</Text>
+            <Text style={styles.modalText}>
+              Aquí van los detalles sobre cómo manejamos tus datos y respetamos
+              tu privacidad.
+            </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setPrivacyModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Eliminar cuenta */}
       <TouchableOpacity
@@ -107,6 +162,9 @@ const SettingsScreen = () => {
         <Ionicons name="trash-outline" size={16} color="white" />
         <Text style={styles.buttonText}>Eliminar cuenta</Text>
       </TouchableOpacity>
+
+      {/* Versión de la aplicación */}
+      <Text style={styles.versionText}>Versión: 1.0.0</Text>
     </View>
   );
 };
@@ -157,6 +215,43 @@ const styles = StyleSheet.create({
   optionText: {
     color: "white",
     fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 14,
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: "#4F59FF",
+    padding: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  versionText: {
+    color: "white",
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 14,
   },
 });
 
