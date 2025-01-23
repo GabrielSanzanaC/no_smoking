@@ -8,18 +8,14 @@ import { auth, db } from "../../FirebaseConfig";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [nombre, setNombre] = useState(null); // Estado para almacenar el nombre del usuario
-  const [userEmail, setUserEmail] = useState(null); // Estado para almacenar el email del usuario
-  const [userId, setUserId] = useState(null); // Estado para almacenar el UID del usuario autenticado
-  const [timeWithoutSmoking] = useState(0); // Tiempo sin fumar
-  const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(0); // Número de cigarros fumados hoy
+  const [nombre, setNombre] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [timeWithoutSmoking] = useState(0);
+  const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(null);
 
-  // Formatear fecha al formato "YYYY-MM-DD"
-  const getCurrentDate = () => {
-    return new Date().toISOString().split("T")[0];
-  };
+  const getCurrentDate = () => new Date().toISOString().split("T")[0];
 
-  // Obtener los datos de Firestore para el usuario
   const getUserData = async (email) => {
     try {
       const q = query(collection(db, "usuarios"), where("email", "==", email));
@@ -28,7 +24,7 @@ export default function ProfileScreen() {
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
-        setUserId(userData.uid); // Asignar el uid del usuario desde la colección 'usuarios'
+        setUserId(userData.uid);
       } else {
         setNombre("Usuario");
       }
@@ -37,76 +33,61 @@ export default function ProfileScreen() {
     }
   };
 
-  // Obtener los cigarros fumados para el día actual
   const getCigarettesForToday = async (uid) => {
     try {
       const currentDate = getCurrentDate();
-      const userDocRef = doc(db, "usuarios", uid); // Referencia al documento del usuario
-      const cigarettesCollectionRef = collection(userDocRef, "cigaretteHistory"); // Colección anidada
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
-      const q = query(
-        cigarettesCollectionRef,
-        where("fecha", "==", currentDate)
-      );
-
+      const q = query(cigarettesCollectionRef, where("fecha", "==", currentDate));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const data = querySnapshot.docs[0].data();
         setCigarettesSmokedToday(data.cigarettesSmoked || 0);
       } else {
-        setCigarettesSmokedToday(0); // Si no hay datos para hoy, inicializar en 0
+        setCigarettesSmokedToday(0);
       }
     } catch (error) {
       console.error("Error al obtener cigarros para hoy:", error);
+      setCigarettesSmokedToday(0);
     }
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserEmail(user.email);
         setUserId(user.uid);
-        getUserData(user.email); // Cargar datos del usuario
-        getCigarettesForToday(user.uid); // Cargar cigarros fumados para el día actual
+        await getUserData(user.email);
+        await getCigarettesForToday(user.uid);
       } else {
         setNombre("Usuario invitado");
+        setCigarettesSmokedToday(0);
       }
     });
 
     return unsubscribe;
   }, []);
 
-  // Registrar un cigarro fumado para el día actual
   const saveCigaretteToDB = async () => {
     if (!userId) return;
 
     const currentDate = getCurrentDate();
-    const userDocRef = doc(db, "usuarios", userId); // Referencia al documento del usuario
-    const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory"); // Colección anidada
+    const userDocRef = doc(db, "usuarios", userId);
+    const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
     try {
-      const q = query(
-        cigarettesCollectionRef,
-        where("fecha", "==", currentDate)
-      );
-
+      const q = query(cigarettesCollectionRef, where("fecha", "==", currentDate));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // Si ya existe un registro, actualiza el contador
         const docRef = querySnapshot.docs[0].ref;
         const data = querySnapshot.docs[0].data();
-        await updateDoc(docRef, {
-          cigarettesSmoked: data.cigarettesSmoked + 1,
-        });
+        await updateDoc(docRef, { cigarettesSmoked: data.cigarettesSmoked + 1 });
         setCigarettesSmokedToday(data.cigarettesSmoked + 1);
       } else {
-        // Si no existe un registro, crea uno nuevo
-        await setDoc(doc(cigarettesCollectionRef), {
-          fecha: currentDate,
-          cigarettesSmoked: 1,
-        });
+        await setDoc(doc(cigarettesCollectionRef), { fecha: currentDate, cigarettesSmoked: 1 });
         setCigarettesSmokedToday(1);
       }
     } catch (error) {
@@ -133,13 +114,11 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Progreso</Text>
         <Ionicons name="settings-outline" size={24} color="white" />
       </View>
 
-      {/* Tabs */}
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, styles.activeTab]}>
           <Text style={[styles.tabText, styles.activeTabText]}>Tablero</Text>
@@ -149,7 +128,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Welcome Card */}
       <View style={styles.card}>
         <Image
           source={{ uri: "https://example.com/user.jpg" }}
@@ -161,7 +139,6 @@ export default function ProfileScreen() {
         <Text style={styles.cardDate}>{formattedDate}</Text>
       </View>
 
-      {/* Estadísticas */}
       <View style={styles.statistics}>
         <Text style={styles.sectionTitle}>Estadísticas</Text>
         <View style={styles.statsRow}>
@@ -171,7 +148,14 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statTitle}>Cigarros fumados hoy</Text>
-            <Text style={styles.statValue}>{cigarettesSmokedToday}</Text>
+            {cigarettesSmokedToday === null ? (
+              <Image
+                source={require("C:/Users/ageof/Documents/GitHub/no_smoking/assets/images/load.gif")}
+                style={styles.loader}
+              />
+            ) : (
+              <Text style={styles.statValue}>{cigarettesSmokedToday}</Text>
+            )}
           </View>
         </View>
         <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
@@ -179,7 +163,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Navegación */}
       <View style={styles.navBar}>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./dailyQuestionP1")}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
@@ -195,6 +178,10 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  loader: {
+    width: 30,
+    height: 30,
+  },
   container: {
     flexGrow: 1,
     backgroundColor: "#0F0F2D",
