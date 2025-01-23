@@ -11,8 +11,10 @@ export default function ProfileScreen() {
   const [nombre, setNombre] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [timeWithoutSmoking] = useState(0);
+  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Tiempo sin fumar en segundos
   const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(null);
+  const [startTime, setStartTime] = useState(Date.now()); // Marca de tiempo inicial
+  const [intervalId, setIntervalId] = useState(null);
 
   const getCurrentDate = () => new Date().toISOString().split("T")[0];
 
@@ -70,6 +72,20 @@ export default function ProfileScreen() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    // Inicia el cronómetro
+    const savedStartTime = localStorage.getItem("startTime");
+    if (savedStartTime) {
+      setStartTime(parseInt(savedStartTime, 10));
+    }
+    const id = setInterval(() => {
+      setTimeWithoutSmoking(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    setIntervalId(id);
+
+    return () => clearInterval(id);
+  }, [startTime]);
+
   const saveCigaretteToDB = async () => {
     if (!userId) return;
 
@@ -97,6 +113,8 @@ export default function ProfileScreen() {
 
   const handleSmokeButtonPress = () => {
     saveCigaretteToDB();
+    setStartTime(Date.now()); // Reinicia el cronómetro
+    localStorage.setItem("startTime", Date.now().toString()); // Guarda la nueva marca de tiempo
   };
 
   const formatTime = (seconds) => {
