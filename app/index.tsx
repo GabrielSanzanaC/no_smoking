@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const App = () => {
@@ -16,6 +17,33 @@ const App = () => {
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const loggedIn = await AsyncStorage.getItem("isLoggedIn");
+        const userData = await AsyncStorage.getItem("userData"); // Recuperar datos del usuario
+  
+        if (loggedIn === "true" && userData) {
+          const { email, password } = JSON.parse(userData); // Extraer email y contraseña
+  
+          // Intentar iniciar sesión automáticamente
+          await signInWithEmailAndPassword(auth, email, password);
+  
+          // Redirigir al perfil si el inicio de sesión fue exitoso
+          router.push({
+            pathname: "./screens/ProfileScreen",
+          });
+        }
+      } catch (err) {
+        console.error("Error during auto login:", err);
+        // Puedes manejar el error aquí si deseas notificar al usuario
+      }
+    };
+    
+  
+    checkLoginStatus();
+  }, []);
 
   const handleLogin = async () => {
     let hasError = false;
@@ -41,12 +69,21 @@ const App = () => {
     }
   
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  
+      const user = userCredential.user;
+  
+      // Guardar estado de sesión y datos del usuario
+      await AsyncStorage.setItem("isLoggedIn", "true");
+      await AsyncStorage.setItem(
+        "userData",
+        JSON.stringify({ email: user.email, uid: user.uid, password }) // Guardar contraseña también
+      );
+  
       setError("");
       router.push("./screens/ProfileScreen");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        // Manejo de errores específicos de Firebase
         if ((err as any).code === "auth/user-not-found") {
           setError("No se encontró un usuario con este correo.");
         } else if ((err as any).code === "auth/wrong-password") {
@@ -140,8 +177,6 @@ const App = () => {
     setPasswordError(false);
   };
     
-  
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>

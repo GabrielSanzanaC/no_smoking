@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Platform } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -123,10 +123,6 @@ const AccountDetailsScreen = () => {
     }
   };
 
-  const handleBackToProfile = () => {
-    router.push("./ProfileScreen");
-  };
-
   const handleGoogleContinue = () => {
     router.push("./DiaryScreen");
   };
@@ -149,67 +145,71 @@ const AccountDetailsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackToProfile}>
-          <Ionicons name="arrow-back-outline" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detalles de la Cuenta</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Image
-          source={{ uri: "https://example.com/user.jpg" }} // Foto de perfil predeterminada
-          style={styles.profileImage}
-        />
-        <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
-        <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={handleEditProfilePicture}>
-          <Ionicons name="camera-outline" size={16} color="white" />
-          <Text style={styles.editButtonText}>Cambiar foto</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.stats}>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-            <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
-          </View>
-          
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
-            <Text style={styles.statValue}>{totalMoneySpentSinceSmoking.toFixed(2)} CLP</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-            <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
-          </View>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.push("./settingsScreen")} style={styles.settingsButton}>
+            <Ionicons name="settings-outline" size={24} color="white" />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
-          <Ionicons name="lock-closed-outline" size={16} color="white" />
-          <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
-          <Ionicons name="log-out-outline" size={16} color="white" />
-          <Text style={styles.actionButtonText}>Cerrar sesión</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./ProfileScreen")}>
-          <Ionicons name="home-outline" size={28} color="white" />
-          <Text style={styles.navText}>Inicio</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./DiaryScreen")}>
-          <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
-          <Text style={styles.navText}>Diario</Text>
-        </TouchableOpacity>
+    
+        {/* Todo el contenido ahora está dentro de ScrollView */}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* Foto de perfil y datos */}
+          <View style={styles.card}>
+            <Image
+              source={{ uri: "https://example.com/user.jpg" }} // Foto de perfil predeterminada
+              style={styles.profileImage}
+            />
+            <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
+            <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
+            <TouchableOpacity style={styles.editButton} onPress={handleEditProfilePicture}>
+              <Ionicons name="camera-outline" size={16} color="white" />
+              <Text style={styles.editButtonText}>Cambiar foto</Text>
+            </TouchableOpacity>
+          </View>
+    
+          {/* Estadísticas */}
+          <View style={styles.stats}>
+            <View style={styles.statCard}>
+              <Text style={styles.statTitle}>Cigarrillos fumados</Text>
+              <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
+            </View>
+            
+            <View style={styles.statCard}>
+              <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
+              <Text style={styles.statValue}>{totalMoneySpentSinceSmoking.toFixed(2)} CLP</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+              <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
+            </View>
+          </View>
+    
+          {/* Botones de acción */}
+          <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
+            <Ionicons name="lock-closed-outline" size={16} color="white" />
+            <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
+          </TouchableOpacity>
+    
+          <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
+            <Ionicons name="log-out-outline" size={16} color="white" />
+            <Text style={styles.actionButtonText}>Cerrar sesión</Text>
+          </TouchableOpacity>
+        </ScrollView>
+    
+        {/* Barra de navegación */}
+        <View style={styles.navBar}>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.push("./ProfileScreen")}>
+            <Ionicons name="home-outline" size={28} color="white" />
+            <Text style={styles.navText}>Inicio</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navButton} onPress={() => router.push("./DiaryScreen")}>
+            <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
+            <Text style={styles.navText}>Diario</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
 };
 
 const styles = StyleSheet.create({
@@ -220,14 +220,8 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    justifyContent: "flex-end",
     marginBottom: 20,
-  },
-  headerTitle: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginLeft: 10,
   },
   card: {
     alignItems: "center",
@@ -262,24 +256,22 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: "white",
     marginLeft: 5,
-    fontSize: 12,
   },
   scrollContainer: {
-    flexGrow: 1, // Permitir que el contenido crezca y sea desplazable
+    paddingBottom: 100,
   },
   stats: {
     marginBottom: 20,
   },
   statCard: {
-    backgroundColor: "#1F3A93",
-    padding: 15,
+    backgroundColor: "#253873",
+    padding: 20,
     borderRadius: 10,
     marginBottom: 10,
   },
   statTitle: {
     color: "#B0C4DE",
     fontSize: 14,
-    marginBottom: 5,
   },
   statValue: {
     color: "white",
@@ -292,32 +284,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#4F59FF",
     padding: 15,
     borderRadius: 10,
-    justifyContent: "center",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   actionButtonText: {
     color: "white",
-    fontSize: 16,
     marginLeft: 10,
   },
   navBar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#0C2B80",
-    paddingVertical: 10,
+    backgroundColor: "#1F3A93",
+    paddingVertical: 15,
     borderRadius: 10,
-    position: "absolute", // Hace que la barra sea fija
-    bottom: 0, // Coloca la barra en la parte inferior de la pantalla
-    left: 0,
-    right: 0,
   },
   navButton: {
     alignItems: "center",
   },
   navText: {
     color: "white",
-    fontSize: 12,
     marginTop: 5,
+  },
+  settingsButton: {
+    backgroundColor: "#4F59FF",
+    padding: 10,
+    borderRadius: 20,
   },
 });
 
