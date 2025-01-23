@@ -184,17 +184,6 @@ const AccountDetailsScreen = () => {
               <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
             </View>
           </View>
-    
-          {/* Botones de acción */}
-          <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
-            <Ionicons name="lock-closed-outline" size={16} color="white" />
-            <Text style={styles.actionButtonText}>Cambiar contraseña</Text>
-          </TouchableOpacity>
-    
-          <TouchableOpacity style={styles.actionButton} onPress={handleSignOut}>
-            <Ionicons name="log-out-outline" size={16} color="white" />
-            <Text style={styles.actionButtonText}>Cerrar sesión</Text>
-          </TouchableOpacity>
         </ScrollView>
     
         {/* Barra de navegación */}

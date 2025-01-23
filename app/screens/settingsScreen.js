@@ -1,32 +1,113 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { signOut, deleteUser } from "firebase/auth";
 
 const SettingsScreen = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [language, setLanguage] = useState("es"); // Idioma por defecto: español
 
-  const handlePasswordReset = async () => {
-    router.push("./reestablecerContrasena"); // Cambia "./reestablecerContrasena" por la ruta exacta de tu archivo si es necesario
+  // Restablecer contraseña
+  const handlePasswordReset = () => {
+    router.push("./reestablecerContrasena");
+  };
+
+  // Cerrar sesión
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      Alert.alert("Cerraste sesión correctamente.");
+      router.push("/"); // Redirige a la pantalla de inicio de sesión
+    } catch (error) {
+      Alert.alert("Error al cerrar sesión:", error.message);
+    }
+  };
+
+  // Eliminar cuenta
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "Confirmación",
+      "¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const user = auth.currentUser;
+              if (user) {
+                await deleteUser(user);
+                Alert.alert("Tu cuenta ha sido eliminada.");
+                router.push("/"); // Redirige a la pantalla de inicio
+              }
+            } catch (error) {
+              Alert.alert("Error al eliminar la cuenta:", error.message);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Cambiar tema
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+    Alert.alert(`Tema cambiado a ${isDarkMode ? "claro" : "oscuro"}.`);
+  };
+
+  // Cambiar idioma
+  const handleChangeLanguage = () => {
+    const newLanguage = language === "es" ? "en" : "es";
+    setLanguage(newLanguage);
+    Alert.alert(`Idioma cambiado a ${newLanguage === "es" ? "Español" : "Inglés"}.`);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("./AccountDetailsScreen")}> {/* Botón para volver */}
+        <TouchableOpacity onPress={() => router.push("./cuenta")}>
           <Ionicons name="arrow-back-outline" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Configuración</Text>
       </View>
 
-        <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
-          <Ionicons name="lock-closed-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Restablecer contraseña</Text>
-        </TouchableOpacity>
+      {/* Cambiar contraseña */}
+      <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
+        <Ionicons name="lock-closed-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Restablecer contraseña</Text>
+      </TouchableOpacity>
+
+      {/* Cambiar tema */}
+      <View style={styles.option}>
+        <Text style={styles.optionText}>Modo oscuro</Text>
+        <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
       </View>
+
+      {/* Cambiar idioma */}
+      <TouchableOpacity style={styles.button} onPress={handleChangeLanguage}>
+        <Ionicons name="language-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Cambiar idioma</Text>
+      </TouchableOpacity>
+
+      {/* Cerrar sesión */}
+      <TouchableOpacity style={styles.button} onPress={handleSignOut}>
+        <Ionicons name="log-out-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Cerrar sesión</Text>
+      </TouchableOpacity>
+
+      {/* Eliminar cuenta */}
+      <TouchableOpacity
+        style={[styles.button, styles.deleteButton]}
+        onPress={handleDeleteAccount}
+      >
+        <Ionicons name="trash-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Eliminar cuenta</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -47,21 +128,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginLeft: 10,
   },
-  content: {
-    marginTop: 20,
-  },
-  label: {
-    color: "white",
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  input: {
-    backgroundColor: "#1F3A93",
-    color: "white",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
   button: {
     flexDirection: "row",
     alignItems: "center",
@@ -69,11 +135,28 @@ const styles = StyleSheet.create({
     backgroundColor: "#4F59FF",
     padding: 15,
     borderRadius: 10,
+    marginBottom: 15,
+  },
+  deleteButton: {
+    backgroundColor: "#FF4D4D",
   },
   buttonText: {
     color: "white",
     marginLeft: 10,
     fontWeight: "bold",
+  },
+  option: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#253873",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  optionText: {
+    color: "white",
+    fontSize: 16,
   },
 });
 
