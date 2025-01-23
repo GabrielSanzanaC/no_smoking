@@ -12,7 +12,7 @@ const SettingsScreen = () => {
   const [notifications, setNotifications] = useState(true);
   const [isPrivacyModalVisible, setPrivacyModalVisible] = useState(false);
 
-  // Funciones básicas
+  // Funciones
   const handlePasswordReset = () => {
     router.push("./reestablecerContrasena");
   };
@@ -69,10 +69,6 @@ const SettingsScreen = () => {
     Alert.alert(`Notificaciones ${notifications ? "desactivadas" : "activadas"}.`);
   };
 
-  const handleEditProfile = () => {
-    router.push("./EditProfileScreen");
-  };
-
   const handleSupport = () => {
     router.push("./SupportScreen");
   };
@@ -80,7 +76,7 @@ const SettingsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("./AccountDetailsScreen")}>
+        <TouchableOpacity onPress={() => router.push("./cuenta")}>
           <Ionicons name="arrow-back-outline" size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Configuración</Text>
@@ -109,12 +105,6 @@ const SettingsScreen = () => {
         <Text style={styles.optionText}>Notificaciones</Text>
         <Switch value={notifications} onValueChange={toggleNotifications} />
       </View>
-
-      {/* Editar perfil */}
-      <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
-        <Ionicons name="person-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Editar perfil</Text>
-      </TouchableOpacity>
 
       {/* Soporte técnico */}
       <TouchableOpacity style={styles.button} onPress={handleSupport}>
@@ -163,6 +153,15 @@ const SettingsScreen = () => {
         <Text style={styles.buttonText}>Eliminar cuenta</Text>
       </TouchableOpacity>
 
+      {/* Cerrar sesión */}
+      <TouchableOpacity
+        style={[styles.button, styles.signOutButton]}
+        onPress={handleSignOut}
+      >
+        <Ionicons name="exit-outline" size={16} color="white" />
+        <Text style={styles.buttonText}>Cerrar sesión</Text>
+      </TouchableOpacity>
+
       {/* Versión de la aplicación */}
       <Text style={styles.versionText}>Versión: 1.0.0</Text>
     </View>
@@ -197,6 +196,9 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: "#FF4D4D",
+  },
+  signOutButton: {
+    backgroundColor: "#FFA500",
   },
   buttonText: {
     color: "white",

@@ -135,15 +135,6 @@ const AccountDetailsScreen = () => {
     router.push("./reestablecerContrasena");
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      router.push("/"); // Redirige a la pantalla de inicio de sesión
-    } catch (error) {
-      console.error("Error al cerrar sesión: ", error);
-    }
-  };
-
   return (
       <View style={styles.container}>
         <View style={styles.header}>
