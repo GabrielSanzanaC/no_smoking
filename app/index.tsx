@@ -40,6 +40,7 @@ const App = () => {
         // Puedes manejar el error aquí si deseas notificar al usuario
       }
     };
+    
   
     checkLoginStatus();
   }, []);
