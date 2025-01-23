@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Importar AsyncStorage
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { collection, query, where, getDocs, updateDoc, setDoc, doc } from "firebase/firestore";
@@ -74,10 +75,19 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     // Inicia el cronómetro
-    const savedStartTime = localStorage.getItem("startTime");
-    if (savedStartTime) {
-      setStartTime(parseInt(savedStartTime, 10));
-    }
+    const loadStartTime = async () => {
+      try {
+        const savedStartTime = await AsyncStorage.getItem("startTime");
+        if (savedStartTime) {
+          setStartTime(parseInt(savedStartTime, 10));
+        }
+      } catch (error) {
+        console.error("Error al cargar la marca de tiempo:", error);
+      }
+    };
+
+    loadStartTime();
+
     const id = setInterval(() => {
       setTimeWithoutSmoking(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
@@ -111,10 +121,11 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSmokeButtonPress = () => {
+  const handleSmokeButtonPress = async () => {
     saveCigaretteToDB();
-    setStartTime(Date.now()); // Reinicia el cronómetro
-    localStorage.setItem("startTime", Date.now().toString()); // Guarda la nueva marca de tiempo
+    const newStartTime = Date.now();
+    setStartTime(newStartTime); // Reinicia el cronómetro
+    await AsyncStorage.setItem("startTime", newStartTime.toString()); // Guarda la nueva marca de tiempo
   };
 
   const formatTime = (seconds) => {
