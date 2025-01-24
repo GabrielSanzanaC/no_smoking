@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -175,6 +175,17 @@ const App = () => {
     setEmailError(false);
     setPasswordError(false);
   };
+
+  const handleKeyPress = (event) => {
+    if (event.nativeEvent.key === 'Enter') {
+      Keyboard.dismiss();
+      if (isLogin) {
+        handleLogin();
+      } else {
+        handleContinue();
+      }
+    }
+  };
     
   return (
     <View style={styles.container}>
@@ -210,6 +221,7 @@ const App = () => {
                 setEmail(text);
                 setEmailError(false);
               }}
+              onKeyPress={handleKeyPress}
             />
             <TextInput
               style={[styles.input, passwordError && styles.errorInput]}
@@ -220,6 +232,7 @@ const App = () => {
                 setPassword(text);
                 setPasswordError(false);
               }}
+              onKeyPress={handleKeyPress}
             />
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -236,6 +249,7 @@ const App = () => {
                 setUser(text);
                 setUserError(false);
               }}
+              onKeyPress={handleKeyPress}
             />
             <TextInput
               style={[styles.input, emailError && styles.errorInput]}
@@ -246,6 +260,7 @@ const App = () => {
                 setEmail(text);
                 setEmailError(false);
               }}
+              onKeyPress={handleKeyPress}
             />
             <TextInput
               style={[styles.input, passwordError && styles.errorInput]}
@@ -256,6 +271,7 @@ const App = () => {
                 setPassword(text);
                 setPasswordError(false);
               }}
+              onKeyPress={handleKeyPress}
             />
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
             <TouchableOpacity style={styles.button} onPress={handleContinue}>
