@@ -10,6 +10,7 @@ const AccountDetailsScreen = () => {
   const router = useRouter();
   const [nombre, setNombre] = useState(null);
   const [email, setEmail] = useState(null);
+  const [moneda, setMoneda] = useState("CLP"); // Estado para la moneda
   const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
   const [totalMoneySpent, setTotalMoneySpent] = useState(0);
   const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
@@ -40,6 +41,7 @@ const AccountDetailsScreen = () => {
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
+        setMoneda(userData.moneda || "CLP"); // Obtener la moneda del usuario
       } else {
         setNombre("Usuario desconocido");
       }
@@ -135,6 +137,10 @@ const AccountDetailsScreen = () => {
     router.push("./reestablecerContrasena");
   };
 
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: moneda }).format(amount);
+  };
+
   return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -168,11 +174,11 @@ const AccountDetailsScreen = () => {
             
             <View style={styles.statCard}>
               <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
-              <Text style={styles.statValue}>{totalMoneySpentSinceSmoking.toFixed(2)} CLP</Text>
+              <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-              <Text style={styles.statValue}>{totalMoneySpentSinceAccountCreation.toFixed(2)} CLP</Text>
+              <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
             </View>
           </View>
         </ScrollView>
