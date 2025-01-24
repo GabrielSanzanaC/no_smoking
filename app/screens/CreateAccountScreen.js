@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { GuardarUsuario } from "../../components/GuardarUsuario"
+import { GuardarUsuario } from "../../components/GuardarUsuario";
 
-export default function CreateAccountScreen () {
+export default function CreateAccountScreen() {
   const router = useRouter();
   const { userProfile } = useLocalSearchParams();
   const { user, email, password } = JSON.parse(userProfile);
-  const [reason, setReason] = useState('');
+  const [reasons, setReasons] = useState([]);
   const [age, setAge] = useState('');
   const [yearsSmoking, setYearsSmoking] = useState('');
   const [cigarettesPerDay, setCigarettesPerDay] = useState('');
@@ -17,10 +17,18 @@ export default function CreateAccountScreen () {
   const [yearlySavings, setYearlySavings] = useState(null);
   const [cigarettesPerYear, setCigarettesPerYear] = useState(null);
 
+  const toggleReason = (option) => {
+    if (reasons.includes(option)) {
+      setReasons(reasons.filter(reason => reason !== option));
+    } else {
+      setReasons([...reasons, option]);
+    }
+  };
+
   const handleContinue = () => {
     if (questionStep === 1) {
-      if (!reason) {
-        Alert.alert('Por favor, elige una razón para dejar de fumar.');
+      if (reasons.length === 0) {
+        Alert.alert('Por favor, elige al menos una razón para dejar de fumar.');
         return;
       }
       setQuestionStep(2); // Pasar a la siguiente pregunta
@@ -71,7 +79,17 @@ export default function CreateAccountScreen () {
 
   const handleFinish = async () => {
     try {
-      await GuardarUsuario({ email, password, user, reason,  age, yearsSmoking, cigarettesPerDay, cigarettesPerPack, packPrice, questionStep, yearlySavings, cigarettesPerYear});
+      await GuardarUsuario({
+        email,
+        password,
+        user,
+        reasons, // Pasar el arreglo de razones
+        age,
+        yearsSmoking,
+        cigarettesPerDay,
+        cigarettesPerPack,
+        packPrice
+      });
       router.push('./ProfileScreen'); // Redirigir a la pantalla de perfil
     } catch (err) {
       // Manejar el error si algo falla en la función GuardarUsuario
@@ -91,8 +109,8 @@ export default function CreateAccountScreen () {
                 {['Mi salud', 'Mi familia', 'Mejorar mi condición física', 'Ahorrar dinero', 'Mejorar mi respiración', 'Aumentar mi energía'].map((option, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={[styles.optionButton, reason === option && styles.selectedOption]}
-                    onPress={() => setReason(option)}
+                    style={[styles.optionButton, reasons.includes(option) && styles.selectedOption]}
+                    onPress={() => toggleReason(option)}
                   >
                     <Text style={styles.optionText}>{option}</Text>
                   </TouchableOpacity>

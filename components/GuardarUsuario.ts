@@ -6,7 +6,7 @@ interface GuardarUsuarioProps {
   email: string;
   password: string;
   user: string;
-  reason: string;
+  reasons: string[]; // Cambiado a un arreglo de motivos
   age: number;
   yearsSmoking: number;
   cigarettesPerDay: number;
@@ -14,7 +14,7 @@ interface GuardarUsuarioProps {
   packPrice: number;
 }
 
-export const GuardarUsuario = async ({ email, password, user, reason, age, yearsSmoking, cigarettesPerDay, cigarettesPerPack, packPrice }: GuardarUsuarioProps): Promise<void> => {
+export const GuardarUsuario = async ({ email, password, user, reasons, age, yearsSmoking, cigarettesPerDay, cigarettesPerPack, packPrice }: GuardarUsuarioProps): Promise<void> => {
   try {
     // Crear usuario en Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -25,13 +25,15 @@ export const GuardarUsuario = async ({ email, password, user, reason, age, years
       uid: uid,
       nombre: user,
       email: email,
-      motivo: reason,
       edad: age,
       añosFumando: yearsSmoking,
       cigarrillosPorDía: cigarettesPerDay,
       cigarrillosPorPaquete: cigarettesPerPack,
       precioPorPaquete: packPrice,
     });
+
+    // Crear subcolección Motivos dentro del documento del usuario
+    await addDoc(collection(db, "usuarios", uid, "Motivos"), { motivos: reasons });
 
     // Obtener solo la fecha (sin la hora)
     const fechaCreacion = new Date().toISOString().split('T')[0]; // Formato "YYYY-MM-DD"
