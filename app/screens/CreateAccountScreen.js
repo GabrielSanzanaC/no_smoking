@@ -270,7 +270,7 @@ export default function CreateAccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0F2D',
+    backgroundColor: '#023E73', // Fondo oscuro para toda la pantalla
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -280,15 +280,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#0F0F2D',
+    backgroundColor: '#023E73',
     borderRadius: 15,
     width: '100%',
   },
   questionContainer: {
     alignItems: 'center',
     marginBottom: 20,
-    width: '100%',
-    zIndex: 10, // Importante para que el dropdown se muestre por encima de otros elementos
   },
   title: {
     fontSize: 20,
@@ -298,20 +296,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#F2F2F2',
     borderRadius: 5,
     padding: 10,
     marginBottom: 15,
     width: '80%',
   },
   button: {
-    backgroundColor: '#1E90FF',
+    backgroundColor: '#059E9E', // Azul para los botones (2013)
     borderRadius: 5,
     padding: 15,
     alignItems: 'center',
     marginTop: 20,
     width: '80%',
-    zIndex: 1, // Asegura que el botón esté por debajo del dropdown
   },
   buttonText: {
     color: '#fff',
@@ -332,7 +329,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedOption: {
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#05F89E', // Azul cuando selecciona una opción
   },
   optionText: {
     color: '#000',
@@ -349,7 +346,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   resultAmount: {
-    color: '#FFD700',
+    color: '#E3E34B', // Verde para los resultados (2021)
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 10,

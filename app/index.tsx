@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -204,8 +204,9 @@ const App = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Contenedor del logo */}
       <View style={styles.titleContainer}>
-        <Text style={styles.iconText}>🚭</Text>
+        <Image source={require("../assets/images/logo.png")} style={styles.logo} />
         <Text style={styles.titleText}>No Smoke</Text>
       </View>
 
@@ -287,16 +288,16 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F0F2D",
+    backgroundColor: "#023E73", // Fondo principal
     padding: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#222",
+    backgroundColor: "#072040", // Fondo del header
     borderRadius: 15,
-    paddingVertical: 20,
+    paddingVertical: 15,
     paddingHorizontal: 10,
     marginBottom: 30,
   },
@@ -304,14 +305,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 10,
-  },
-  activeTab: {
-    backgroundColor: "#444",
     borderRadius: 10,
   },
+  activeTab: {
+    backgroundColor: "#1F82BF", // Tab activo
+  },
   tabText: {
-    color: "#fff",
+    color: "#F2F2F2", // Texto del tab
     fontWeight: "bold",
+    fontSize: 16,
   },
   titleContainer: {
     alignItems: "center",
@@ -319,12 +321,12 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 48,
-    color: "#fff",
+    color: "#059E9E", // Icono destacado
     marginBottom: 10,
   },
   titleText: {
-    color: "#fff",
-    fontSize: 24,
+    color: "#F2F2F2", // Texto principal
+    fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
   },
@@ -334,29 +336,41 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   input: {
-    backgroundColor: "#fff",
-    borderRadius: 5,
-    padding: 10,
+    backgroundColor: "#F2F2F2", // Fondo claro para inputs
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#1F82BF", // Borde del input
+    color: "#072040", // Texto del input
   },
   errorInput: {
-    borderColor: "red",
-    borderWidth: 2,
+    borderColor: "red", // Borde rojo en caso de error
   },
   button: {
-    backgroundColor: "#1E90FF",
-    borderRadius: 5,
+    backgroundColor: "#059E9E", // Botón principal
+    borderRadius: 8,
     padding: 15,
     alignItems: "center",
+    marginTop: 10,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    resizeMode: "contain",
+    marginBottom: 10,
   },
   buttonText: {
-    color: "#fff",
+    color: "#F2F2F2", // Texto del botón
     fontWeight: "bold",
+    fontSize: 16,
   },
   errorText: {
     color: "red",
     textAlign: "center",
     marginBottom: 10,
+    fontSize: 14,
   },
 });
 
