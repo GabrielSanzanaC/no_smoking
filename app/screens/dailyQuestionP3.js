@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router'; // Importa useRouter
+import { useRouter } from 'expo-router'; 
+import { useLocalSearchParams } from 'expo-router';
 
-export default function dailyQuestionP3() {
+export default function DailyQuestionP3() {
   const [selectedOption, setSelectedOption] = useState(null);
-  const router = useRouter(); // Inicializa el router
+  const router = useRouter(); 
+
+  // Extraemos los parámetros pasados desde P2
+  const { emotion, moodRating } = useLocalSearchParams(); 
 
   const options = [
     { label: 'Casa', emoji: '🏠' },
@@ -14,37 +18,44 @@ export default function dailyQuestionP3() {
   ];
 
   const handleOptionSelect = (option) => {
-    setSelectedOption(option);
+    setSelectedOption(option); // Actualizamos la opción seleccionada
   };
 
-  const handleGoogleContinue = () => {
-    // Aquí puedes manejar la lógica de navegación o guardar la respuesta
-    router.push("./dailyQuestionP4"); // Navega a la siguiente pantalla
+  const handleNext = () => {
+    // Asegúrate de pasar los parámetros correctamente a la siguiente pantalla (P4)
+    router.push({
+      pathname: './dailyQuestionP4',
+      params: { 
+        emotion, // Pasamos la emoción seleccionada
+        moodRating, // Pasamos la calificación de estado de ánimo
+        location: selectedOption // Pasamos el lugar seleccionado
+      },
+    });
   };
 
   return (
     <View style={styles.container}>
-      {/* Step Counter */}
+      {/* Indicador de pasos */}
       <View style={styles.stepContainer}>
-      {['01', '02', '03', '04', '05'].map((step, index) => (
+        {['01', '02', '03', '04', '05'].map((step, index) => (
           <View
             key={index}
-            style={[styles.stepCircle, index === 2 && styles.activeStepCircle]}
+            style={[styles.stepCircle, index === 2 && styles.activeStepCircle]} 
           >
             <Text style={styles.stepText}>{step}</Text>
           </View>
         ))}
       </View>
 
-      {/* Title */}
+      {/* Título */}
       <Text style={styles.title}>¿Dónde fumaste?</Text>
 
-      {/* Options */}
+      {/* Opciones */}
       <View style={styles.optionsContainer}>
         {options.map((option, index) => (
           <TouchableOpacity
             key={index}
-            style={[
+            style={[ 
               styles.optionButton,
               selectedOption === option.label && styles.selectedOptionButton,
             ]}
@@ -56,13 +67,13 @@ export default function dailyQuestionP3() {
         ))}
       </View>
 
-      {/* Next Button */}
+      {/* Botón de siguiente */}
       <TouchableOpacity
-        style={[
-          styles.nextButton,
-          { opacity: selectedOption ? 1 : 0.5 }, // Cambia la opacidad según la selección
+        style={[ 
+          styles.nextButton, 
+          { opacity: selectedOption ? 1 : 0.5 },
         ]}
-        onPress={handleGoogleContinue}
+        onPress={handleNext}
         disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
       >
         <Text style={styles.nextButtonText}>Siguiente</Text>
@@ -146,4 +157,3 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
-

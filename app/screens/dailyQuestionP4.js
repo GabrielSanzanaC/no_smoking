@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router'; // Importa useRouter
+import { useLocalSearchParams } from 'expo-router'; // Importa useLocalSearchParams
 
-export default function dailyQuestionP4() {
+export default function DailyQuestionP4() {
   const [selectedOption, setSelectedOption] = useState(null);
   const router = useRouter(); // Inicializa el router
 
+  // Recibe los parámetros desde la página anterior usando useLocalSearchParams
+  const { emotion, moodRating, location } = useLocalSearchParams();
+
+  // Verifica si los parámetros están presentes
+  if (!emotion || !moodRating || !location) {
+    console.error("Faltan parámetros:", { emotion, moodRating, location });
+  }
+
+  // Opciones de actividad
   const options = [
     { label: 'Trabajando', emoji: '💼' },
     { label: 'Estudiando', emoji: '📚' },
@@ -13,20 +23,35 @@ export default function dailyQuestionP4() {
     { label: 'Otro', emoji: '❓' },
   ];
 
+  // Manejar la selección de la actividad
   const handleOptionSelect = (option) => {
-    setSelectedOption(option);
+    setSelectedOption(option); // Asigna la opción seleccionada
+    console.log({ emotion, moodRating, location, option });  // Muestra los parámetros recibidos
   };
 
   const handleGoogleContinue = () => {
-    // Aquí puedes manejar la lógica de navegación o guardar la respuesta
-    router.push("./dailyQuestionP5"); // Navega a la siguiente pantalla
+    // Validación de selección y pasos previos
+    if (!selectedOption) {
+      console.error("No se ha seleccionado una opción de actividad");
+      return;
+    }
+    // Pasar todos los parámetros a la siguiente página (dailyQuestionP5)
+    router.push({
+      pathname: './dailyQuestionP5',
+      params: {
+        emotion: emotion,
+        moodRating: moodRating,
+        location: location,
+        activity: selectedOption,  // Asegúrate de pasar `selectedOption`
+      },
+    });
   };
 
   return (
     <View style={styles.container}>
       {/* Step Counter */}
       <View style={styles.stepContainer}>
-      {['01', '02', '03', '04', '05'].map((step, index) => (
+        {['01', '02', '03', '04', '05'].map((step, index) => (
           <View
             key={index}
             style={[styles.stepCircle, index === 3 && styles.activeStepCircle]}
@@ -44,7 +69,7 @@ export default function dailyQuestionP4() {
         {options.map((option, index) => (
           <TouchableOpacity
             key={index}
-            style={[
+            style={[ 
               styles.optionButton,
               selectedOption === option.label && styles.selectedOptionButton,
             ]}
@@ -58,9 +83,9 @@ export default function dailyQuestionP4() {
 
       {/* Next Button */}
       <TouchableOpacity
-        style={[
-          styles.nextButton,
-          { opacity: selectedOption ? 1 : 0.5 }, // Cambia la opacidad según la selección
+        style={[ 
+          styles.nextButton, 
+          { opacity: selectedOption ? 1 : 0.5 },
         ]}
         onPress={handleGoogleContinue}
         disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
@@ -145,4 +170,3 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
-

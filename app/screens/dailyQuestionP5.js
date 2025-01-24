@@ -1,18 +1,77 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { useRouter } from 'expo-router'; // Importa useRouter
+import { useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router'; // Importa useLocalSearchParams
+import { getAuth } from 'firebase/auth'; // Para obtener el usuario autenticado
+import { db } from '../../FirebaseConfig'; // Asegúrate de importar la configuración de Firebase
+import { collection, doc, getDocs, query, setDoc, where, serverTimestamp, updateDoc } from 'firebase/firestore';
 
-export default function dailyQuestionP5() {
-  const [guiltRating, setGuiltRating] = useState(3); // Estado inicial en el medio de la escala
-  const router = useRouter(); // Inicializa el router
-  const [selectedOption, setSelectedOption] = useState(null);
+export default function DailyQuestionP5() {
+  const [guiltRating, setGuiltRating] = useState(3); 
+  const router = useRouter();
+  const { emotion, moodRating, location , activity} = useLocalSearchParams();
 
+  // Obtener el usuario actual desde Firebase Authentication
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid; 
 
-  const handleGoToProfile = () => {
-    // Navega a la pantalla de perfil
-    router.push("./ProfileScreen"); 
+  // Si no hay usuario autenticado, muestra un mensaje o redirige
+  if (!userId) {
+    console.error("Usuario no autenticado");
+    return null; // O redirigir a una pantalla de login
+  }
+
+  // Función para obtener la fecha actual en formato 'YYYY-MM-DD'
+  const getCurrentDate = () => {
+    const date = new Date();
+    return date.toISOString().split('T')[0]; // Retorna la fecha en formato 'YYYY-MM-DD'
   };
+
+  const handleSaveToDB = async () => {
+    const currentDate = getCurrentDate();
+    const userDocRef = doc(db, "usuarios", userId);
+    const cigaretteHistoryRef = collection(userDocRef, "CigaretteHistory");
+
+    try {
+      const q = query(cigaretteHistoryRef, where("fecha", "==", currentDate));
+      const querySnapshot = await getDocs(q);
+  
+      let cigaretteDocRef;
+  
+      if (!querySnapshot.empty) {
+        // Si ya existe un documento para hoy, actualiza el contador de cigarrillos
+        cigaretteDocRef = querySnapshot.docs[0].ref;
+        const data = querySnapshot.docs[0].data();
+        const newCigarettesSmoked = data.cigarettesSmoked + 1;
+        await updateDoc(cigaretteDocRef, { cigarettesSmoked: newCigarettesSmoked });
+      } else {
+        // Si no existe un documento para hoy, crea uno nuevo
+        cigaretteDocRef = doc(cigaretteHistoryRef);
+        await addDoc(cigaretteDocRef, {
+          fecha: currentDate,
+          cigarettesSmoked: 1,
+        });
+        console.log("Nuevo documento creado con 1 cigarro fumado");
+      }
+  
+      // Guarda los datos adicionales dentro de la subcolección 'datosPorCigarro'
+      const datosPorCigarroRef = collection(cigaretteDocRef, "datosPorCigarro");
+      await setDoc(doc(datosPorCigarroRef), {
+        emotion,
+        moodRating,
+        location,
+        activity,
+        guiltRating,
+        timestamp: serverTimestamp(),
+      });
+      console.log("Datos adicionales guardados en 'datosPorCigarro'");
+  
+      router.push("./ProfileScreen");
+    } catch (error) {
+      console.error("Error al guardar los datos en la base de datos: ", error);
+    }
+  };  
 
   return (
     <View style={styles.container}>
@@ -53,14 +112,9 @@ export default function dailyQuestionP5() {
         <Text style={styles.guiltRatingText}>Tu calificación: {guiltRating}</Text>
       </View>
 
-      {/* Go to Profile Button */}
-      <TouchableOpacity style={[
-          styles.nextButton
-        ]}
-        onPress={handleGoToProfile}> 
-        
-
-        <Text style={styles.nextButtonText}>Ir a Perfil</Text>
+      {/* Save Data Button */}
+      <TouchableOpacity style={styles.nextButton} onPress={handleSaveToDB}>
+        <Text style={styles.nextButtonText}>Ir al Perfil</Text>
       </TouchableOpacity>
     </View>
   );
@@ -145,4 +199,3 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
-

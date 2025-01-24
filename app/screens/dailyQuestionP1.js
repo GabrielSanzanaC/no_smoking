@@ -1,65 +1,12 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { db } from '../../FirebaseConfig';
-import { getAuth } from "firebase/auth";
-import { collection, doc, getDoc, setDoc, addDoc } from 'firebase/firestore';
 
 export default function dailyQuestionP1() {
-  const [selectedEmotion, setSelectedEmotion] = useState(""); // Estado para la emoción seleccionada
+  const [selectedEmotion, setSelectedEmotion] = useState(''); // Estado para la emoción seleccionada
   const router = useRouter();
 
-  // Función para guardar los datos en Firestore
-  const saveDataToFirestore = async () => {
-    try {
-      const auth = getAuth(); // Obtén la instancia de autenticación
-      const user = auth.currentUser; // Usuario actualmente logueado
-
-      if (!user) {
-        console.error("No hay usuario logueado");
-        return;
-      }
-
-      const userId = user.uid; // UID único del usuario logueado
-      const dateString = new Date().toISOString().split('T')[0]; // Obtener la fecha en formato YYYY-MM-DD
-
-      // Referencia a la colección "CigaretteHistory" dentro del usuario logueado
-      const historyRef = collection(db, `usuarios/${userId}/CigaretteHistory`);
-
-      // Crear la referencia del documento con la fecha (ID del documento = fecha)
-      const cigaretteDocRef = doc(historyRef, dateString); // Usamos la fecha como ID del documento
-
-      // Verificamos si ya existe el documento para la fecha actual
-      const docSnapshot = await getDoc(cigaretteDocRef);
-
-      if (docSnapshot.exists()) {
-        console.log("Documento de la fecha encontrado, agregando datos de cigarro...");
-
-        // Agregamos los datos de "datosPorCigarro" dentro del documento de la fecha
-        const datosPorCigarroRef = collection(cigaretteDocRef, "datosPorCigarro");
-
-        // Guardar los datos específicos por cigarro
-        await addDoc(datosPorCigarroRef, {
-          id: dateString, // Usamos la fecha como un identificador único para cada cigarro
-          emocion: selectedEmotion, // Emoción seleccionada
-          antes: "", // Si tiene valor
-          ayudaAnimo: "", // Si tiene valor
-          culpable: "", // Si tiene valor
-          donde: "", // Si tiene valor
-        });
-
-        console.log("Datos de cigarro guardados correctamente");
-
-        router.push("./dailyQuestionP2"); // Navega a la siguiente pantalla
-
-      } else {
-        console.error("No se ha encontrado un documento para la fecha actual.");
-      }
-    } catch (error) {
-      console.error("Error al guardar el dato:", error);
-    }
-  };
-
+  // Lista de emociones
   const emotions = [
     { id: 'feliz', label: 'Feliz', icon: '😊' },
     { id: 'ansioso', label: 'Ansioso', icon: '😰' },
@@ -69,15 +16,9 @@ export default function dailyQuestionP1() {
     { id: 'triste', label: 'Triste', icon: '😞' },
   ];
 
-  const selectEmotion = (emotionId) => {
-    setSelectedEmotion(emotionId);
-  };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
-
-      {/* Emotion Buttons */}
       <View style={styles.taskContainer}>
         {emotions.map((emotion) => (
           <TouchableOpacity
@@ -86,7 +27,7 @@ export default function dailyQuestionP1() {
               styles.taskButton,
               selectedEmotion === emotion.id && styles.selectedTaskButton,
             ]}
-            onPress={() => selectEmotion(emotion.id)}
+            onPress={() => setSelectedEmotion(emotion.id)}
           >
             <Text style={styles.taskIcon}>{emotion.icon}</Text>
             <Text style={styles.taskLabel}>{emotion.label}</Text>
@@ -95,12 +36,19 @@ export default function dailyQuestionP1() {
       </View>
 
       <TouchableOpacity
-        style={[
-          styles.nextButton,
-          { opacity: selectedEmotion ? 1 : 0.5 },
-        ]}
-        onPress={saveDataToFirestore}
-        disabled={!selectedEmotion}
+        style={[styles.nextButton, { opacity: selectedEmotion ? 1 : 0.5 }]}
+        onPress={() => {
+          if (selectedEmotion) {
+            // Navegación a P2 pasando el valor de la emoción seleccionada
+            router.push({
+              pathname: './dailyQuestionP2', // Ruta de la siguiente pantalla
+              params: { emotion: selectedEmotion }, // Paso el parámetro 'emotion'
+            });
+          } else {
+            console.log('No se seleccionó ninguna emoción');
+          }
+        }}
+        disabled={!selectedEmotion} // Deshabilitar el botón si no hay emoción seleccionada
       >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
@@ -127,8 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 10,
-    marginBottom: 10,
+    marginBottom: 20,
   },
   taskButton: {
     width: 100,
@@ -145,7 +92,6 @@ const styles = StyleSheet.create({
   taskIcon: {
     fontSize: 24,
     color: '#FFF',
-    marginBottom: 5,
   },
   taskLabel: {
     fontSize: 14,
