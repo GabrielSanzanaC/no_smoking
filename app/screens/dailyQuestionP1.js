@@ -1,76 +1,106 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router'; // Importa useRouter
+import { useRouter } from 'expo-router';
+import { db } from '../../FirebaseConfig';
+import { getAuth } from "firebase/auth";
+import { collection, doc, getDoc, setDoc, addDoc } from 'firebase/firestore';
 
 export default function dailyQuestionP1() {
-  const [selectedOption, setSelectedOption] = useState(null); // Definir el estado para la opción seleccionada
-  const router = useRouter(); // Inicializa el router
+  const [selectedEmotion, setSelectedEmotion] = useState(""); // Estado para la emoción seleccionada
+  const router = useRouter();
 
-  const handleGoogleContinue = () => {
-    router.push("./dailyQuestionP2"); // Navega a la pantalla
+  // Función para guardar los datos en Firestore
+  const saveDataToFirestore = async () => {
+    try {
+      const auth = getAuth(); // Obtén la instancia de autenticación
+      const user = auth.currentUser; // Usuario actualmente logueado
+
+      if (!user) {
+        console.error("No hay usuario logueado");
+        return;
+      }
+
+      const userId = user.uid; // UID único del usuario logueado
+      const dateString = new Date().toISOString().split('T')[0]; // Obtener la fecha en formato YYYY-MM-DD
+
+      // Referencia a la colección "CigaretteHistory" dentro del usuario logueado
+      const historyRef = collection(db, `usuarios/${userId}/CigaretteHistory`);
+
+      // Crear la referencia del documento con la fecha (ID del documento = fecha)
+      const cigaretteDocRef = doc(historyRef, dateString); // Usamos la fecha como ID del documento
+
+      // Verificamos si ya existe el documento para la fecha actual
+      const docSnapshot = await getDoc(cigaretteDocRef);
+
+      if (docSnapshot.exists()) {
+        console.log("Documento de la fecha encontrado, agregando datos de cigarro...");
+
+        // Agregamos los datos de "datosPorCigarro" dentro del documento de la fecha
+        const datosPorCigarroRef = collection(cigaretteDocRef, "datosPorCigarro");
+
+        // Guardar los datos específicos por cigarro
+        await addDoc(datosPorCigarroRef, {
+          id: dateString, // Usamos la fecha como un identificador único para cada cigarro
+          emocion: selectedEmotion, // Emoción seleccionada
+          antes: "", // Si tiene valor
+          ayudaAnimo: "", // Si tiene valor
+          culpable: "", // Si tiene valor
+          donde: "", // Si tiene valor
+        });
+
+        console.log("Datos de cigarro guardados correctamente");
+
+        router.push("./dailyQuestionP2"); // Navega a la siguiente pantalla
+
+      } else {
+        console.error("No se ha encontrado un documento para la fecha actual.");
+      }
+    } catch (error) {
+      console.error("Error al guardar el dato:", error);
+    }
   };
 
-  const tasks = [
+  const emotions = [
+    { id: 'feliz', label: 'Feliz', icon: '😊' },
     { id: 'ansioso', label: 'Ansioso', icon: '😰' },
     { id: 'cansado', label: 'Cansado', icon: '😔' },
     { id: 'estresado', label: 'Estresado', icon: '😩' },
     { id: 'molesto', label: 'Molesto', icon: '😠' },
     { id: 'triste', label: 'Triste', icon: '😞' },
-    { id: 'nervioso', label: 'Nervioso', icon: '😬' },
   ];
 
-  const selectTask = (taskId) => {
-    setSelectedOption(taskId);
+  const selectEmotion = (emotionId) => {
+    setSelectedEmotion(emotionId);
   };
 
   return (
     <View style={styles.container}>
-      {/* Step Counter */}
-      <View style={styles.stepContainer}>
-        {['01', '02', '03', '04', '05'].map((step, index) => (
-          <View
-            key={index}
-            style={[
-              styles.stepCircle,
-              index === 0 && styles.activeStepCircle,
-            ]}
-          >
-            <Text style={styles.stepText}>{step}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Title */}
       <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
 
-      {/* Task Buttons */}
+      {/* Emotion Buttons */}
       <View style={styles.taskContainer}>
-        {tasks.map((task) => (
+        {emotions.map((emotion) => (
           <TouchableOpacity
-            key={task.id}
+            key={emotion.id}
             style={[
               styles.taskButton,
-              selectedOption === task.id && styles.selectedTaskButton,
+              selectedEmotion === emotion.id && styles.selectedTaskButton,
             ]}
-            onPress={() => selectTask(task.id)}
+            onPress={() => selectEmotion(emotion.id)}
           >
-            <Text style={styles.taskIcon}>{task.icon}</Text>
-            <Text style={styles.taskLabel}>{task.label}</Text>
+            <Text style={styles.taskIcon}>{emotion.icon}</Text>
+            <Text style={styles.taskLabel}>{emotion.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Message */}
-      <Text style={styles.message}>Solo elegir una</Text>
-
-      {/* Next Button */}
       <TouchableOpacity
         style={[
           styles.nextButton,
-          { opacity: selectedOption ? 1 : 0.5 }, // Cambia la opacidad según la selección
+          { opacity: selectedEmotion ? 1 : 0.5 },
         ]}
-        onPress={handleGoogleContinue}
-        disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
+        onPress={saveDataToFirestore}
+        disabled={!selectedEmotion}
       >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
@@ -85,28 +115,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#0F0F2D',
     padding: 20,
-  },
-  stepContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 150,
-    marginBottom: 20,
-  },
-  stepCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#33334D',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeStepCircle: {
-    backgroundColor: '#4F59FF',
-  },
-  stepText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   title: {
     fontSize: 16,
@@ -143,11 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFF',
   },
-  message: {
-    fontSize: 14,
-    color: '#B0C4DE',
-    marginBottom: 20,
-  },
   nextButton: {
     width: '80%',
     padding: 15,
@@ -161,4 +164,3 @@ const styles = StyleSheet.create({
     color: '#4F59FF',
   },
 });
-

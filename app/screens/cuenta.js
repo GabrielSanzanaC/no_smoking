@@ -183,10 +183,6 @@ const AccountDetailsScreen = () => {
             <Ionicons name="home-outline" size={28} color="white" />
             <Text style={styles.navText}>Inicio</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navButton} onPress={() => router.push("./DiaryScreen")}>
-            <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
-            <Text style={styles.navText}>Diario</Text>
-          </TouchableOpacity>
         </View>
       </View>
     );
