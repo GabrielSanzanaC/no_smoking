@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Checkbox from "expo-checkbox";
+import * as Animatable from "react-native-animatable";
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +17,7 @@ const App = () => {
   const [userError, setUserError] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,13 +25,13 @@ const App = () => {
       try {
         const loggedIn = await AsyncStorage.getItem("isLoggedIn");
         const userData = await AsyncStorage.getItem("userData"); // Recuperar datos del usuario
-  
+
         if (loggedIn === "true" && userData) {
           const { email, password } = JSON.parse(userData); // Extraer email y contraseña
-  
+
           // Intentar iniciar sesión automáticamente
           await signInWithEmailAndPassword(auth, email, password);
-  
+
           // Redirigir al perfil si el inicio de sesión fue exitoso
           router.push({
             pathname: "./screens/ProfileScreen",
@@ -36,17 +39,15 @@ const App = () => {
         }
       } catch (err) {
         console.error("Error during auto login:", err);
-        // Puedes manejar el error aquí si deseas notificar al usuario
       }
     };
-    
-  
+
     checkLoginStatus();
   }, []);
 
   const handleLogin = async () => {
     let hasError = false;
-  
+
     if (!email.trim()) {
       setEmailError(true);
       setError("Por favor ingresa tu correo.");
@@ -54,7 +55,7 @@ const App = () => {
     } else {
       setEmailError(false);
     }
-  
+
     if (!password.trim()) {
       setPasswordError(true);
       setError("Por favor ingresa tu contraseña.");
@@ -62,23 +63,22 @@ const App = () => {
     } else {
       setPasswordError(false);
     }
-  
+
     if (hasError) {
       return;
     }
-  
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  
       const user = userCredential.user;
-  
+
       // Guardar estado de sesión y datos del usuario
       await AsyncStorage.setItem("isLoggedIn", "true");
       await AsyncStorage.setItem(
         "userData",
         JSON.stringify({ email: user.email, uid: user.uid, password }) // Guardar contraseña también
       );
-  
+
       setError("");
       router.push("./screens/ProfileScreen");
     } catch (err: unknown) {
@@ -99,7 +99,7 @@ const App = () => {
 
   const handleContinue = async () => {
     let hasError = false;
-  
+
     // Validación
     if (!user.trim()) {
       setUserError(true);
@@ -107,7 +107,7 @@ const App = () => {
     } else {
       setUserError(false);
     }
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       setEmailError(true);
@@ -120,7 +120,7 @@ const App = () => {
     } else {
       setEmailError(false);
     }
-  
+
     if (!password.trim()) {
       setPasswordError(true);
       setError("La contraseña no puede estar vacía.");
@@ -132,7 +132,7 @@ const App = () => {
     } else {
       setPasswordError(false);
     }
-  
+
     if (hasError) {
       return;
     }
@@ -176,7 +176,7 @@ const App = () => {
     setPasswordError(false);
   };
 
-  const handleKeyPress = (event) => {
+  const handleKeyPress = (event: { nativeEvent: { key: string; }; }) => {
     if (event.nativeEvent.key === 'Enter') {
       Keyboard.dismiss();
       if (isLogin) {
@@ -186,101 +186,105 @@ const App = () => {
       }
     }
   };
-    
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={[styles.tab, isLogin && styles.activeTab]}
-          onPress={() => handleTabChange(true)}
-        >
-          <Text style={styles.tabText}>🔒 Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, !isLogin && styles.activeTab]}
-          onPress={() => handleTabChange(false)}
-        >
-          <Text style={styles.tabText}>👤 Registrar</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Animated Background */}
+      <Animatable.View
+        animation="pulse"
+        iterationCount="infinite"
+        duration={500}
+        style={styles.animatedCircle1}
+      />
+      <Animatable.View
+        animation="pulse"
+        iterationCount="infinite"
+        style={styles.animatedCircle2}
+      />
 
-      {/* Contenedor del logo */}
-      <View style={styles.titleContainer}>
-        <Image source={require("../assets/images/logo.png")} style={styles.logo} />
-        <Text style={styles.titleText}>No Smoke</Text>
-      </View>
+      {/* Main Content */}
+      <Animatable.View animation="fadeIn" style={styles.rectangle}>
+        <Animatable.View animation="zoomIn" style={styles.logoContainer}>
+          <Image
+            source={{ uri: "https://via.placeholder.com/150" }}
+            style={styles.logo}
+          />
+          <Animatable.Text animation="bounceIn" style={styles.welcomeText}>
+            ¡Bienvenido a Deja de Fumar!
+          </Animatable.Text>
+        </Animatable.View>
 
-      <View style={styles.formContainer}>
-        {isLogin ? (
-          <>
+        <Animatable.View animation="fadeInUp" style={styles.formContainer}>
+          {!isLogin && (
             <TextInput
-              style={[styles.input, emailError && styles.errorInput]}
-              placeholder="Email"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setEmailError(false);
-              }}
-              onKeyPress={handleKeyPress}
-            />
-            <TextInput
-              style={[styles.input, passwordError && styles.errorInput]}
-              placeholder="Password"
-              secureTextEntry
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setPasswordError(false);
-              }}
-              onKeyPress={handleKeyPress}
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Iniciar sesión</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <TextInput
-              style={[styles.input, userError && styles.errorInput]}
+              style={styles.input}
               placeholder="Nombre de usuario"
+              placeholderTextColor="black"
               value={user}
-              onChangeText={(text) => {
-                setUser(text);
-                setUserError(false);
-              }}
-              onKeyPress={handleKeyPress}
+              onChangeText={setUser}
             />
+          )}
+          <Animatable.View animation="slideInRight">
             <TextInput
-              style={[styles.input, emailError && styles.errorInput]}
-              placeholder="Email"
-              keyboardType="email-address"
+              style={styles.input}
+              placeholder="Correo electrónico"
+              placeholderTextColor="black"
               value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setEmailError(false);
-              }}
-              onKeyPress={handleKeyPress}
+              onChangeText={setEmail}
             />
+          </Animatable.View>
+          <Animatable.View animation="slideInLeft">
             <TextInput
-              style={[styles.input, passwordError && styles.errorInput]}
-              placeholder="Password"
+              style={styles.input}
+              placeholder="Contraseña"
+              placeholderTextColor="black"
               secureTextEntry
               value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setPasswordError(false);
-              }}
-              onKeyPress={handleKeyPress}
+              onChangeText={setPassword}
             />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <TouchableOpacity style={styles.button} onPress={handleContinue}>
-              <Text style={styles.buttonText}>Registrar</Text>
+          </Animatable.View>
+          {isLogin && (
+            <Animatable.View animation="fadeIn" style={styles.checkboxContainer}>
+              <Checkbox
+                value={rememberMe}
+                onValueChange={setRememberMe}
+                color={rememberMe ? "#FF6F61" : undefined}
+              />
+              <Text style={styles.checkboxLabel}>Recuérdame</Text>
+            </Animatable.View>
+          )}
+          <Animatable.View animation="zoomIn">
+            <TouchableOpacity
+              style={styles.button}
+              onPress={isLogin ? handleLogin : handleContinue}
+            >
+              <Text style={styles.buttonText}>
+                {isLogin ? "Iniciar Sesión" : "Registrarse"}
+              </Text>
             </TouchableOpacity>
-          </>
-        )}
-      </View>
+          </Animatable.View>
+          <Animatable.View animation="fadeInUp">
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => setIsLogin(!isLogin)}
+            >
+              <Text style={styles.switchButtonText}>
+                {isLogin
+                  ? "¿No tienes cuenta? Regístrate"
+                  : "¿Ya tienes cuenta? Inicia sesión"}
+              </Text>
+            </TouchableOpacity>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" style={styles.socialButtons}>
+            <TouchableOpacity style={styles.socialButton}>
+              <Text style={styles.socialButtonText}>Google</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton}>
+              <Text style={styles.socialButtonText}>Facebook</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        </Animatable.View>
+      </Animatable.View>
     </View>
   );
 };
@@ -288,83 +292,124 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#023E73", // Fondo principal
+    backgroundColor: "#7595BF", // Background
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  animatedCircle1: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    backgroundColor: "#072040", // Contrast Black
+    borderRadius: 150,
+    opacity: 0.2,
+    top: -50,
+    left: -50,
+  },
+  animatedCircle2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    backgroundColor: "#1F82BF", // Contrast Light
+    borderRadius: 100,
+    opacity: 0.3,
+    bottom: -50,
+    right: -50,
+  },
+  rectangle: {
+    width: "90%",
+    backgroundColor: "#072040", // Contrast Black
+    borderRadius: 20,
     padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+    alignItems: "center", // Centra horizontalmente el contenido dentro del rectángulo
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+  logoContainer: {
     alignItems: "center",
-    backgroundColor: "#072040", // Fondo del header
-    borderRadius: 15,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    marginBottom: 30,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 10,
-  },
-  activeTab: {
-    backgroundColor: "#1F82BF", // Tab activo
-  },
-  tabText: {
-    color: "#F2F2F2", // Texto del tab
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  titleContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  iconText: {
-    fontSize: 48,
-    color: "#059E9E", // Icono destacado
-    marginBottom: 10,
-  },
-  titleText: {
-    color: "#F2F2F2", // Texto principal
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  formContainer: {
-    flex: 1,
-    justifyContent: "flex-start",
-    marginTop: 20,
-  },
-  input: {
-    backgroundColor: "#F2F2F2", // Fondo claro para inputs
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#1F82BF", // Borde del input
-    color: "#072040", // Texto del input
-  },
-  errorInput: {
-    borderColor: "red", // Borde rojo en caso de error
-  },
-  button: {
-    backgroundColor: "#059E9E", // Botón principal
-    borderRadius: 8,
-    padding: 15,
-    alignItems: "center",
-    marginTop: 10,
+    marginBottom: 20,
   },
   logo: {
     width: 100,
     height: 100,
-    resizeMode: "contain",
     marginBottom: 10,
+    borderRadius: 50,
+    borderWidth: 2,
+    borderColor: "#059E9E", // Buttons
+  },
+  welcomeText: {
+    color: "#F2F2F2", // Text
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  formContainer: {
+    width: "100%",
+  },
+  input: {
+    backgroundColor: "beige", // Contrast Light
+    color: "black", // Text
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#059E9E", // Buttons
+    width: "100%", // Asegurarse de que los inputs ocupen el ancho completo del contenedor
+  },
+  button: {
+    backgroundColor: "#059E9E", // Buttons
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 15,
+    width: "100%", // Asegurarse de que el botón ocupe el ancho completo del contenedor
   },
   buttonText: {
-    color: "#F2F2F2", // Texto del botón
+    color: "#F2F2F2", // Text
     fontWeight: "bold",
     fontSize: 16,
+  },
+  switchButton: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  switchButtonText: {
+    color: "#F2F2F2", // Text
+    textDecorationLine: "underline",
+    fontSize: 14,
+  },
+  socialButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  socialButton: {
+    backgroundColor: "#1F82BF", // Contrast Light
+    padding: 12,
+    borderRadius: 10,
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  socialButtonText: {
+    color: "#F2F2F2", // Text
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  checkboxLabel: {
+    color: "#F2F2F2", // Text
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  errorInput: {
+    borderColor: "red", // Borde rojo en caso de error
   },
   errorText: {
     color: "red",
