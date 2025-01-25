@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Importar AsyncStorage
+import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { collection, query, where, getDocs, updateDoc, setDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../FirebaseConfig";
+import * as Animatable from 'react-native-animatable';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [nombre, setNombre] = useState(null);
+  const [nombre, setNombre] = useState("Cargando...");
   const [userEmail, setUserEmail] = useState(null);
   const [userId, setUserId] = useState(null);
   const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Tiempo sin fumar en segundos
   const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(null);
+  const [streakDays, setStreakDays] = useState(0); // Racha de días
+  const [monthlySavings, setMonthlySavings] = useState(0); // Ahorro de dinero
   const [startTime, setStartTime] = useState(Date.now()); // Marca de tiempo inicial
+  const [smokingHistory, setSmokingHistory] = useState([]);
+  const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
+
 
   const getCurrentDate = () => new Date().toISOString().split("T")[0];
 
@@ -28,6 +34,8 @@ export default function ProfileScreen() {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
         setUserId(userData.uid);
+        setStreakDays(userData.streakDays || 0);
+        setMonthlySavings(userData.monthlySavings || 0);
       } else {
         setNombre("Usuario");
       }
@@ -91,10 +99,40 @@ export default function ProfileScreen() {
     const id = setInterval(() => {
       setTimeWithoutSmoking(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
+
     setIntervalId(id);
 
     return () => clearInterval(id);
   }, [startTime]);
+
+  useEffect(() => {
+    const dailyMessage = () => {
+      const messages = [
+        "Cada día sin fumar es una victoria.",
+        "Tu salud es lo más importante.",
+        "Recuerda por qué comenzaste este viaje.",
+        "¡Sigue así, estás haciendo un gran trabajo!",
+      ];
+      return messages[Math.floor(Math.random() * messages.length)];
+    };
+
+    const checkAndUpdateMessage = async () => {
+      const lastShownDate = await AsyncStorage.getItem("lastShownDate");
+      const currentDate = getCurrentDate();
+
+      if (lastShownDate !== currentDate) {
+        const newMessage = dailyMessage();
+        setMotivationalMessage(newMessage);
+        await AsyncStorage.setItem("lastShownDate", currentDate);
+        await AsyncStorage.setItem("motivationalMessage", newMessage);
+      } else {
+        const savedMessage = await AsyncStorage.getItem("motivationalMessage");
+        setMotivationalMessage(savedMessage || dailyMessage());
+      }
+    };
+
+    checkAndUpdateMessage();
+  }, []);
 
   const handleSmokeButtonPress = async () => {
     const newStartTime = Date.now();
@@ -117,36 +155,22 @@ export default function ProfileScreen() {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.tabs}>
-        <TouchableOpacity style={[styles.tab, styles.activeTab]}>
-          <Text style={[styles.tabText, styles.activeTabText]}>Tablero</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tab} onPress={() => router.push("./historial")}>
-          <Text style={styles.tabText}>Historial</Text>
-        </TouchableOpacity>
-      </View>
+    <View style={styles.background}>
+      <View style={styles.container}>
+        <Animatable.View animation="fadeIn" duration={1000} style={styles.header}>
+          <Text style={styles.title}>¡Hola, {nombre}!</Text>
+          <Text style={styles.subtitle}>Tu progreso contra el tabaco</Text>
+        </Animatable.View>
 
-      <View style={styles.card}>
-        <Image
-          source={{ uri: "https://example.com/user.jpg" }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.cardText}>
-          Hola {nombre || "Cargando..."}! buen día.
-        </Text>
-        <Text style={styles.cardDate}>{formattedDate}</Text>
-      </View>
-
-      <View style={styles.statistics}>
-        <Text style={styles.sectionTitle}>Estadísticas</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Tiempo sin fumar</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Ionicons name="time" size={40} color="#4CAF50" />
+            <Text style={styles.statLabel}>Tiempo sin fumar</Text>
             <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Cigarros fumados hoy</Text>
+          <View style={styles.statBox}>
+            <Ionicons name="flame" size={40} color="#FF6F61" />
+            <Text style={styles.statLabel}>Cigarros fumados hoy</Text>
             {cigarettesSmokedToday === null ? (
               <Image
                 source={require("../../assets/images/load.gif")}
@@ -157,124 +181,127 @@ export default function ProfileScreen() {
             )}
           </View>
         </View>
+
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Ionicons name="checkmark-circle" size={40} color="#FF6F61" />
+            <Text style={styles.statLabel}>Racha de días</Text>
+            <Text style={styles.statValue}>{streakDays} días</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Ionicons name="cash" size={40} color="#4CAF50" />
+            <Text style={styles.statLabel}>Ahorro del mes</Text>
+            <Text style={styles.statValue}>${monthlySavings}</Text>
+          </View>
+        </View>
+
+        <Animatable.Text animation="fadeIn" duration={1000} style={styles.motivationalText}>
+          {motivationalMessage}
+        </Animatable.Text>
+
+        <FlatList
+          data={smokingHistory}
+          renderItem={({ item }) => (
+            <View style={styles.historyItem}>
+              <Text style={styles.historyDate}>{item.date}</Text>
+              <Text style={styles.historyCount}>{item.count} cig.</Text>
+            </View>
+          )}
+          keyExtractor={(item) => item.date}
+          style={styles.historyList}
+        />
+
         <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
           <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.navBar}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./historial")}>
+          <Ionicons name="calendar" size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.circleButton} onPress={handleSmokeButtonPress}>
+          <View style={styles.circle}>
+            <Ionicons name="flame" size={24} color="#fff" />
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./cuenta")}>
-          <Ionicons name="person-outline" size={28} color="white" />
-          <Text style={styles.navText}>Cuenta</Text>
+          <Ionicons name="person" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loader: {
-    width: 30,
-    height: 30,
+  background: {
+    flex: 1,
+    backgroundColor: '#2C2C3E',
   },
   container: {
-    flexGrow: 1,
-    backgroundColor: "#0F0F2D",
-    paddingBottom: 60,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 20,
+    width: '90%',
+    alignSelf: 'center',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#071E50",
+    marginBottom: 20,
+    alignItems: 'center',
   },
-  headerTitle: {
-    color: "white",
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
+  },
+  subtitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    color: '#f0f0f0',
+    marginTop: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 10,
-    backgroundColor: "#0C2B80",
-  },
-  tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    flex: 1,
-    alignItems: "center",
-  },
-  activeTab: {
-    backgroundColor: "white",
-  },
-  tabText: {
-    color: "white",
-    fontSize: 14,
-  },
-  activeTabText: {
-    color: "#004080",
-    fontWeight: "bold",
-  },
-  card: {
-    backgroundColor: "#1F3A93",
-    margin: 20,
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-  },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 10,
-  },
-  cardText: {
-    color: "white",
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 5,
-  },
-  cardDate: {
-    color: "#B0C4DE",
-    fontSize: 14,
-  },
-  statistics: {
-    marginHorizontal: 20,
+  statsContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
-  sectionTitle: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+  statBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+    width: '45%',
   },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  statCard: {
-    backgroundColor: "#1F3A93",
-    flex: 1,
-    marginHorizontal: 5,
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  statTitle: {
-    color: "#B0C4DE",
-    fontSize: 14,
-    textAlign: "center",
+  statLabel: {
+    fontSize: 16,
+    color: '#ccc',
+    marginTop: 10,
+    textAlign: 'center',
   },
   statValue: {
-    color: "white",
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: 5,
+  },
+  motivationalText: {
     fontSize: 20,
-    fontWeight: "bold",
-    marginTop: 10,
+    color: '#FFD700',
+    textAlign: 'center',
+    marginVertical: 20,
+    fontStyle: 'italic',
   },
   smokeButton: {
     backgroundColor: "#FF6347",
@@ -290,20 +317,55 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   navBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 15,
-    backgroundColor: "#0C2B80",
-    position: "absolute",
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#444',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    paddingVertical: 10,
+    position: 'absolute',
     bottom: 0,
-    width: "100%",
+    left: 0,
+    right: 0,
   },
   navButton: {
-    alignItems: "center",
+    alignItems: 'center',
   },
-  navText: {
-    color: "white",
-    fontSize: 12,
-    marginTop: 5,
+  circleButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF6F61',
+    borderRadius: 35,
+    padding: 12,
+    elevation: 5,
+  },
+  circle: {
+    backgroundColor: '#FF6F61',
+    borderRadius: 35,
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loader: {
+    width: 30,
+    height: 30,
+  },
+  historyList: {
+    marginTop: 20,
+    width: '100%',
+  },
+  historyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+  },
+  historyDate: {
+    color: '#fff',
+  },
+  historyCount: {
+    color: '#FFD700',
   },
 });

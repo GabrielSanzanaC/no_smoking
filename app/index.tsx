@@ -2,11 +2,16 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Image, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Checkbox from "expo-checkbox";
 import * as Animatable from "react-native-animatable";
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import * as Random from 'expo-random';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,6 +24,14 @@ const App = () => {
   const [passwordError, setPasswordError] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    //expoClientId: 'YOUR_EXPO_CLIENT_ID',
+    //iosClientId: 'YOUR_IOS_CLIENT_ID',
+    androidClientId: '571745550303-6485sga5adgjg24a48ijrdite1nf9mic.apps.googleusercontent.com',
+    webClientId: '571745550303-84m79of6kn1vqd6g8i3jik57l183vla4.apps.googleusercontent.com',
+    redirectUri: 'https://app-nosmoking.firebaseapp.com/__/auth/handler',
+  });
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -44,6 +57,28 @@ const App = () => {
 
     checkLoginStatus();
   }, []);
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Guardar estado de sesión y datos del usuario
+          AsyncStorage.setItem("isLoggedIn", "true");
+          AsyncStorage.setItem(
+            "userData",
+            JSON.stringify({ email: user.email, uid: user.uid })
+          );
+          router.push("./screens/ProfileScreen");
+        })
+        .catch((error) => {
+          Alert.alert("Error", error.message);
+        });
+    }
+  }, [response]);
 
   const handleLogin = async () => {
     let hasError = false;
@@ -276,7 +311,11 @@ const App = () => {
             </TouchableOpacity>
           </Animatable.View>
           <Animatable.View animation="bounceIn" style={styles.socialButtons}>
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={() => promptAsync()}
+              disabled={!request}
+            >
               <Text style={styles.socialButtonText}>Google</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialButton}>
