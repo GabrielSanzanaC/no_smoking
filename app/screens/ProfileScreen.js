@@ -96,42 +96,13 @@ export default function ProfileScreen() {
     return () => clearInterval(id);
   }, [startTime]);
 
-  const saveCigaretteToDB = async () => {
-    if (!userId) return;
-  
-    const currentDate = getCurrentDate();
-    const userDocRef = doc(db, "usuarios", userId);
-    const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
-  
-    try {
-      const q = query(cigarettesCollectionRef, where("fecha", "==", currentDate));
-      const querySnapshot = await getDocs(q);
-  
-      if (!querySnapshot.empty) {
-        // Si ya existe un documento para hoy, actualizamos el contador de cigarrillos
-        const docRef = querySnapshot.docs[0].ref;
-        const data = querySnapshot.docs[0].data();
-        const newCigarettesSmoked = data.cigarettesSmoked + 1;
-        await updateDoc(docRef, { cigarettesSmoked: newCigarettesSmoked });
-        setCigarettesSmokedToday(newCigarettesSmoked); // Actualizamos el estado local
-      } else {
-        // Si no existe un documento para hoy, creamos uno nuevo con 1 cigarro fumado
-        await setDoc(doc(cigarettesCollectionRef), { fecha: currentDate, cigarettesSmoked: 1 });
-        setCigarettesSmokedToday(1); // Actualizamos el estado local
-      }
-    } catch (error) {
-      console.error("Error al guardar cigarro:", error);
-    }
-  };
-  
   const handleSmokeButtonPress = async () => {
-    await saveCigaretteToDB(); // Aumenta el contador de cigarrillos
     const newStartTime = Date.now();
     setStartTime(newStartTime); // Reinicia el cronómetro
     await AsyncStorage.setItem("startTime", newStartTime.toString()); // Guarda la nueva marca de tiempo
     await router.push("./dailyQuestionP1"); // Navega a la siguiente pantalla
   };
-
+  
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
