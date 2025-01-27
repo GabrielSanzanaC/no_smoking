@@ -10,7 +10,7 @@ import { getFirestore, collection, addDoc } from "firebase/firestore";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDc6ru4ga2NCaNmvDyq5bWPBA2Ao1Dofwc",
+  apiKey: process.env.API_KEY,
   authDomain: "app-nosmoking.firebaseapp.com",
   projectId: "app-nosmoking",
   storageBucket: "app-nosmoking.firebasestorage.app",
