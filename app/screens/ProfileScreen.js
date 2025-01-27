@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { collection, query, where, getDocs, doc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "../../FirebaseConfig";
 import * as Animatable from 'react-native-animatable';
 
@@ -21,7 +21,6 @@ export default function ProfileScreen() {
   const [smokingHistory, setSmokingHistory] = useState([]);
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
-
 
   const getCurrentDate = () => new Date().toISOString().split("T")[0];
 
@@ -62,6 +61,18 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error("Error al obtener cigarros para hoy:", error);
       setCigarettesSmokedToday(0);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      Alert.alert("Cerraste sesión correctamente.");
+      await AsyncStorage.removeItem('isLoggedIn'); // Eliminar estado de sesión
+      await AsyncStorage.removeItem('userData');
+      router.push("/");
+    } catch (error) {
+      Alert.alert("Error al cerrar sesión:", error.message);
     }
   };
 
@@ -144,8 +155,7 @@ export default function ProfileScreen() {
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h}h ${m}m ${s}s`;
+    return `${h}h ${m}m`;
   };
 
   const currentDate = new Date();
@@ -157,6 +167,12 @@ export default function ProfileScreen() {
   return (
     <View style={styles.background}>
       <View style={styles.container}>
+
+        {/* Botón de salir sesión */}
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Ionicons name="exit-outline" size={24} color="#fff" />
+        </TouchableOpacity>
+
         <Animatable.View animation="fadeIn" duration={1000} style={styles.header}>
           <Text style={styles.title}>¡Hola, {nombre}!</Text>
           <Text style={styles.subtitle}>Tu progreso contra el tabaco</Text>
@@ -169,7 +185,7 @@ export default function ProfileScreen() {
             <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
           </View>
           <View style={styles.statBox}>
-            <Ionicons name="flame" size={40} color="#FF6F61" />
+            <Ionicons name="logo-no-smoking" size={40} color="#FF6F61" /> {/* Cambio del icono del cigarro */}
             <Text style={styles.statLabel}>Cigarros fumados hoy</Text>
             {cigarettesSmokedToday === null ? (
               <Image
@@ -212,6 +228,7 @@ export default function ProfileScreen() {
         />
 
         <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
+          <Ionicons name="add-outline" size={24} color="#fff" /> {/* Cambio del icono de signo más */}
           <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
         </TouchableOpacity>
       </View>
@@ -222,7 +239,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
         <TouchableOpacity style={styles.circleButton} onPress={handleSmokeButtonPress}>
           <View style={styles.circle}>
-            <Ionicons name="flame" size={24} color="#fff" />
+            <Ionicons name="add-outline" size={24} color="#fff" /> {/* Cambio del icono de signo más */}
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./cuenta")}>
@@ -245,6 +262,14 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '90%',
     alignSelf: 'center',
+  },
+  signOutButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: '#FF6F61',
+    padding: 10,
+    borderRadius: 5,
   },
   header: {
     marginBottom: 20,
@@ -304,17 +329,19 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   smokeButton: {
+    flexDirection: 'row', // Añadido para alinear el icono y el texto horizontalmente
+    alignItems: 'center', // Añadido para alinear verticalmente el icono y el texto
     backgroundColor: "#FF6347",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
-    alignItems: "center",
     marginTop: 20,
   },
   smokeButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+    marginLeft: 10, // Añadido para dar espacio entre el icono y el texto
   },
   navBar: {
     flexDirection: 'row',
