@@ -3,14 +3,13 @@ import { initializeApp } from "firebase/app";
 import { initializeAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 
-
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
-
+const { API_KEY } = require('./config');
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.API_KEY,
+  apiKey: API_KEY,
   authDomain: "app-nosmoking.firebaseapp.com",
   projectId: "app-nosmoking",
   storageBucket: "app-nosmoking.firebasestorage.app",
