@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -38,7 +38,7 @@ export default function DailyQuestionCombined() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       {/* Indicador de pasos */}
       <View style={styles.stepContainer}>
         {['01', '02', '03'].map((step, index) => (
@@ -103,13 +103,13 @@ export default function DailyQuestionCombined() {
       >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#0F0F2D',

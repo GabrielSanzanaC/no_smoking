@@ -114,9 +114,12 @@ const HistoryScreen = () => {
 
         const querySnapshot = await getDocs(cigarettesCollectionRef);
         const historyData = {};
-        querySnapshot.forEach(doc => {
+        querySnapshot.forEach((doc) => {
           const data = doc.data();
-          historyData[data.fecha] = `Fumaste ${data.cigarettesSmoked} cigarrillos`;
+          if (!historyData[data.fecha]) {
+            historyData[data.fecha] = [];
+          }
+          historyData[data.fecha].push(data);
         });
         setHistory(historyData);
       }
@@ -155,16 +158,16 @@ const HistoryScreen = () => {
   };
 
   const renderDay = (day) => {
-    const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const isSelected = selectedDate === day;
-    const hasRecords = history[dateKey] && history[dateKey].length > 0;
+    const hasRecords = Array.isArray(history[dateKey]) && history[dateKey].length > 0;
 
     return (
       <TouchableOpacity
         key={day}
         style={[styles.dayContainer, hasRecords && styles.hasRecords]}
         onPress={() => {
-          const [year, month, day] = dateKey.split('-').map(Number); // Extraer año, mes y día
+          const [year, month, day] = dateKey.split("-").map(Number); // Extraer año, mes y día
           setSelectedDate(new Date(year, month - 1, day)); // Crear fecha correctamente
           setShowRecords(true);
           Animated.timing(fadeAnim, {
@@ -180,11 +183,9 @@ const HistoryScreen = () => {
         }}
       >
         {isSelected && <View style={styles.selectedCircle} />}
-        <Text style={[styles.dayText, isSelected && styles.selectedDayText]}>
-          {day}
-        </Text>
+        <Text style={[styles.dayText, isSelected && styles.selectedDayText]}>{day}</Text>
         <Text style={[styles.dayNameText, isSelected && styles.selectedDayText]}>
-          {new Date(currentYear, currentMonth, day).toLocaleString('default', { weekday: 'short' })}
+          {new Date(currentYear, currentMonth, day).toLocaleString("default", { weekday: "short" })}
         </Text>
         {hasRecords && <View style={styles.recordIndicator} />}
       </TouchableOpacity>
@@ -192,14 +193,12 @@ const HistoryScreen = () => {
   };
 
   const renderRecords = () => {
-    const dateKey = selectedDate ? selectedDate.toISOString().split('T')[0] : '';
-    const dailyRecords = history[dateKey] || [];
-    const totalCigars = dailyRecords.reduce((total, record) => total + record.cigars, 0);
+    const dateKey = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+    const dailyRecords = Array.isArray(history[dateKey]) ? history[dateKey] : [];
+    const totalCigars = dailyRecords.reduce((total, record) => total + record.cigarettesSmoked, 0);
     return (
       <Animated.View style={[styles.recordsContainer, { opacity: fadeAnim, height: heightAnim }]}>
-        <Text style={styles.totalCigarsText}>
-          Total de cigarros: {totalCigars}
-        </Text>
+        <Text style={styles.totalCigarsText}>Total de cigarros: {totalCigars}</Text>
       </Animated.View>
     );
   };
@@ -212,7 +211,9 @@ const HistoryScreen = () => {
           <Text style={styles.buttonText}>{"<"}</Text>
         </TouchableOpacity>
         <Text style={styles.headerText}>
-          {new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }).charAt(0).toUpperCase() + new Date(currentYear, currentMonth).toLocaleString('default', { month: 'long' }).slice(1)} {currentYear}
+          {new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" }).charAt(0).toUpperCase() +
+            new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" }).slice(1)}{" "}
+          {currentYear}
         </Text>
         <TouchableOpacity onPress={handleNextMonth}>
           <Text style={styles.buttonText}>{">"}</Text>
@@ -244,33 +245,33 @@ const HistoryScreen = () => {
 
 const styles = StyleSheet.create({
   scrollToTopButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
-    right: 20,
-    backgroundColor: '#4CAF50',
+    left: 20, // Mover el botón a la parte inferior izquierda
+    backgroundColor: "#4CAF50",
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   scrollToTopText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
   },
   scrollToTopLabel: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 12,
     marginTop: 5,
   },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#7595BF',
-    position: 'relative',
+    backgroundColor: "#7595BF",
+    position: "relative",
   },
   backgroundContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -278,24 +279,24 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   circle: {
-    position: 'absolute',
+    position: "absolute",
     borderRadius: 50,
     opacity: 0.5,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   headerText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'beige',
+    fontWeight: "bold",
+    color: "beige",
   },
   buttonText: {
     fontSize: 24,
-    color: 'beige',
+    color: "beige",
   },
   list: {
     flexGrow: 0,
@@ -305,87 +306,83 @@ const styles = StyleSheet.create({
     padding: 15,
     marginHorizontal: 5,
     borderRadius: 10,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   selectedCircle: {
     width: 45,
     height: 45,
     borderRadius: 22.5,
-    backgroundColor: '#059E9E',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [
-      { translateX: -22.5 },
-      { translateY: -22.5 },
-      { rotate: '45deg' },
-    ],
+    backgroundColor: "#059E9E",
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -22.5 }, { translateY: -22.5 }, { rotate: "45deg" }],
   },
   dayText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#00796b',
+    fontWeight: "bold",
+    color: "#00796b",
   },
   selectedDayText: {
-    color: '#ffb300',
+    color: "#ffb300",
   },
   dayNameText: {
     fontSize: 14,
-    color: '#00796b',
+    color: "#00796b",
   },
   hasRecords: {
-    borderColor: '#ffeb3b',
+    borderColor: "#ffeb3b",
     borderWidth: 2,
   },
   recordIndicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ffeb3b',
-    position: 'absolute',
+    backgroundColor: "#ffeb3b",
+    position: "absolute",
     bottom: 5,
     right: 5,
   },
   recordsContainer: {
     marginTop: 20,
     padding: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
-    justifyContent: 'center', // Centrar contenido verticalmente
-    alignItems: 'flex-start', // Centrar contenido horizontalmente
+    justifyContent: "center", // Centrar contenido verticalmente
+    alignItems: "flex-start", // Centrar contenido horizontalmente
     minHeight: 50, // Altura mínima para el rectángulo
   },
   recordItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 5,
     padding: 10,
     borderRadius: 5,
-    backgroundColor: '#e0f7fa',
+    backgroundColor: "#e0f7fa",
   },
   recordNumber: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginRight: 10,
   },
   recordInfo: {
     flex: 1,
     padding: 10,
     borderRadius: 5,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -393,7 +390,7 @@ const styles = StyleSheet.create({
   },
   recordText: {
     fontSize: 16,
-    color: '#555',
+    color: "#555",
   },
 });
 
