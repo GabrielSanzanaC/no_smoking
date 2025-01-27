@@ -22,7 +22,7 @@ const ProfileScreen = () => {
   const [intervalId, setIntervalId] = useState(null);
 
   const handleExitApp = () => {
-    BackHandler.exitApp(); // Cierra la aplicación
+    BackHandler.exitApp();
   };
 
   useEffect(() => {
@@ -236,9 +236,19 @@ const styles = StyleSheet.create({
     bottom: -50,
     right: -50,
   },
-  header: {
-    marginBottom: 20,
-    alignItems: 'center',
+  rectangle: {
+    width: "90%",
+    backgroundColor: "#072040",
+    borderRadius: 20,
+    padding: 20,
+    paddingTop: 60, // Add padding at the top for the greeting and sign out button
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+    alignItems: "center",
+    marginBottom: 80, // Add space for nav bar
   },
   welcomeText: {
     color: "#F2F2F2",
@@ -276,78 +286,71 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 26,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginTop: 5,
   },
   motivationalText: {
     fontSize: 20,
-    color: '#FFD700',
-    textAlign: 'center',
+    color: "#FFD700",
+    textAlign: "center",
     marginVertical: 20,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
-  smokeButton: {
-    flexDirection: 'row', // Añadido para alinear el icono y el texto horizontalmente
-    alignItems: 'center', // Añadido para alinear verticalmente
+  signOutButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
     backgroundColor: '#FF6F61',
-    padding: 15,
+    padding: 10,
     borderRadius: 5,
-    marginBottom: 20,
-    marginTop: 10,
   },
-  smokeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 10, // Espacio entre el icono y el texto
-  },
-  historyItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  historyDate: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  historyCount: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  historyList: {
-    marginTop: 10,
-    width: '100%',
+  loader: {
+    width: 30,
+    height: 30,
   },
   navBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 10,
-    width: '100%',
-    paddingHorizontal: 10,
+    flexDirection: "row",
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
   },
   navButton: {
-    flex: 1,
-    alignItems: 'center',
+    backgroundColor: "#4CAF50",
     padding: 10,
+    borderRadius: 50,
   },
   circleButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#FF6F61',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 10,
+    backgroundColor: "#FF6F61",
+    padding: 20,
+    borderRadius: 50,
   },
   circle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
     backgroundColor: '#FF6F61',
+    borderRadius: 35,
+    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  historyItem: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginBottom: 5,
+    borderRadius: 10,
+    elevation: 3,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  historyDate: {
+    fontSize: 14,
+    color: "#555",
+  },
+  historyCount: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#FF6F61",
   },
 });
 
