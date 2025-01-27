@@ -41,6 +41,60 @@ const ProfileScreen = () => {
     return unsubscribe;
   }, []);
 
+  const getMonthlySavings = async (uid) => {
+    try {
+      const currentDate = new Date();
+      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  
+      // Referencia a la colección `CigaretteHistory`
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+  
+      // Consulta para obtener los documentos del mes actual
+      const q = query(
+        cigarettesCollectionRef,
+        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
+        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
+      );
+      const querySnapshot = await getDocs(q);
+  
+      // Sumar los cigarrillos fumados en el mes
+      let totalCigarettesSmoked = 0;
+      querySnapshot.forEach((doc) => {
+        totalCigarettesSmoked += doc.data().cigarettesSmoked || 0;
+      });
+  
+      // Datos del usuario para el cálculo
+      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0].data();
+        const cigarrillosPorDía = parseInt(userData.cigarrillosPorDía, 10);
+        const cigarrillosPorPaquete = parseInt(userData.cigarrillosPorPaquete, 10);
+        const precioPorPaquete = parseFloat(userData.precioPorPaquete);
+  
+        // Cálculos
+        const precioPorCigarrillo = precioPorPaquete / cigarrillosPorPaquete;
+        const diasEnElMes = lastDayOfMonth.getDate();
+        const totalCigarettesExpected = cigarrillosPorDía * diasEnElMes;
+  
+        const dineroAhorrado = (totalCigarettesExpected - totalCigarettesSmoked) * precioPorCigarrillo;
+  
+        setMonthlySavings(dineroAhorrado.toFixed(2)); // Actualizar el estado con el ahorro calculado
+      } else {
+        console.error("No se encontraron datos del usuario.");
+      }
+    } catch (error) {
+      console.error("Error al calcular el dinero ahorrado:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      getMonthlySavings(userId);
+    }
+  }, [userId]);
+
   useEffect(() => {
     // Inicia el cronómetro
     const loadStartTime = async () => {
@@ -182,9 +236,13 @@ const ProfileScreen = () => {
               <Text style={styles.statValue}>{streakDays} días</Text>
             </View>
             <View style={styles.statBox}>
-              <Ionicons name="cash" size={40} color="#FF6F61" />
-              <Text style={styles.statLabel}>Ahorro del mes</Text>
-              <Text style={styles.statValue}>${monthlySavings}</Text>
+            <Ionicons name="cash" size={40} color="#FF6F61" />
+              <Text style={styles.statLabel}>
+            {monthlySavings >= 0 ? "Ahorro del mes" : "Dinero gastado"}
+            </Text>
+            <Text style={[styles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
+             ${Math.abs(monthlySavings)}
+            </Text>
             </View>
           </View>
           <Animatable.Text animation="fadeIn" duration={1000} style={styles.motivationalText}>
@@ -196,7 +254,7 @@ const ProfileScreen = () => {
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./historial")}>
           <Ionicons name="calendar" size={24} color="#F2F2F2" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.circleButton} onPress={() => {}}>
+        <TouchableOpacity style={styles.circleButton} onPress={() => router.push("./dailyQuestionP1")}>
           <View style={styles.circle}>
             <Ionicons name="add-outline" size={24} color="#F2F2F2" />
           </View>
