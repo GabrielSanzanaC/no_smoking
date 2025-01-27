@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Alert } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Alert, BackHandler } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -74,6 +74,10 @@ export default function ProfileScreen() {
     } catch (error) {
       Alert.alert("Error al cerrar sesión:", error.message);
     }
+  };
+
+  const handleExitApp = () => {
+    BackHandler.exitApp(); // Cierra la aplicación
   };
 
   useEffect(() => {
@@ -168,8 +172,8 @@ export default function ProfileScreen() {
     <View style={styles.background}>
       <View style={styles.container}>
 
-        {/* Botón de salir sesión */}
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        {/* Botón para salir de la aplicación */}
+        <TouchableOpacity style={styles.signOutButton} onPress={handleExitApp}>
           <Ionicons name="exit-outline" size={24} color="#fff" />
         </TouchableOpacity>
 
@@ -226,11 +230,6 @@ export default function ProfileScreen() {
           keyExtractor={(item) => item.date}
           style={styles.historyList}
         />
-
-        <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
-          <Ionicons name="add-outline" size={24} color="#fff" /> {/* Cambio del icono de signo más */}
-          <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.navBar}>
@@ -330,69 +329,68 @@ const styles = StyleSheet.create({
   },
   smokeButton: {
     flexDirection: 'row', // Añadido para alinear el icono y el texto horizontalmente
-    alignItems: 'center', // Añadido para alinear verticalmente el icono y el texto
-    backgroundColor: "#FF6347",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    alignItems: 'center', // Añadido para alinear verticalmente
+    backgroundColor: '#FF6F61',
+    padding: 15,
     borderRadius: 5,
-    marginTop: 20,
+    marginBottom: 20,
+    marginTop: 10,
   },
   smokeButtonText: {
-    color: "white",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 10, // Añadido para dar espacio entre el icono y el texto
-  },
-  navBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#444',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    paddingVertical: 10,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  navButton: {
-    alignItems: 'center',
-  },
-  circleButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF6F61',
-    borderRadius: 35,
-    padding: 12,
-    elevation: 5,
-  },
-  circle: {
-    backgroundColor: '#FF6F61',
-    borderRadius: 35,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loader: {
-    width: 30,
-    height: 30,
-  },
-  historyList: {
-    marginTop: 20,
-    width: '100%',
+    marginLeft: 10, // Espacio entre el icono y el texto
   },
   historyItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
+    marginBottom: 10,
   },
   historyDate: {
     color: '#fff',
+    fontSize: 14,
   },
   historyCount: {
-    color: '#FFD700',
+    color: '#fff',
+    fontSize: 14,
+  },
+  historyList: {
+    marginTop: 10,
+    width: '100%',
+  },
+  navBar: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 10,
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  navButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+  },
+  circleButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FF6F61',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  circle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FF6F61',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loader: {
+    width: 50,
+    height: 50,
   },
 });
