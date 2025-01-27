@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 
 export default function dailyQuestionP1() {
   const [selectedEmotion, setSelectedEmotion] = useState(''); // Estado para la emoción seleccionada
+  const [cigarettes, setCigarettes] = useState(''); // Estado para la cantidad de cigarros
   const router = useRouter();
 
   // Lista de emociones
@@ -18,6 +19,18 @@ export default function dailyQuestionP1() {
 
   return (
     <View style={styles.container}>
+      {/* Indicador de pasos */}
+      <View style={styles.stepContainer}>
+        {['01', '02', '03'].map((step, index) => (
+          <View
+            key={index}
+            style={[styles.stepCircle, index === 0 && styles.activeStepCircle]} // Marca el paso activo
+          >
+            <Text style={styles.stepText}>{step}</Text>
+          </View>
+        ))}
+      </View>
+
       <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
       <View style={styles.taskContainer}>
         {emotions.map((emotion) => (
@@ -35,20 +48,27 @@ export default function dailyQuestionP1() {
         ))}
       </View>
 
+      <Text style={styles.inputLabel}>¿Cuántos cigarros has fumado hoy?</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Cantidad de cigarros"
+        placeholderTextColor="#888"
+        keyboardType="numeric"
+        value={cigarettes}
+        onChangeText={setCigarettes}
+      />
+
       <TouchableOpacity
-        style={[styles.nextButton, { opacity: selectedEmotion ? 1 : 0.5 }]}
+        style={[styles.nextButton, { opacity: selectedEmotion && cigarettes ? 1 : 0.5 }]}
         onPress={() => {
-          if (selectedEmotion) {
-            // Navegación a P2 pasando el valor de la emoción seleccionada
+          if (selectedEmotion && cigarettes) {
             router.push({
               pathname: './dailyQuestionP2', // Ruta de la siguiente pantalla
-              params: { emotion: selectedEmotion }, // Paso el parámetro 'emotion'
+              params: { emotion: selectedEmotion, cigarettes },
             });
-          } else {
-            console.log('No se seleccionó ninguna emoción');
           }
         }}
-        disabled={!selectedEmotion} // Deshabilitar el botón si no hay emoción seleccionada
+        disabled={!selectedEmotion || !cigarettes}
       >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
@@ -97,6 +117,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFF',
   },
+  inputLabel: {
+    fontSize: 14,
+    color: '#FFF',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  input: {
+    width: '80%',
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFF',
+    color: '#333',
+    marginBottom: 20,
+  },
   nextButton: {
     width: '80%',
     padding: 15,
@@ -108,5 +142,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#4F59FF',
+  },
+  stepContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  stepCircle: {
+    width: 30,
+    height: 30,
+    backgroundColor: '#33334D',
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  activeStepCircle: {
+    backgroundColor: '#4F59FF',
+  },
+  stepText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
 });

@@ -1,31 +1,47 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 
-export default function DailyQuestionP2() {
-  const [moodRating, setMoodRating] = useState(3); // Estado inicial en el medio de la escala
-  const router = useRouter(); // Inicializa el router
+export default function DailyQuestionCombined() {
+  const [selectedOptionP3, setSelectedOptionP3] = useState(null); // Opción de ubicación
+  const [selectedOptionP4, setSelectedOptionP4] = useState(null); // Opción de actividad
+  const router = useRouter();
+  const { emotion, cigarettes } = useLocalSearchParams(); // Recibimos parámetros de pantallas previas
 
-  // Recibe los parámetros desde la página anterior
-  const { emotion } = useLocalSearchParams(); // Extrae el parámetro 'emotion'
+  const locations = [
+    { label: 'Casa', emoji: '🏠' },
+    { label: 'Trabajo', emoji: '🏢' },
+    { label: 'Auto', emoji: '🚗' },
+    { label: 'Exterior', emoji: '🌳' },
+  ];
+
+  const activities = [
+    { label: 'Trabajando', emoji: '💼' },
+    { label: 'Estudiando', emoji: '📚' },
+    { label: 'Descansando', emoji: '😌' },
+    { label: 'Otro', emoji: '❓' },
+  ];
 
   const handleNext = () => {
-    router.push({
-      pathname: './dailyQuestionP3',
-      params: { 
-        emotion: emotion,  // Pasa la emoción seleccionada
-        moodRating: moodRating, // Pasa la calificación de estado de ánimo
-      },
-    });
+    if (selectedOptionP3 && selectedOptionP4) {
+      router.push({
+        pathname: './dailyQuestionP3',
+        params: {
+          emotion,
+          cigarettes,
+          location: selectedOptionP3,
+          activity: selectedOptionP4,
+        },
+      });
+    }
   };
 
   return (
     <View style={styles.container}>
       {/* Indicador de pasos */}
       <View style={styles.stepContainer}>
-        {['01', '02', '03', '04', '05'].map((step, index) => (
+        {['01', '02', '03'].map((step, index) => (
           <View
             key={index}
             style={[styles.stepCircle, index === 1 && styles.activeStepCircle]} // Marca el paso activo
@@ -36,38 +52,55 @@ export default function DailyQuestionP2() {
       </View>
 
       {/* Título */}
-      <Text style={styles.title}>
-        ¿Cuánto crees que el cigarro ayudó a tu estado de ánimo?
-      </Text>
-      <Text style={styles.subtitle}>
-        (Escala del 1 al 5: 1 = Nada, 5 = Mucho)
-      </Text>
+      <Text style={styles.title}>Cuéntanos más sobre tu experiencia:</Text>
 
-      {/* Slider */}
-      <View style={styles.sliderContainer}>
-        <Slider
-          style={styles.slider}
-          minimumValue={1}
-          maximumValue={5}
-          step={1}
-          value={moodRating}
-          onValueChange={setMoodRating} // Actualiza el estado con el valor seleccionado
-          minimumTrackTintColor="#4F59FF"
-          maximumTrackTintColor="#33334D"
-          thumbTintColor="#4F59FF"
-        />
-        <View style={styles.sliderLabels}>
-          {[1, 2, 3, 4, 5].map((value) => (
-            <Text key={value} style={styles.sliderLabel}>
-              {value}
-            </Text>
-          ))}
-        </View>
-        <Text style={styles.moodRatingText}>Tu calificación: {moodRating}</Text>
+      {/* Pregunta: ¿Dónde fumaste? */}
+      <Text style={styles.subtitle}>¿Dónde fumaste?</Text>
+      <View style={styles.optionsContainer}>
+        {locations.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.optionButton,
+              selectedOptionP3 === option.label && styles.selectedOptionButton,
+            ]}
+            onPress={() => setSelectedOptionP3(option.label)}
+          >
+            <Text style={styles.optionEmoji}>{option.emoji}</Text>
+            <Text style={styles.optionText}>{option.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Pregunta: ¿Qué estabas haciendo antes de fumar? */}
+      <Text style={styles.subtitle}>¿Qué estabas haciendo antes de fumar?</Text>
+      <View style={styles.optionsContainer}>
+        {activities.map((option, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.optionButton,
+              selectedOptionP4 === option.label && styles.selectedOptionButton,
+            ]}
+            onPress={() => setSelectedOptionP4(option.label)}
+          >
+            <Text style={styles.optionEmoji}>{option.emoji}</Text>
+            <Text style={styles.optionText}>{option.label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Botón de siguiente */}
-      <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+      <TouchableOpacity
+        style={[
+          styles.nextButton,
+          {
+            opacity: selectedOptionP3 && selectedOptionP4 ? 1 : 0.5,
+          },
+        ]}
+        onPress={handleNext}
+        disabled={!selectedOptionP3 || !selectedOptionP4}
+      >
         <Text style={styles.nextButtonText}>Siguiente</Text>
       </TouchableOpacity>
     </View>
@@ -82,63 +115,43 @@ const styles = StyleSheet.create({
     backgroundColor: '#0F0F2D',
     padding: 20,
   },
-  stepContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 150,
-    marginBottom: 20,
-  },
-  stepCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#33334D',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeStepCircle: {
-    backgroundColor: '#4F59FF',
-  },
-  stepText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#B0C4DE',
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 10,
+    alignSelf: 'flex-start',
   },
-  sliderContainer: {
-    width: '80%',
-    alignItems: 'center',
+  optionsContainer: {
+    width: '100%',
     marginBottom: 30,
   },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderLabels: {
+  optionButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#33334D',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
   },
-  sliderLabel: {
-    color: '#FFF',
-    fontSize: 12,
+  selectedOptionButton: {
+    backgroundColor: '#4F59FF',
   },
-  moodRatingText: {
-    color: '#FFF',
+  optionEmoji: {
+    fontSize: 24,
+    marginRight: 10,
+  },
+  optionText: {
     fontSize: 16,
-    marginTop: 10,
+    color: '#FFF',
   },
   nextButton: {
     width: '80%',
@@ -151,5 +164,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#4F59FF',
+  },
+  stepContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  stepCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#33334D',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  activeStepCircle: {
+    backgroundColor: '#4F59FF',
+  },
+  stepText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

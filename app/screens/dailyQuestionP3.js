@@ -1,46 +1,94 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router'; 
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Slider from '@react-native-community/slider';
+import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
+import { getAuth } from 'firebase/auth';
+import { db } from '../../FirebaseConfig';
+import { collection, doc, getDocs, query, setDoc, where, serverTimestamp, updateDoc } from 'firebase/firestore';
 
-export default function DailyQuestionP3() {
-  const [selectedOption, setSelectedOption] = useState(null);
-  const router = useRouter(); 
+export default function DailyQuestion() {
+  const [moodRating, setMoodRating] = useState(3); // Estado inicial del estado de ánimo
+  const [guiltRating, setGuiltRating] = useState(3); // Estado inicial de la culpa
+  const [loading, setLoading] = useState(false); // Estado para controlar el botón
+  const router = useRouter();
+  const { emotion, cigarettes, location, activity } = useLocalSearchParams(); // Incluimos 'cigarettes'
 
-  // Extraemos los parámetros pasados desde P2
-  const { emotion, moodRating } = useLocalSearchParams(); 
+  const auth = getAuth();
+  const userId = auth.currentUser?.uid;
+  const cigarettesNumber = parseInt(cigarettes, 10);  // Convertimos el valor de 'cigarettes' a número en base 10
 
-  const options = [
-    { label: 'Casa', emoji: '🏠' },
-    { label: 'Trabajo', emoji: '🏢' },
-    { label: 'Auto', emoji: '🚗' },
-    { label: 'Exterior', emoji: '🌳' },
-  ];
+  if (!userId) {
+    console.error("Usuario no autenticado");
+    return null;
+  }
 
-  const handleOptionSelect = (option) => {
-    setSelectedOption(option); // Actualizamos la opción seleccionada
+  const getCurrentDate = () => {
+    const date = new Date();
+    return date.toISOString().split('T')[0];
   };
 
-  const handleNext = () => {
-    // Asegúrate de pasar los parámetros correctamente a la siguiente pantalla (P4)
-    router.push({
-      pathname: './dailyQuestionP4',
-      params: { 
-        emotion, // Pasamos la emoción seleccionada
-        moodRating, // Pasamos la calificación de estado de ánimo
-        location: selectedOption // Pasamos el lugar seleccionado
-      },
-    });
+  const handleSaveToDB = async () => {
+    if (loading) return;
+  
+    setLoading(true);
+    const currentDate = getCurrentDate();
+    const userDocRef = doc(db, "usuarios", userId);
+    const cigaretteHistoryRef = collection(userDocRef, "CigaretteHistory");
+  
+    try {
+      const q = query(cigaretteHistoryRef, where("fecha", "==", currentDate));
+      const querySnapshot = await getDocs(q);
+  
+      let cigaretteDocRef;
+      const cigarettesNumber = parseInt(cigarettes, 10);  // Convertimos 'cigarettes' a número
+  
+      if (isNaN(cigarettesNumber)) {
+        console.error("El valor de 'cigarettes' no es un número válido.");
+        return;  // Detenemos la ejecución si el valor no es válido
+      }
+  
+      if (!querySnapshot.empty) {
+        cigaretteDocRef = querySnapshot.docs[0].ref;
+        const data = querySnapshot.docs[0].data();
+        const currentCigarettesSmoked = parseInt(data.cigarettesSmoked, 10) || 0; // Aseguramos que sea un número
+        const newCigarettesSmoked = currentCigarettesSmoked + cigarettesNumber; // Sumar correctamente como números
+        await updateDoc(cigaretteDocRef, { cigarettesSmoked: newCigarettesSmoked });
+      } else {
+        cigaretteDocRef = doc(cigaretteHistoryRef);
+        await setDoc(cigaretteDocRef, {
+          fecha: currentDate,
+          cigarettesSmoked: cigarettesNumber, // Guardamos como número
+        });
+      }
+  
+      const datosPorCigarroRef = collection(cigaretteDocRef, "datosPorCigarro");
+      await setDoc(doc(datosPorCigarroRef), {
+        emotion,
+        cigarettes,
+        location,
+        activity,
+        moodRating,
+        guiltRating,
+        timestamp: serverTimestamp(),
+      });
+  
+      router.push("./ProfileScreen");
+    } catch (error) {
+      console.error("Error al guardar los datos: ", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       {/* Indicador de pasos */}
       <View style={styles.stepContainer}>
-        {['01', '02', '03', '04', '05'].map((step, index) => (
+        {['01', '02', '03'].map((step, index) => (
           <View
             key={index}
-            style={[styles.stepCircle, index === 2 && styles.activeStepCircle]} 
+            style={[styles.stepCircle, index === 2 && styles.activeStepCircle]} // Marca el paso activo
           >
             <Text style={styles.stepText}>{step}</Text>
           </View>
@@ -48,35 +96,63 @@ export default function DailyQuestionP3() {
       </View>
 
       {/* Título */}
-      <Text style={styles.title}>¿Dónde fumaste?</Text>
+      <Text style={styles.title}>¿Cómo te sientes después de fumar?</Text>
 
-      {/* Opciones */}
-      <View style={styles.optionsContainer}>
-        {options.map((option, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[ 
-              styles.optionButton,
-              selectedOption === option.label && styles.selectedOptionButton,
-            ]}
-            onPress={() => handleOptionSelect(option.label)}
-          >
-            <Text style={styles.optionEmoji}>{option.emoji}</Text>
-            <Text style={styles.optionText}>{option.label}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* Pregunta 1 */}
+      <Text style={styles.subtitle}>¿Cuánto crees que el cigarro ayudó a tu estado de ánimo?</Text>
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={5}
+          step={1}
+          value={moodRating}
+          onValueChange={setMoodRating}
+          minimumTrackTintColor="#4F59FF"
+          maximumTrackTintColor="#33334D"
+          thumbTintColor="#4F59FF"
+        />
+        <View style={styles.sliderLabels}>
+          {[1, 2, 3, 4, 5].map((value) => (
+            <Text key={value} style={styles.sliderLabel}>{value}</Text>
+          ))}
+        </View>
+        <Text style={styles.ratingText}>Tu calificación: {moodRating}</Text>
       </View>
 
-      {/* Botón de siguiente */}
+      {/* Pregunta 2 */}
+      <Text style={styles.subtitle}>¿Te sentiste culpable después de fumar?</Text>
+      <View style={styles.sliderContainer}>
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={5}
+          step={1}
+          value={guiltRating}
+          onValueChange={setGuiltRating}
+          minimumTrackTintColor="#4F59FF"
+          maximumTrackTintColor="#33334D"
+          thumbTintColor="#4F59FF"
+        />
+        <View style={styles.sliderLabels}>
+          {[1, 2, 3, 4, 5].map((value) => (
+            <Text key={value} style={styles.sliderLabel}>{value}</Text>
+          ))}
+        </View>
+        <Text style={styles.ratingText}>Tu calificación: {guiltRating}</Text>
+      </View>
+
+      {/* Botón de guardar */}
       <TouchableOpacity
-        style={[ 
-          styles.nextButton, 
-          { opacity: selectedOption ? 1 : 0.5 },
-        ]}
-        onPress={handleNext}
-        disabled={!selectedOption} // Deshabilita el botón si no hay opción seleccionada
+        style={[styles.nextButton, loading && { backgroundColor: '#ccc' }]}
+        onPress={handleSaveToDB}
+        disabled={loading}
       >
-        <Text style={styles.nextButtonText}>Siguiente</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#4F59FF" />
+        ) : (
+          <Text style={styles.nextButtonText}>Ir al Perfil</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -113,35 +189,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
     marginBottom: 20,
   },
-  optionsContainer: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    backgroundColor: '#33334D',
-    padding: 15,
-    borderRadius: 10,
+  subtitle: {
+    fontSize: 16,
+    color: '#B0C4DE',
+    textAlign: 'center',
     marginBottom: 10,
   },
-  selectedOptionButton: {
-    backgroundColor: '#4F59FF',
+  sliderContainer: {
+    width: '80%',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  optionEmoji: {
-    fontSize: 24,
-    marginRight: 10,
+  slider: {
+    width: '100%',
+    height: 40,
   },
-  optionText: {
-    fontSize: 16,
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  sliderLabel: {
     color: '#FFF',
+    fontSize: 12,
+  },
+  ratingText: {
+    color: '#FFF',
+    fontSize: 16,
+    marginTop: 10,
   },
   nextButton: {
     width: '80%',
@@ -149,7 +230,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFF',
     alignItems: 'center',
-    opacity: 1,
   },
   nextButtonText: {
     fontSize: 16,
