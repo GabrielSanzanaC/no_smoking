@@ -10,6 +10,8 @@ import * as Animatable from "react-native-animatable";
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as Random from 'expo-random';
+import { Ionicons } from "@expo/vector-icons";
+
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -240,10 +242,7 @@ const App = () => {
       {/* Main Content */}
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
         <Animatable.View animation="zoomIn" style={styles.logoContainer}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/150" }}
-            style={styles.logo}
-          />
+          <Ionicons name="logo-no-smoking" size={50} color="#F2F2F2" />
           <Animatable.Text animation="bounceIn" style={styles.welcomeText}>
             ¡Bienvenido a Deja de Fumar!
           </Animatable.Text>
