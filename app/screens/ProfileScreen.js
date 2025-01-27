@@ -1,79 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
 import { useRouter } from "expo-router";
-import { collection, query, where, getDocs, doc } from "firebase/firestore";
-import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "../../FirebaseConfig";
-import * as Animatable from 'react-native-animatable';
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs, doc } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Animatable from "react-native-animatable";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function ProfileScreen() {
+const ProfileScreen = () => {
   const router = useRouter();
   const [nombre, setNombre] = useState("Cargando...");
   const [userEmail, setUserEmail] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Tiempo sin fumar en segundos
+  const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0);
   const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(null);
-  const [streakDays, setStreakDays] = useState(0); // Racha de días
-  const [monthlySavings, setMonthlySavings] = useState(0); // Ahorro de dinero
-  const [startTime, setStartTime] = useState(Date.now()); // Marca de tiempo inicial
-  const [smokingHistory, setSmokingHistory] = useState([]);
+  const [streakDays, setStreakDays] = useState(0);
+  const [monthlySavings, setMonthlySavings] = useState(0);
+  const [startTime, setStartTime] = useState(Date.now());
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
 
-  const getCurrentDate = () => new Date().toISOString().split("T")[0];
-
-  const getUserData = async (email) => {
-    try {
-      const q = query(collection(db, "usuarios"), where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data();
-        setNombre(userData.nombre || "Usuario");
-        setUserId(userData.uid);
-        setStreakDays(userData.streakDays || 0);
-        setMonthlySavings(userData.monthlySavings || 0);
-      } else {
-        setNombre("Usuario");
-      }
-    } catch (error) {
-      setNombre("Error al obtener datos");
-    }
-  };
-
-  const getCigarettesForToday = async (uid) => {
-    try {
-      const currentDate = getCurrentDate();
-      const userDocRef = doc(db, "usuarios", uid);
-      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
-
-      const q = query(cigarettesCollectionRef, where("fecha", "==", currentDate));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const data = querySnapshot.docs[0].data();
-        setCigarettesSmokedToday(data.cigarettesSmoked || 0);
-      } else {
-        setCigarettesSmokedToday(0);
-      }
-    } catch (error) {
-      console.error("Error al obtener cigarros para hoy:", error);
-      setCigarettesSmokedToday(0);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      Alert.alert("Cerraste sesión correctamente.");
-      await AsyncStorage.removeItem('isLoggedIn'); // Eliminar estado de sesión
-      await AsyncStorage.removeItem('userData');
-      router.push("/");
-    } catch (error) {
-      Alert.alert("Error al cerrar sesión:", error.message);
-    }
+  const handleExitApp = () => {
+    BackHandler.exitApp();
   };
 
   useEffect(() => {
@@ -91,6 +40,60 @@ export default function ProfileScreen() {
 
     return unsubscribe;
   }, []);
+
+  const getMonthlySavings = async (uid) => {
+    try {
+      const currentDate = new Date();
+      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  
+      // Referencia a la colección `CigaretteHistory`
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+  
+      // Consulta para obtener los documentos del mes actual
+      const q = query(
+        cigarettesCollectionRef,
+        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
+        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
+      );
+      const querySnapshot = await getDocs(q);
+  
+      // Sumar los cigarrillos fumados en el mes
+      let totalCigarettesSmoked = 0;
+      querySnapshot.forEach((doc) => {
+        totalCigarettesSmoked += doc.data().cigarettesSmoked || 0;
+      });
+  
+      // Datos del usuario para el cálculo
+      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0].data();
+        const cigarrillosPorDía = parseInt(userData.cigarrillosPorDía, 10);
+        const cigarrillosPorPaquete = parseInt(userData.cigarrillosPorPaquete, 10);
+        const precioPorPaquete = parseFloat(userData.precioPorPaquete);
+  
+        // Cálculos
+        const precioPorCigarrillo = precioPorPaquete / cigarrillosPorPaquete;
+        const diasEnElMes = lastDayOfMonth.getDate();
+        const totalCigarettesExpected = cigarrillosPorDía * diasEnElMes;
+  
+        const dineroAhorrado = (totalCigarettesExpected - totalCigarettesSmoked) * precioPorCigarrillo;
+  
+        setMonthlySavings(dineroAhorrado.toFixed(2)); // Actualizar el estado con el ahorro calculado
+      } else {
+        console.error("No se encontraron datos del usuario.");
+      }
+    } catch (error) {
+      console.error("Error al calcular el dinero ahorrado:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      getMonthlySavings(userId);
+    }
+  }, [userId]);
 
   useEffect(() => {
     // Inicia el cronómetro
@@ -129,7 +132,7 @@ export default function ProfileScreen() {
 
     const checkAndUpdateMessage = async () => {
       const lastShownDate = await AsyncStorage.getItem("lastShownDate");
-      const currentDate = getCurrentDate();
+      const currentDate = new Date().toISOString().split("T")[0];
 
       if (lastShownDate !== currentDate) {
         const newMessage = dailyMessage();
@@ -145,227 +148,242 @@ export default function ProfileScreen() {
     checkAndUpdateMessage();
   }, []);
 
-  const handleSmokeButtonPress = async () => {
-    const newStartTime = Date.now();
-    setStartTime(newStartTime); // Reinicia el cronómetro
-    await AsyncStorage.setItem("startTime", newStartTime.toString()); // Guarda la nueva marca de tiempo
-    await router.push("./dailyQuestionP1"); // Navega a la siguiente pantalla
+  const getUserData = async (email) => {
+    try {
+      const q = query(collection(db, "usuarios"), where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setNombre(userData.nombre || "Usuario");
+        setStreakDays(userData.streakDays || 0);
+        setMonthlySavings(userData.monthlySavings || 0);
+      } else {
+        setNombre("Usuario");
+      }
+    } catch (error) {
+      setNombre("Error al obtener datos");
+    }
   };
-  
+
+  const getCigarettesForToday = async (uid) => {
+    try {
+      const currentDate = new Date().toISOString().split("T")[0];
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+
+      const q = query(cigarettesCollectionRef, where("fecha", "==", currentDate));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const data = querySnapshot.docs[0].data();
+        setCigarettesSmokedToday(data.cigarettesSmoked || 0);
+      } else {
+        setCigarettesSmokedToday(0);
+      }
+    } catch (error) {
+      console.error("Error al obtener cigarros para hoy:", error);
+      setCigarettesSmokedToday(0);
+    }
+  };
+
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     return `${h}h ${m}m`;
   };
 
-  const currentDate = new Date();
-  const formattedDate = currentDate.toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-  });
-
   return (
-    <View style={styles.background}>
-      <View style={styles.container}>
-
-        {/* Botón de salir sesión */}
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Ionicons name="exit-outline" size={24} color="#fff" />
+    <View style={styles.container}>
+      {/* Animated Background */}
+      <Animatable.View
+        animation="pulse"
+        iterationCount="infinite"
+        duration={500}
+        style={styles.animatedCircle1}
+      />
+      <Animatable.View
+        animation="pulse"
+        iterationCount="infinite"
+        style={styles.animatedCircle2}
+      />
+      <Animatable.View animation="fadeIn" style={styles.rectangle}>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleExitApp}>
+          <Ionicons name="exit-outline" size={24} color="#F2F2F2" />
         </TouchableOpacity>
-
-        <Animatable.View animation="fadeIn" duration={1000} style={styles.header}>
-          <Text style={styles.title}>¡Hola, {nombre}!</Text>
-          <Text style={styles.subtitle}>Tu progreso contra el tabaco</Text>
-        </Animatable.View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Ionicons name="time" size={40} color="#4CAF50" />
-            <Text style={styles.statLabel}>Tiempo sin fumar</Text>
-            <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Ionicons name="logo-no-smoking" size={40} color="#FF6F61" /> {/* Cambio del icono del cigarro */}
-            <Text style={styles.statLabel}>Cigarros fumados hoy</Text>
-            {cigarettesSmokedToday === null ? (
-              <Image
-                source={require("../../assets/images/load.gif")}
-                style={styles.loader}
-              />
-            ) : (
-              <Text style={styles.statValue}>{cigarettesSmokedToday}</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Ionicons name="checkmark-circle" size={40} color="#FF6F61" />
-            <Text style={styles.statLabel}>Racha de días</Text>
-            <Text style={styles.statValue}>{streakDays} días</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Ionicons name="cash" size={40} color="#4CAF50" />
-            <Text style={styles.statLabel}>Ahorro del mes</Text>
-            <Text style={styles.statValue}>${monthlySavings}</Text>
-          </View>
-        </View>
-
-        <Animatable.Text animation="fadeIn" duration={1000} style={styles.motivationalText}>
-          {motivationalMessage}
-        </Animatable.Text>
-
-        <FlatList
-          data={smokingHistory}
-          renderItem={({ item }) => (
-            <View style={styles.historyItem}>
-              <Text style={styles.historyDate}>{item.date}</Text>
-              <Text style={styles.historyCount}>{item.count} cig.</Text>
+        <Animatable.Text animation="bounceIn" style={styles.welcomeText}>¡Hola, {nombre}!</Animatable.Text>
+        <Animatable.View animation="fadeInUp" style={styles.formContainer}>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Ionicons name="time" size={40} color="#FF6F61" />
+              <Text style={styles.statLabel}>Tiempo sin fumar</Text>
+              <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
             </View>
-          )}
-          keyExtractor={(item) => item.date}
-          style={styles.historyList}
-        />
-
-        <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
-          <Ionicons name="add-outline" size={24} color="#fff" /> {/* Cambio del icono de signo más */}
-          <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
-        </TouchableOpacity>
-      </View>
-
+            <View style={styles.statBox}>
+              <Ionicons name="logo-no-smoking" size={40} color="#059E9E" />
+              <Text style={styles.statLabel}>Cigarros fumados hoy</Text>
+              {cigarettesSmokedToday === null ? (
+                <View style={styles.loader} />
+              ) : (
+                <Text style={styles.statValue}>{cigarettesSmokedToday}</Text>
+              )}
+            </View>
+          </View>
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Ionicons name="checkmark-circle" size={40} color="#059E9E" />
+              <Text style={styles.statLabel}>Racha de días</Text>
+              <Text style={styles.statValue}>{streakDays} días</Text>
+            </View>
+            <View style={styles.statBox}>
+            <Ionicons name="cash" size={40} color="#FF6F61" />
+              <Text style={styles.statLabel}>
+            {monthlySavings >= 0 ? "Ahorro del mes" : "Dinero gastado"}
+            </Text>
+            <Text style={[styles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
+             ${Math.abs(monthlySavings)}
+            </Text>
+            </View>
+          </View>
+          <Animatable.Text animation="fadeIn" duration={1000} style={styles.motivationalText}>
+            {motivationalMessage}
+          </Animatable.Text>
+        </Animatable.View>
+      </Animatable.View>
       <View style={styles.navBar}>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./historial")}>
-          <Ionicons name="calendar" size={24} color="#fff" />
+          <Ionicons name="calendar" size={24} color="#F2F2F2" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.circleButton} onPress={handleSmokeButtonPress}>
+        <TouchableOpacity style={styles.circleButton} onPress={() => router.push("./dailyQuestionP1")}>
           <View style={styles.circle}>
-            <Ionicons name="add-outline" size={24} color="#fff" /> {/* Cambio del icono de signo más */}
+            <Ionicons name="add-outline" size={24} color="#F2F2F2" />
           </View>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./cuenta")}>
-          <Ionicons name="person" size={24} color="#fff" />
+          <Ionicons name="person" size={24} color="#F2F2F2" />
         </TouchableOpacity>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: '#2C2C3E',
-  },
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    backgroundColor: "#7595BF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  animatedCircle1: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    backgroundColor: "#072040", // Contrast Black
+    borderRadius: 150,
+    opacity: 0.2,
+    top: -50,
+    left: -50,
+  },
+  animatedCircle2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    backgroundColor: "#1F82BF",
+    borderRadius: 100,
+    opacity: 0.3,
+    bottom: -50,
+    right: -50,
+  },
+  rectangle: {
+    width: "90%",
+    backgroundColor: "#072040",
+    borderRadius: 20,
     padding: 20,
-    width: '90%',
-    alignSelf: 'center',
+    paddingTop: 60, // Add padding at the top for the greeting and sign out button
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+    alignItems: "center",
+    marginBottom: 80, // Add space for nav bar
   },
-  signOutButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    backgroundColor: '#FF6F61',
-    padding: 10,
-    borderRadius: 5,
+  welcomeText: {
+    color: "#F2F2F2",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10, // Add margin bottom to separate from the stats
   },
-  header: {
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#f0f0f0',
-    marginTop: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+  formContainer: {
+    width: "100%",
   },
   statsContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   statBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: 20,
     padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 5,
-    width: '45%',
+    width: "45%",
   },
   statLabel: {
     fontSize: 16,
-    color: '#ccc',
+    color: "#ccc",
     marginTop: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   statValue: {
     fontSize: 26,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginTop: 5,
   },
   motivationalText: {
     fontSize: 20,
-    color: '#FFD700',
-    textAlign: 'center',
+    color: "#FFD700",
+    textAlign: "center",
     marginVertical: 20,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
-  smokeButton: {
-    flexDirection: 'row', // Añadido para alinear el icono y el texto horizontalmente
-    alignItems: 'center', // Añadido para alinear verticalmente el icono y el texto
-    backgroundColor: "#FF6347",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+  signOutButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: '#FF6F61',
+    padding: 10,
     borderRadius: 5,
-    marginTop: 20,
   },
-  smokeButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 10, // Añadido para dar espacio entre el icono y el texto
+  loader: {
+    width: 30,
+    height: 30,
   },
   navBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#444',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    paddingVertical: 10,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    flexDirection: "row",
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
   },
   navButton: {
-    alignItems: 'center',
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 50,
   },
   circleButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF6F61',
-    borderRadius: 35,
-    padding: 12,
-    elevation: 5,
+    backgroundColor: "#FF6F61",
+    padding: 20,
+    borderRadius: 50,
   },
   circle: {
     backgroundColor: '#FF6F61',
@@ -374,25 +392,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loader: {
-    width: 30,
-    height: 30,
-  },
-  historyList: {
-    marginTop: 20,
-    width: '100%',
-  },
   historyItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
+    backgroundColor: "#fff",
+    padding: 10,
+    marginBottom: 5,
+    borderRadius: 10,
+    elevation: 3,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   historyDate: {
-    color: '#fff',
+    fontSize: 14,
+    color: "#555",
   },
   historyCount: {
-    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#FF6F61",
   },
 });
+
+export default ProfileScreen;
