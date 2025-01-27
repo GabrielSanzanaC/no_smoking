@@ -94,6 +94,13 @@ const ProfileScreen = () => {
     checkAndUpdateMessage();
   }, []);
 
+  const handleSmokeButtonPress = async () => {
+    const newStartTime = Date.now();
+    setStartTime(newStartTime); // Reinicia el cronómetro
+    await AsyncStorage.setItem("startTime", newStartTime.toString()); // Guarda la nueva marca de tiempo
+    await router.push("./dailyQuestionP1"); // Navega a la siguiente pantalla
+  };
+
   const getUserData = async (email) => {
     try {
       const q = query(collection(db, "usuarios"), where("email", "==", email));
@@ -196,7 +203,7 @@ const ProfileScreen = () => {
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./historial")}>
           <Ionicons name="calendar" size={24} color="#F2F2F2" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.circleButton} onPress={() => {}}>
+        <TouchableOpacity style={styles.circleButton} onPress={handleSmokeButtonPress}>
           <View style={styles.circle}>
             <Ionicons name="add-outline" size={24} color="#F2F2F2" />
           </View>
