@@ -77,7 +77,22 @@ export default function ProfileScreen() {
   };
 
   const handleExitApp = () => {
-    BackHandler.exitApp(); // Cierra la aplicación
+    Alert.alert(
+      "Confirmar salida",
+      "¿Estás seguro de que deseas salir de la aplicación?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Salir",
+          onPress: () => BackHandler.exitApp(),
+          style: "destructive",
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   useEffect(() => {
@@ -155,7 +170,7 @@ export default function ProfileScreen() {
     await AsyncStorage.setItem("startTime", newStartTime.toString()); // Guarda la nueva marca de tiempo
     await router.push("./dailyQuestionP1"); // Navega a la siguiente pantalla
   };
-  
+
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -271,7 +286,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 40, // Aumenta el margen inferior
+    marginTop: 30, // Aumenta el margen superior
     alignItems: 'center',
   },
   title: {
@@ -315,82 +331,69 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   statValue: {
-    fontSize: 26,
-    fontWeight: 'bold',
+    fontSize: 20,
     color: '#fff',
+    fontWeight: 'bold',
     marginTop: 5,
   },
   motivationalText: {
-    fontSize: 20,
-    color: '#FFD700',
+    fontSize: 18,
+    color: '#fff',
+    marginTop: 20,
     textAlign: 'center',
-    marginVertical: 20,
     fontStyle: 'italic',
   },
-  smokeButton: {
-    flexDirection: 'row', // Añadido para alinear el icono y el texto horizontalmente
-    alignItems: 'center', // Añadido para alinear verticalmente
-    backgroundColor: '#FF6F61',
-    padding: 15,
-    borderRadius: 5,
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  smokeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 10, // Espacio entre el icono y el texto
+  historyList: {
+    width: '100%',
+    marginTop: 20,
   },
   historyItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    backgroundColor: '#333',
+    padding: 10,
+    marginBottom: 5,
+    borderRadius: 10,
   },
   historyDate: {
     color: '#fff',
-    fontSize: 14,
+    fontWeight: 'bold',
   },
   historyCount: {
     color: '#fff',
-    fontSize: 14,
+    marginTop: 5,
   },
-  historyList: {
-    marginTop: 10,
-    width: '100%',
+  loader: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
   navBar: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    position: 'absolute',
-    bottom: 10,
     width: '100%',
-    paddingHorizontal: 10,
+    padding: 15,
+    backgroundColor: '#2C2C3E',
   },
   navButton: {
-    flex: 1,
-    alignItems: 'center',
     padding: 10,
+    backgroundColor: '#FF6F61',
+    borderRadius: 50,
   },
   circleButton: {
+    backgroundColor: '#FF6F61',
+    borderRadius: 50,
     width: 60,
     height: 60,
-    borderRadius: 30,
-    backgroundColor: '#FF6F61',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
+    elevation: 5,
   },
   circle: {
+    backgroundColor: '#FF6F61',
+    borderRadius: 50,
     width: 50,
     height: 50,
-    borderRadius: 25,
-    backgroundColor: '#FF6F61',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loader: {
-    width: 50,
-    height: 50,
   },
 });
