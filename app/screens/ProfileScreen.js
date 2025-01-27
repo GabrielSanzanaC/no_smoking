@@ -22,7 +22,7 @@ const ProfileScreen = () => {
   const [intervalId, setIntervalId] = useState(null);
 
   const handleExitApp = () => {
-    BackHandler.exitApp();
+    BackHandler.exitApp(); // Cierra la aplicación
   };
 
   useEffect(() => {
@@ -236,19 +236,9 @@ const styles = StyleSheet.create({
     bottom: -50,
     right: -50,
   },
-  rectangle: {
-    width: "90%",
-    backgroundColor: "#072040",
-    borderRadius: 20,
-    padding: 20,
-    paddingTop: 60, // Add padding at the top for the greeting and sign out button
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 10,
-    alignItems: "center",
-    marginBottom: 80, // Add space for nav bar
+  header: {
+    marginBottom: 20,
+    alignItems: 'center',
   },
   welcomeText: {
     color: "#F2F2F2",
@@ -286,57 +276,76 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 26,
-    fontWeight: "bold",
-    color: "#fff",
+    fontWeight: 'bold',
+    color: '#fff',
     marginTop: 5,
   },
   motivationalText: {
     fontSize: 20,
-    color: "#FFD700",
-    textAlign: "center",
+    color: '#FFD700',
+    textAlign: 'center',
     marginVertical: 20,
-    fontStyle: "italic",
+    fontStyle: 'italic',
   },
-  signOutButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
+  smokeButton: {
+    flexDirection: 'row', // Añadido para alinear el icono y el texto horizontalmente
+    alignItems: 'center', // Añadido para alinear verticalmente
     backgroundColor: '#FF6F61',
-    padding: 10,
+    padding: 15,
     borderRadius: 5,
+    marginBottom: 20,
+    marginTop: 10,
   },
-  loader: {
-    width: 30,
-    height: 30,
+  smokeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 10, // Espacio entre el icono y el texto
+  },
+  historyItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  historyDate: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  historyCount: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  historyList: {
+    marginTop: 10,
+    width: '100%',
   },
   navBar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1F82BF', // Changed color of the nav bar
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingVertical: 10,
-    width: '90%',
-    alignSelf: 'center',
     position: 'absolute',
-    bottom: 0,
+    bottom: 10,
+    width: '100%',
+    paddingHorizontal: 10,
   },
   navButton: {
+    flex: 1,
     alignItems: 'center',
+    padding: 10,
   },
   circleButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#FF6F61',
-    borderRadius: 35,
-    padding: 12,
-    elevation: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
   },
   circle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#FF6F61',
-    borderRadius: 35,
-    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
