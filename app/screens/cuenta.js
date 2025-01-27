@@ -106,6 +106,9 @@ const AccountDetailsScreen = () => {
   const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
   const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
   const [totalMoneySpentSinceAccountCreation, setTotalMoneySpentSinceAccountCreation] = useState(0);
+  const [timeLostInDays, setTimeLostInDays] = useState(0);  // Estado para almacenar el tiempo perdido en días
+  const [timeLostInHours, setTimeLostInHours] = useState(0); // Estado para almacenar las horas perdidas
+  const [timeLostInMinutes, setTimeLostInMinutes] = useState(0); // Estado para almacenar los minutos perdidos
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -163,6 +166,16 @@ const AccountDetailsScreen = () => {
   
         setTotalCigarettesSmoked(totalCigarettes);
         setTotalMoneySpentSinceSmoking(totalMoneySpent); // Guardamos el dinero total gastado
+
+        // Calcular el tiempo perdido basado en cigarrillos fumados (7 minutos por cigarro)
+        const timeLostInMinutesTotal = totalCigarettes * 7;
+        const days = Math.floor(timeLostInMinutesTotal / 1440); // Número de días completos
+        const hours = Math.floor((timeLostInMinutesTotal % 1440) / 60); // Número de horas restantes
+        const minutes = timeLostInMinutesTotal % 60; // Restantes minutos
+
+        setTimeLostInDays(days);
+        setTimeLostInHours(hours);
+        setTimeLostInMinutes(minutes); // Guardamos los minutos restantes
       } else {
         console.log("Usuario no encontrado");
       }
@@ -211,9 +224,13 @@ const AccountDetailsScreen = () => {
             <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
             <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
           </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+          <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
             <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
             <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+            <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
+            <Text style={styles.statValue}>{timeLostInDays} días, {timeLostInHours} horas y {timeLostInMinutes} minutos</Text>
           </Animatable.View>
         </Animatable.View>
       </ScrollView>
