@@ -1,18 +1,109 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, getDocs, doc, query, where } from "firebase/firestore";
-import { auth, db } from "../../FirebaseConfig"; // Asegúrate de que 'auth' y 'db' estén exportados correctamente
+import * as Animatable from "react-native-animatable";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { auth, db } from "../../FirebaseConfig";
+
+const BackgroundCircles = () => {
+  const circles = Array.from({ length: 15 });
+  const circleRefs = useRef([]);
+
+  useEffect(() => {
+    const moveCircles = () => {
+      circleRefs.current.forEach((circle) => {
+        const randomX = Math.random() * 2 - 1;
+        const randomY = Math.random() * 2 - 1;
+        const duration = Math.random() * 3000 + 2000;
+        const moveAnimation = Animated.loop(
+          Animated.sequence([
+            Animated.timing(circle, {
+              toValue: 1,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(circle, {
+              toValue: 0,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+        moveAnimation.start();
+      });
+    };
+
+    moveCircles();
+  }, []);
+
+  return (
+    <View style={styles.backgroundContainer}>
+      {circles.map((_, index) => {
+        const circleAnimation = useRef(new Animated.Value(0)).current;
+        circleRefs.current[index] = circleAnimation;
+
+        const size = Math.random() * 50 + 50;
+        const opacity = Math.random() * 0.5 + 0.3;
+        const color = `rgba(7, 32, 64, ${opacity})`;
+
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.circle,
+              {
+                width: size,
+                height: size,
+                backgroundColor: color,
+                borderColor: "#ffffff",
+                borderWidth: 2,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                top: Math.random() * 100 + "%",
+                left: Math.random() * 100 + "%",
+                transform: [
+                  {
+                    translateX: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
+                    }),
+                  },
+                  {
+                    translateY: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
+                    }),
+                  },
+                  {
+                    rotate: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0deg", `${Math.random() * 360}deg`],
+                    }),
+                  },
+                ],
+                opacity: circleAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
   const [nombre, setNombre] = useState(null);
   const [email, setEmail] = useState(null);
-  const [moneda, setMoneda] = useState("CLP"); // Estado para la moneda
+  const [moneda, setMoneda] = useState("CLP");
   const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
-  const [totalMoneySpent, setTotalMoneySpent] = useState(0);
   const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
   const [totalMoneySpentSinceAccountCreation, setTotalMoneySpentSinceAccountCreation] = useState(0);
 
@@ -21,9 +112,6 @@ const AccountDetailsScreen = () => {
       if (user) {
         setEmail(user.email);
         getUserData(user.email);
-        getTotalCigarettesSmokedAndMoneySpent(user.uid);
-        calculateMoneySpentSinceSmoking(user.uid);
-        calculateMoneySpentSinceAccountCreation(user.uid);
       } else {
         setNombre("Usuario invitado");
         setEmail("No disponible");
@@ -41,7 +129,7 @@ const AccountDetailsScreen = () => {
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
-        setMoneda(userData.moneda || "CLP"); // Obtener la moneda del usuario
+        setMoneda(userData.moneda || "CLP");
       } else {
         setNombre("Usuario desconocido");
       }
@@ -50,177 +138,115 @@ const AccountDetailsScreen = () => {
     }
   };
 
-  const getTotalCigarettesSmokedAndMoneySpent = async (uid) => {
-    try {
-      const userDocRef = doc(db, "usuarios", uid);
-      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
-
-      const querySnapshot = await getDocs(cigarettesCollectionRef);
-      let totalCigarettes = 0;
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        totalCigarettes += data.cigarettesSmoked;
-      });
-      setTotalCigarettesSmoked(totalCigarettes);
-
-      // Obtener datos del usuario para cálculos
-      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
-      if (!userDoc.empty) {
-        const userData = userDoc.docs[0].data();
-        const { añosFumando, cigarrillosPorDía, cigarrillosPorPaquete, precioPorPaquete } = userData;
-
-        // Calcular el costo total
-        const totalDaysSmoking = añosFumando * 365;
-        const totalCigarettesSmoked = totalDaysSmoking * cigarrillosPorDía;
-        const totalCost = (totalCigarettesSmoked / cigarrillosPorPaquete) * precioPorPaquete;
-        setTotalMoneySpent(totalCost);
-      }
-    } catch (error) {
-      console.error("Error al obtener el total de cigarrillos fumados y el costo total:", error);
-    }
-  };
-
-  const calculateMoneySpentSinceSmoking = async (uid) => {
-    try {
-      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
-      if (!userDoc.empty) {
-        const userData = userDoc.docs[0].data();
-        const { añosFumando, cigarrillosPorDía, cigarrillosPorPaquete, precioPorPaquete } = userData;
-
-        // Calcular el costo total desde que comenzó a fumar
-        const totalDaysSmoking = añosFumando * 365;
-        const totalCigarettesSmoked = totalDaysSmoking * cigarrillosPorDía;
-        const totalCost = (totalCigarettesSmoked / cigarrillosPorPaquete) * precioPorPaquete;
-        setTotalMoneySpentSinceSmoking(totalCost);
-      }
-    } catch (error) {
-      console.error("Error al calcular el dinero gastado desde que comenzó a fumar:", error);
-    }
-  };
-
-  const calculateMoneySpentSinceAccountCreation = async (uid) => {
-    try {
-      const userDocRef = doc(db, "usuarios", uid);
-      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
-
-      const querySnapshot = await getDocs(cigarettesCollectionRef);
-      let totalCigarettes = 0;
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        totalCigarettes += data.cigarettesSmoked;
-      });
-
-      // Obtener datos del usuario para cálculos
-      const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
-      if (!userDoc.empty) {
-        const userData = userDoc.docs[0].data();
-        const { cigarrillosPorPaquete, precioPorPaquete } = userData;
-
-        // Calcular el costo total desde la creación de la cuenta de cigaretteHistory
-        const totalCost = (totalCigarettes / cigarrillosPorPaquete) * precioPorPaquete;
-        setTotalMoneySpentSinceAccountCreation(totalCost);
-      }
-    } catch (error) {
-      console.error("Error al calcular el dinero gastado desde la creación de la cuenta:", error);
-    }
-  };
-
-  const handleGoogleContinue = () => {
-    router.push("./DiaryScreen");
-  };
-
-  const handleEditProfilePicture = () => {
-    console.log("Editar foto de perfil");
-  };
-
-  const handleChangePassword = () => {
-    router.push("./reestablecerContrasena");
-  };
-
   const formatMoney = (amount) => {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: moneda }).format(amount);
+    return new Intl.NumberFormat("es-CL", { style: "currency", currency: moneda }).format(amount);
   };
 
   return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push("./settingsScreen")} style={styles.settingsButton}>
-            <Ionicons name="settings-outline" size={24} color="white" />
+    <View style={styles.container}>
+      <BackgroundCircles /> {/* Added BackgroundCircles component here */}
+
+      <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
+        <View style={styles.profileTextContainer}>
+          <TouchableOpacity onPress={() => router.push("./ProfileScreen")} style={styles.profileButton}>
+            <Ionicons name="arrow-back-outline" size={24} color="white" />
+            <Text style={styles.profileText}>Inicio</Text>
           </TouchableOpacity>
         </View>
-    
-        {/* Todo el contenido ahora está dentro de ScrollView */}
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* Foto de perfil y datos */}
-          <View style={styles.card}>
-            <Image
-              source={{ uri: "https://example.com/user.jpg" }} // Foto de perfil predeterminada
-              style={styles.profileImage}
-            />
-            <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
-            <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
-            <TouchableOpacity style={styles.editButton} onPress={handleEditProfilePicture}>
-              <Ionicons name="camera-outline" size={16} color="white" />
-              <Text style={styles.editButtonText}>Cambiar foto</Text>
-            </TouchableOpacity>
-          </View>
-    
-          {/* Estadísticas */}
-          <View style={styles.stats}>
-            <View style={styles.statCard}>
-              <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-              <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
-            </View>
-            
-            <View style={styles.statCard}>
-              <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
-              <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-              <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
-            </View>
-          </View>
-        </ScrollView>
-    
-        {/* Barra de navegación */}
-        <View style={styles.navBar}>
-          <TouchableOpacity style={styles.navButton} onPress={() => router.push("./ProfileScreen")}>
-            <Ionicons name="home-outline" size={28} color="white" />
-            <Text style={styles.navText}>Inicio</Text>
+        <TouchableOpacity onPress={() => router.push("./settingsScreen")} style={styles.settingsButton}>
+          <Ionicons name="settings-outline" size={24} color="white" />
+        </TouchableOpacity>
+      </Animatable.View>
+
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} 
+  showsHorizontalScrollIndicator={false}>
+        <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
+          <Image
+            source={{ uri: "https://example.com/user.jpg" }}
+            style={styles.profileImage}
+          />
+          <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
+          <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
+          <TouchableOpacity style={styles.editButton}>
+            <Ionicons name="camera-outline" size={16} color="white" />
+            <Text style={styles.editButtonText}>Cambiar foto</Text>
           </TouchableOpacity>
-        </View>
-      </View>
-    );
+        </Animatable.View>
+
+        <Animatable.View animation="fadeInUp" delay={200} duration={800} style={styles.stats}>
+          <Animatable.View animation="bounceIn" delay={300} style={styles.statCard}>
+            <Text style={styles.statTitle}>Cigarrillos fumados</Text>
+            <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={400} style={styles.statCard}>
+            <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
+            <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+            <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+            <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
+          </Animatable.View>
+        </Animatable.View>
+      </ScrollView>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Asegúrate de que el contenedor principal ocupe todo el espacio disponible
-    backgroundColor: "#0F0F2D",
-    padding: 20,
+    flex: 1,
+    backgroundColor: "#7595BF",
+    padding: 0,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     marginBottom: 20,
+    position: "absolute",
+    top: 10, // Fijo en la parte superior
+    left: 20,
+    right: 20,
+    zIndex: 1, // Asegura que esté sobre otros elementos
+    paddingHorizontal: 20,
+  },
+  profileTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profileText: {
+    color: "white",
+    marginLeft: 5,
+    fontWeight: "600",
+    fontSize: 16,
   },
   card: {
     alignItems: "center",
-    backgroundColor: "#1F3A93",
+    backgroundColor: "#072040",
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 100,
     marginBottom: 20,
+    marginTop: 0, // Agregado para dar espacio desde la parte superior (debajo del header)
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     marginBottom: 10,
+    borderWidth: 2,
+    borderColor: "#4F59FF",
   },
   cardText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
   cardSubText: {
@@ -231,65 +257,59 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4F59FF",
-    padding: 8,
-    borderRadius: 5,
+    backgroundColor: "#059E9E",
+    padding: 10,
+    borderRadius: 8,
   },
   editButtonText: {
     color: "white",
     marginLeft: 5,
+    fontWeight: "600",
   },
   scrollContainer: {
     paddingBottom: 100,
+    marginTop: 80, // Ajuste para dejar espacio debajo del header y card
   },
   stats: {
     marginBottom: 20,
   },
   statCard: {
-    backgroundColor: "#253873",
+    backgroundColor: "#072040",
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 100,
     marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
   },
   statTitle: {
     color: "#B0C4DE",
     fontSize: 14,
+    fontWeight: "600",
   },
   statValue: {
     color: "white",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#4F59FF",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  actionButtonText: {
-    color: "white",
-    marginLeft: 10,
-  },
-  navBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#1F3A93",
-    paddingVertical: 15,
-    borderRadius: 10,
-  },
-  navButton: {
-    alignItems: "center",
-  },
-  navText: {
-    color: "white",
-    marginTop: 5,
   },
   settingsButton: {
     backgroundColor: "#4F59FF",
     padding: 10,
-    borderRadius: 20,
+    borderRadius: 30,
+  },
+  backgroundContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  circle: {
+    position: "absolute",
+    borderRadius: 50,
   },
 });
 

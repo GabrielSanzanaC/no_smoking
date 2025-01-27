@@ -1,10 +1,107 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Alert, Switch, Modal } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Switch, Modal, Animated, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
 import { signOut, deleteUser } from "firebase/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const BackgroundCircles = () => {
+  const circles = Array.from({ length: 15 }); // Aumentar la cantidad de círculos
+  const circleRefs = useRef([]);
+
+  useEffect(() => {
+    const moveCircles = () => {
+      circleRefs.current.forEach((circle) => {
+        const randomX = Math.random() * 2 - 1; // Movimiento aleatorio en X
+        const randomY = Math.random() * 2 - 1; // Movimiento aleatorio en Y
+        const duration = Math.random() * 3000 + 2000; // Duración aleatoria entre 2000 y 5000 ms
+        const moveAnimation = Animated.loop(
+          Animated.sequence([ 
+            Animated.timing(circle, {
+              toValue: 1,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(circle, {
+              toValue: 0,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+        moveAnimation.start();
+      });
+    };
+
+    moveCircles();
+  }, []);
+
+  return (
+    <View style={styles.backgroundContainer}>
+      {circles.map((_, index) => {
+        const circleAnimation = useRef(new Animated.Value(0)).current;
+        circleRefs.current[index] = circleAnimation;
+
+        const size = Math.random() * 50 + 50; // Tamaño aleatorio entre 50 y 100
+        const opacity = Math.random() * 0.5 + 0.3; // Opacidad aleatoria entre 0.3 y 0.8
+        const color = `rgba(7, 32, 64, ${opacity})`;
+
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.circle,
+              {
+                width: size,
+                height: size,
+                backgroundColor: color,
+                borderColor: "#ffffff", // Borde blanco
+                borderWidth: 2, // Ancho del borde
+                shadowColor: "#000", // Sombra
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                top: Math.random() * 100 + "%",
+                left: Math.random() * 100 + "%",
+                transform: [
+                  {
+                    translateX: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [
+                        0,
+                        Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1),
+                      ],
+                    }),
+                  },
+                  {
+                    translateY: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [
+                        0,
+                        Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1),
+                      ],
+                    }),
+                  },
+                  {
+                    rotate: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0deg", `${Math.random() * 360}deg`],
+                    }),
+                  },
+                ],
+                opacity: circleAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 const SettingsScreen = () => {
   const router = useRouter();
@@ -77,12 +174,18 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false} // Esto hace que la barra de desplazamiento sea invisible
+    >
+      <BackgroundCircles /> {/* Fondo con círculos animados */}
+
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("./cuenta")}>
+        <TouchableOpacity onPress={() => router.push("./cuenta")} style={styles.headerButton}>
           <Ionicons name="arrow-back-outline" size={24} color="white" />
+          <Text style={styles.headerText}>Perfil</Text>
         </TouchableOpacity>
-        <Text style={styles.headerText}>Configuración</Text>
       </View>
 
       {/* Cambiar contraseña */}
@@ -167,14 +270,15 @@ const SettingsScreen = () => {
 
       {/* Versión de la aplicación */}
       <Text style={styles.versionText}>Versión: 1.0.0</Text>
-    </View>
+    </ScrollView>
+    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F0F2D",
+    backgroundColor: "#7595BF", // Fondo oscuro
     padding: 20,
   },
   header: {
@@ -182,26 +286,35 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  headerButton: {
+    flexDirection: "row", // Para que el ícono y el texto estén en una fila
+    alignItems: "center", // Centra verticalmente el ícono y el texto
+  },
   headerText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginLeft: 10,
+    color: "white", // Color blanco para el texto
+    fontSize: 18, // Tamaño de fuente
+    marginLeft: 8, // Espacio entre el ícono y el texto
   },
   button: {
+    borderWidth: 2, // Añadido el borde
+    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4F59FF",
+    backgroundColor: "#059E9E", // Verde para los botones
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
   },
   deleteButton: {
-    backgroundColor: "#FF4D4D",
+    borderWidth: 2, // Añadido el borde
+    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
+    backgroundColor: "#FF4D4D", // Botón de eliminar en rojo
   },
   signOutButton: {
-    backgroundColor: "#FFA500",
+    borderWidth: 2, // Añadido el borde
+    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
+    backgroundColor: "#FFA500", // Botón de cerrar sesión en naranja
   },
   buttonText: {
     color: "white",
@@ -212,9 +325,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#253873",
+    backgroundColor: "#54DEAF", // Fondo de opciones más oscuro
     padding: 15,
     borderRadius: 10,
+    borderWidth: 2, // Añadido el borde
+    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
     marginBottom: 15,
   },
   optionText: {
@@ -232,21 +347,20 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     width: "80%",
-    alignItems: "center",
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
   },
   modalText: {
     fontSize: 14,
-    marginBottom: 20,
+    marginVertical: 10,
   },
   closeButton: {
-    backgroundColor: "#4F59FF",
+    backgroundColor: "#4CAF50", // Verde
     padding: 10,
     borderRadius: 5,
+    marginTop: 10,
   },
   closeButtonText: {
     color: "white",
@@ -254,9 +368,22 @@ const styles = StyleSheet.create({
   },
   versionText: {
     color: "white",
+    fontSize: 12,
     textAlign: "center",
     marginTop: 20,
-    fontSize: 14,
+  },
+  backgroundContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  circle: {
+    position: "absolute",
+    borderRadius: 50,
+    opacity: 0.5,
   },
 });
 
