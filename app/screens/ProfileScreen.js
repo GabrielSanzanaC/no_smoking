@@ -281,7 +281,8 @@ const ProfileScreen = () => {
     },
     yAxisLabel: '',
     yAxisSuffix: '',
-    yAxisInterval: Math.max(0,cigarettesSmokedToday), // Define el intervalo del eje Y basado en cigarettesSmokedToday
+    yAxisInterval: (0,cigarettesSmokedToday), // Define el intervalo del eje Y basado en cigarettesSmokedToday
+    decimalPlaces: 0,
   };
 
   const handleChartPress = () => {
