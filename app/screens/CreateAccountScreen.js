@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Alert, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { GuardarUsuario } from "../../components/GuardarUsuario";
 import DropDownPicker from 'react-native-dropdown-picker';
+import BackgroundShapes from '../../components/BackgroundShapes';
 
 const countryCurrencyOptions = [
   { label: 'Chile (CLP)', value: 'CLP' },
@@ -53,6 +54,7 @@ export default function CreateAccountScreen() {
   const [yearlySavings, setYearlySavings] = useState(null);
   const [cigarettesPerYear, setCigarettesPerYear] = useState(null);
   const [open, setOpen] = useState(false); // Estado para el dropdown
+  const [isEffectExecuted, setIsEffectExecuted] = useState(false);
 
   const toggleReason = (option) => {
     if (reasons.includes(option)) {
@@ -146,10 +148,19 @@ export default function CreateAccountScreen() {
     return new Intl.NumberFormat('es-CL', options).format(amount);
   };
 
+  useEffect(() => {
+    if (!isEffectExecuted) {
+      // Si el efecto no se ha ejecutado aún
+      setIsEffectExecuted(true); // Marcamos que el efecto ha sido ejecutado
+      // Aquí puedes colocar la lógica para animaciones o efectos que solo quieras ejecutar una vez
+    }
+  }, [isEffectExecuted]);
+
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <View style={styles.container}>
         <View style={styles.overlay}>
+        <BackgroundShapesMemo />
           {questionStep === 1 && (
             <View style={styles.questionContainer}>
               <Text style={styles.title}>Seleccione su país y tipo de moneda</Text>
@@ -267,10 +278,15 @@ export default function CreateAccountScreen() {
   );
 }
 
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#023E73', // Fondo oscuro para toda la pantalla
+    backgroundColor: '#7595BF', // Fondo oscuro para toda la pantalla
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -280,7 +296,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#023E73',
+    backgroundColor: '#7595BF',
     borderRadius: 15,
     width: '100%',
   },
@@ -303,16 +319,21 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   button: {
-    backgroundColor: '#059E9E', // Azul para los botones (2013)
-    borderRadius: 5,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 20,
     width: '80%',
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#059E9E',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "white",
+    marginLeft: 5,
+    fontWeight: "600",
   },
   optionsContainer: {
     flexDirection: 'row',

@@ -9,8 +9,8 @@ import Checkbox from "expo-checkbox";
 import * as Animatable from "react-native-animatable";
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import * as Random from 'expo-random';
 import { Ionicons } from "@expo/vector-icons";
+import BackgroundShapes from '../components/BackgroundShapes';
 
 
 WebBrowser.maybeCompleteAuthSession();
@@ -227,17 +227,8 @@ const App = () => {
   return (
     <View style={styles.container}>
       {/* Animated Background */}
-      <Animatable.View
-        animation="pulse"
-        iterationCount="infinite"
-        duration={500}
-        style={styles.animatedCircle1}
-      />
-      <Animatable.View
-        animation="pulse"
-        iterationCount="infinite"
-        style={styles.animatedCircle2}
-      />
+      <BackgroundShapesMemo />
+
 
       {/* Main Content */}
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
@@ -327,32 +318,16 @@ const App = () => {
   );
 };
 
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#7595BF", // Background
     alignItems: "center",
     justifyContent: "center",
-  },
-  animatedCircle1: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    backgroundColor: "#072040", // Contrast Black
-    borderRadius: 150,
-    opacity: 0.2,
-    top: -50,
-    left: -50,
-  },
-  animatedCircle2: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    backgroundColor: "#1F82BF", // Contrast Light
-    borderRadius: 100,
-    opacity: 0.3,
-    bottom: -50,
-    right: -50,
   },
   rectangle: {
     width: "90%",
