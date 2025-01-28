@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
@@ -7,6 +7,7 @@ import { collection, query, where, getDocs, doc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
+
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -20,11 +21,22 @@ const ProfileScreen = () => {
   const [startTime, setStartTime] = useState(Date.now());
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
 
   const handleExitApp = () => {
-    BackHandler.exitApp();
+    setIsModalVisible(true); // Muestra el modal de confirmación
   };
 
+  const confirmExit = () => {
+    BackHandler.exitApp(); // Cierra la aplicación
+  };
+  
+  const cancelExit = () => {
+    setIsModalVisible(false); // Cierra el modal
+  };
+  
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -95,6 +107,8 @@ const ProfileScreen = () => {
     }
   }, [userId]);
 
+
+  
   useEffect(() => {
     // Inicia el cronómetro
     const loadStartTime = async () => {
@@ -208,8 +222,29 @@ const ProfileScreen = () => {
         style={styles.animatedCircle2}
       />
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleExitApp}>
-          <Ionicons name="exit-outline" size={24} color="#F2F2F2" />
+      <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={cancelExit}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>¿Estás seguro?</Text>
+              <Text style={styles.modalMessage}>¿Quieres cerrar la aplicación?</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity onPress={cancelExit} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={confirmExit} style={[styles.modalButton, styles.confirmButton]}>
+                  <Text style={styles.modalButtonText}>Salir</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      <TouchableOpacity style={styles.navButtonLeft} onPress={handleExitApp}>
+          <Ionicons name="exit" size={24} color="#F2F2F2" />
         </TouchableOpacity>
         <Animatable.Text animation="bounceIn" style={styles.welcomeText}>¡Hola, {nombre}!</Animatable.Text>
         <Animatable.View animation="fadeInUp" style={styles.formContainer}>
@@ -409,6 +444,60 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#FF6F61",
+  },
+  navButtonLeft: {
+    position: "absolute",
+    top: 20, // Ajusta esto según lo necesites
+    left: 10,
+    backgroundColor: "#FF6F61",
+    padding: 10,
+    borderRadius: 50,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semitransparente
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    padding: 10,
+    width: "45%",
+    alignItems: "center",
+    borderRadius: 5,
+    backgroundColor: "#FF6F61", // Color del botón
+  },
+  confirmButton: {
+    backgroundColor: "#FF0000", // Botón de salir en color rojo
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
 
