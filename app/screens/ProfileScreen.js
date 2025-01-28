@@ -291,6 +291,18 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
+        {/* Animated Background */}
+        <Animatable.View
+        animation="pulse"
+        iterationCount="infinite"
+        duration={500}
+        style={styles.animatedCircle1}
+      />
+      <Animatable.View
+        animation="pulse"
+        iterationCount="infinite"
+        style={styles.animatedCircle2}
+      />
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
       <Modal
           animationType="fade"
