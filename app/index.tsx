@@ -27,13 +27,14 @@ const App = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
+
+  /*const [request, response, promptAsync] = Google.useAuthRequest({
     //expoClientId: 'YOUR_EXPO_CLIENT_ID',
     //iosClientId: 'YOUR_IOS_CLIENT_ID',
     androidClientId: '571745550303-6485sga5adgjg24a48ijrdite1nf9mic.apps.googleusercontent.com',
     webClientId: '571745550303-84m79of6kn1vqd6g8i3jik57l183vla4.apps.googleusercontent.com',
     redirectUri: 'https://app-nosmoking.firebaseapp.com/__/auth/handler',
-  });
+  });*/
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -60,7 +61,7 @@ const App = () => {
     checkLoginStatus();
   }, []);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (response?.type === 'success') {
       const { id_token } = response.params;
 
@@ -81,6 +82,8 @@ const App = () => {
         });
     }
   }, [response]);
+  */
+  
 
   const handleLogin = async () => {
     let hasError = false;
@@ -224,6 +227,15 @@ const App = () => {
     }
   };
 
+  const handleRememberMeChange = async () => {
+    setRememberMe(!rememberMe);
+    if (!rememberMe) {
+      await AsyncStorage.setItem('rememberedEmail', email);
+    } else {
+      await AsyncStorage.removeItem('rememberedEmail');
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Animated Background */}
@@ -272,7 +284,7 @@ const App = () => {
             <Animatable.View animation="fadeIn" style={styles.checkboxContainer}>
               <Checkbox
                 value={rememberMe}
-                onValueChange={setRememberMe}
+                onChange={handleRememberMeChange}
                 color={rememberMe ? "#FF6F61" : undefined}
               />
               <Text style={styles.checkboxLabel}>Recuérdame</Text>
@@ -303,8 +315,8 @@ const App = () => {
           <Animatable.View animation="bounceIn" style={styles.socialButtons}>
             <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => promptAsync()}
-              disabled={!request}
+              //onPress={() => promptAsync()}
+              //disabled={!request}
             >
               <Text style={styles.socialButtonText}>Google</Text>
             </TouchableOpacity>
