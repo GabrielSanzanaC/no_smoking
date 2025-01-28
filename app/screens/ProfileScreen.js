@@ -26,10 +26,10 @@ const ProfileScreen = () => {
   const [startTime, setStartTime] = useState(Date.now());
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
-  const [cigarettesData, setCigarettesData] = useState([]);
-  const [last7DaysData, setLast7DaysData] = useState([]);
   const [isFullMonthChartVisible, setFullMonthChartVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [cigarettesData, setCigarettesData] = useState(Array(31).fill(0)); // Valor predeterminado de 31 días
+  const [last7DaysData, setLast7DaysData] = useState(Array(7).fill(0)); // Valor predeterminado para los últimos 7 días
 
   const handleExitApp = () => {
     setIsModalVisible(true); // Muestra el modal de confirmación
