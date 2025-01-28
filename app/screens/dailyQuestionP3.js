@@ -1,11 +1,102 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { db } from '../../FirebaseConfig';
 import { collection, doc, getDocs, query, setDoc, where, serverTimestamp, updateDoc } from 'firebase/firestore';
+
+const BackgroundCircles = () => {
+  const circles = Array.from({ length: 15 });
+  const circleRefs = useRef([]);
+
+  useEffect(() => {
+    const moveCircles = () => {
+      circleRefs.current.forEach((circle) => {
+        const randomX = Math.random() * 2 - 1;
+        const randomY = Math.random() * 2 - 1;
+        const duration = Math.random() * 3000 + 2000;
+        const moveAnimation = Animated.loop(
+          Animated.sequence([
+            Animated.timing(circle, {
+              toValue: 1,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(circle, {
+              toValue: 0,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+        moveAnimation.start();
+      });
+    };
+
+    moveCircles();
+  }, []);
+
+  return (
+    <View style={styles.backgroundContainer}>
+      {circles.map((_, index) => {
+        const circleAnimation = useRef(new Animated.Value(0)).current;
+        circleRefs.current[index] = circleAnimation;
+
+        const size = Math.random() * 50 + 50;
+        const opacity = Math.random() * 0.5 + 0.3;
+        const color = `rgba(7, 32, 64, ${opacity})`;
+
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.circle,
+              {
+                width: size,
+                height: size,
+                backgroundColor: color,
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                top: Math.random() * 100 + '%',
+                left: Math.random() * 100 + '%',
+                transform: [
+                  {
+                    translateX: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
+                    }),
+                  },
+                  {
+                    translateY: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
+                    }),
+                  },
+                  {
+                    rotate: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', `${Math.random() * 360}deg`],
+                    }),
+                  },
+                ],
+                opacity: circleAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 export default function DailyQuestion() {
   const [moodRating, setMoodRating] = useState(3); // Estado inicial del estado de ánimo
@@ -30,24 +121,24 @@ export default function DailyQuestion() {
 
   const handleSaveToDB = async () => {
     if (loading) return;
-  
+
     setLoading(true);
     const currentDate = getCurrentDate();
     const userDocRef = doc(db, "usuarios", userId);
     const cigaretteHistoryRef = collection(userDocRef, "CigaretteHistory");
-  
+
     try {
       const q = query(cigaretteHistoryRef, where("fecha", "==", currentDate));
       const querySnapshot = await getDocs(q);
-  
+
       let cigaretteDocRef;
       const cigarettesNumber = parseInt(cigarettes, 10);  // Convertimos 'cigarettes' a número
-  
+
       if (isNaN(cigarettesNumber)) {
         console.error("El valor de 'cigarettes' no es un número válido.");
         return;  // Detenemos la ejecución si el valor no es válido
       }
-  
+
       if (!querySnapshot.empty) {
         cigaretteDocRef = querySnapshot.docs[0].ref;
         const data = querySnapshot.docs[0].data();
@@ -61,7 +152,7 @@ export default function DailyQuestion() {
           cigarettesSmoked: cigarettesNumber, // Guardamos como número
         });
       }
-  
+
       const datosPorCigarroRef = collection(cigaretteDocRef, "datosPorCigarro");
       await setDoc(doc(datosPorCigarroRef), {
         emotion,
@@ -72,7 +163,7 @@ export default function DailyQuestion() {
         guiltRating,
         timestamp: serverTimestamp(),
       });
-  
+
       router.push("./ProfileScreen");
     } catch (error) {
       console.error("Error al guardar los datos: ", error);
@@ -83,6 +174,8 @@ export default function DailyQuestion() {
 
   return (
     <View style={styles.container}>
+      <BackgroundCircles /> {/* Componente de círculos de fondo */}
+
       {/* Indicador de pasos */}
       <View style={styles.stepContainer}>
         {['01', '02', '03'].map((step, index) => (
@@ -94,9 +187,6 @@ export default function DailyQuestion() {
           </View>
         ))}
       </View>
-
-      {/* Título */}
-      <Text style={styles.title}>¿Cómo te sientes después de fumar?</Text>
 
       {/* Pregunta 1 */}
       <Text style={styles.subtitle}>¿Cuánto crees que el cigarro ayudó a tu estado de ánimo?</Text>
@@ -163,7 +253,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0F0F2D',
+    backgroundColor: '#7595BF',
     padding: 20,
   },
   stepContainer: {
@@ -188,16 +278,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
   subtitle: {
     fontSize: 16,
-    color: '#B0C4DE',
+    color: '#FFF',
     textAlign: 'center',
     marginBottom: 10,
   },
@@ -228,12 +311,29 @@ const styles = StyleSheet.create({
     width: '80%',
     padding: 15,
     borderRadius: 10,
-    backgroundColor: '#FFF',
+    backgroundColor: '#059E9E',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   nextButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4F59FF',
+    color: "white",
+    marginLeft: 5,
+    fontWeight: "600",
+  },
+  backgroundContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  circle: {
+    position: "absolute",
+    borderRadius: 50,
   },
 });

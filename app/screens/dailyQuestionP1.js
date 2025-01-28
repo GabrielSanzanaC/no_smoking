@@ -1,13 +1,106 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from "@expo/vector-icons";
+import { Easing } from 'react-native-reanimated';
+
+const BackgroundCircles = () => {
+  const circles = Array.from({ length: 15 });
+  const circleRefs = useRef([]);
+
+  useEffect(() => {
+    const moveCircles = () => {
+      circleRefs.current.forEach((circle) => {
+        const randomX = Math.random() * 2 - 1;
+        const randomY = Math.random() * 2 - 1;
+        const duration = Math.random() * 3000 + 2000;
+        const moveAnimation = Animated.loop(
+          Animated.sequence([ 
+            Animated.timing(circle, {
+              toValue: 1,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+            Animated.timing(circle, {
+              toValue: 0,
+              duration: duration,
+              useNativeDriver: true,
+            }),
+          ])
+        );
+        moveAnimation.start();
+      });
+    };
+
+    moveCircles();
+  }, []);
+
+  return (
+    <View style={styles.backgroundContainer}>
+      {circles.map((_, index) => {
+        const circleAnimation = useRef(new Animated.Value(0)).current;
+        circleRefs.current[index] = circleAnimation;
+
+        const size = Math.random() * 50 + 50;
+        const opacity = Math.random() * 0.5 + 0.3;
+        const color = `rgba(7, 32, 64, ${opacity})`;
+
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.circle,
+              {
+                width: size,
+                height: size,
+                backgroundColor: color,
+                borderColor: "#ffffff",
+                borderWidth: 2,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                top: Math.random() * 100 + "%",
+                left: Math.random() * 100 + "%",
+                transform: [
+                  {
+                    translateX: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
+                    }),
+                  },
+                  {
+                    translateY: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
+                    }),
+                  },
+                  {
+                    rotate: circleAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0deg", `${Math.random() * 360}deg`],
+                    }),
+                  },
+                ],
+                opacity: circleAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.7],
+                }),
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 export default function dailyQuestionP1() {
-  const [selectedEmotion, setSelectedEmotion] = useState(''); // Estado para la emoción seleccionada
-  const [cigarettes, setCigarettes] = useState(''); // Estado para la cantidad de cigarros
+  const [selectedEmotion, setSelectedEmotion] = useState('');
+  const [cigarettes, setCigarettes] = useState('');
+  const [scale] = useState(new Animated.Value(1)); // Animación de escala
   const router = useRouter();
 
-  // Lista de emociones
   const emotions = [
     { id: 'feliz', label: 'Feliz', icon: '😊' },
     { id: 'ansioso', label: 'Ansioso', icon: '😰' },
@@ -17,14 +110,41 @@ export default function dailyQuestionP1() {
     { id: 'triste', label: 'Triste', icon: '😞' },
   ];
 
+  const handlePress = (emotionId) => {
+    setSelectedEmotion(emotionId);
+    Animated.timing(scale, {
+      toValue: 1.1,
+      duration: 200,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: 200,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
   return (
     <View style={styles.container}>
-      {/* Indicador de pasos */}
+      <BackgroundCircles />
+
+      {/* Profile Button */}
+      <TouchableOpacity 
+        onPress={() => router.push("./ProfileScreen")} 
+        style={styles.profileButton}
+      >
+        <Ionicons name="arrow-back-outline" size={24} color="white" />
+        <Text style={styles.profileText}>Inicio</Text>
+      </TouchableOpacity>
+
       <View style={styles.stepContainer}>
         {['01', '02', '03'].map((step, index) => (
           <View
             key={index}
-            style={[styles.stepCircle, index === 0 && styles.activeStepCircle]} // Marca el paso activo
+            style={[styles.stepCircle, index === 0 && styles.activeStepCircle]}
           >
             <Text style={styles.stepText}>{step}</Text>
           </View>
@@ -36,13 +156,14 @@ export default function dailyQuestionP1() {
         {emotions.map((emotion) => (
           <TouchableOpacity
             key={emotion.id}
-            style={[
-              styles.taskButton,
-              selectedEmotion === emotion.id && styles.selectedTaskButton,
-            ]}
-            onPress={() => setSelectedEmotion(emotion.id)}
+            style={[styles.taskButton, selectedEmotion === emotion.id && styles.selectedTaskButton]}
+            onPress={() => handlePress(emotion.id)}
           >
-            <Text style={styles.taskIcon}>{emotion.icon}</Text>
+            <Animated.Text
+              style={[styles.taskIcon, selectedEmotion === emotion.id && { transform: [{ scale }] }]}
+            >
+              {emotion.icon}
+            </Animated.Text>
             <Text style={styles.taskLabel}>{emotion.label}</Text>
           </TouchableOpacity>
         ))}
@@ -63,7 +184,7 @@ export default function dailyQuestionP1() {
         onPress={() => {
           if (selectedEmotion && cigarettes) {
             router.push({
-              pathname: './dailyQuestionP2', // Ruta de la siguiente pantalla
+              pathname: './dailyQuestionP2',
               params: { emotion: selectedEmotion, cigarettes },
             });
           }
@@ -77,15 +198,29 @@ export default function dailyQuestionP1() {
 }
 
 const styles = StyleSheet.create({
+  profileButton: {
+    flexDirection: "row", // Para que el ícono y el texto estén en una fila
+    alignItems: "center", // Centra verticalmente el ícono y el texto
+    marginBottom: 20, // Espacio entre el botón y los otros elementos
+    position: 'absolute', // Asegura que el botón esté posicionado de forma absoluta
+    left: 20, // Ajusta esta propiedad para mover el botón a la izquierda
+    top: 20, // Puedes ajustar esta propiedad para mover el botón verticalmente si es necesario
+  },
+  profileText: {
+    color: "white",
+    marginLeft: 5,
+    fontWeight: "600",
+    fontSize: 16,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0F0F2D',
+    backgroundColor: '#7595BF',
     padding: 20,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
@@ -100,22 +235,31 @@ const styles = StyleSheet.create({
   taskButton: {
     width: 100,
     height: 100,
-    backgroundColor: '#33334D',
-    borderRadius: 10,
+    backgroundColor: '#072040',
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 5,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   selectedTaskButton: {
-    backgroundColor: '#4F59FF',
+    borderWidth: 2, // Añadido el borde
+    borderColor: "yellow", // Color del borde, puedes cambiarlo según tu preferencia
+    backgroundColor: '#54DEAF',
+    transform: [{ scale: 1.1 }],
   },
   taskIcon: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#FFF',
   },
   taskLabel: {
     fontSize: 14,
     color: '#FFF',
+    marginTop: 5,
   },
   inputLabel: {
     fontSize: 14,
@@ -127,7 +271,7 @@ const styles = StyleSheet.create({
     width: '80%',
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#FFF',
+    backgroundColor: 'beige',
     color: '#333',
     marginBottom: 20,
   },
@@ -135,13 +279,18 @@ const styles = StyleSheet.create({
     width: '80%',
     padding: 15,
     borderRadius: 10,
-    backgroundColor: '#FFF',
+    backgroundColor: '#059E9E',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   nextButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4F59FF',
+    color: "white",
+    marginLeft: 5,
+    fontWeight: "600",
   },
   stepContainer: {
     flexDirection: 'row',
@@ -162,5 +311,17 @@ const styles = StyleSheet.create({
   stepText: {
     color: '#FFF',
     fontWeight: 'bold',
+  },
+  backgroundContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: -1,
+  },
+  circle: {
+    position: "absolute",
+    borderRadius: 50,
   },
 });
