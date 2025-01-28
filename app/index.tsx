@@ -340,6 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#7595BF", // Background
     alignItems: "center",
     justifyContent: "center",
+    zIndex: -1,
   },
   rectangle: {
     width: "90%",
