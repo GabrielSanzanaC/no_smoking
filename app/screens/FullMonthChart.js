@@ -25,13 +25,26 @@ const FullMonthChart = ({ visible, onClose, data }) => {
 
   // Función para validar y normalizar datos
   const normalizeData = (data) => {
+    // Verifica que 'data' sea un arreglo antes de procesarlo
+    if (!Array.isArray(data)) {
+      console.warn("Se esperaba un arreglo, pero se recibió:", data);
+      return []; // Devuelve un arreglo vacío si la entrada no es válida
+    }
+
     return data.map(value => {
-      if (!isFinite(value) || isNaN(value)) {
+      // Si el valor no es un número finito o es NaN, lo reemplaza por 0
+      if (!Number.isFinite(value) || Number.isNaN(value)) {
         return 0; // O cualquier valor por defecto que consideres apropiado
       }
       return value;
     });
   };
+
+  // Verificar que data y data.datasets sean válidos antes de usarlos
+  if (!data || !data.datasets || !Array.isArray(data.datasets)) {
+    console.warn("Data o datasets no son válidos:", data);
+    return null; // Retorna null o algún valor predeterminado si no se tienen datos válidos
+  }
 
   const normalizedData = {
     ...data,
