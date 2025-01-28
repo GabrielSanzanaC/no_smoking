@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, BackHandler } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
@@ -7,6 +7,11 @@ import { collection, query, where, getDocs, doc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
+import { LineChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
+import FullMonthChart from "./FullMonthChart"; // Importa el componente del modal
+
+const screenWidth = Dimensions.get("window").width;
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -20,6 +25,9 @@ const ProfileScreen = () => {
   const [startTime, setStartTime] = useState(Date.now());
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
+  const [cigarettesData, setCigarettesData] = useState([]);
+  const [last7DaysData, setLast7DaysData] = useState([]);
+  const [isFullMonthChartVisible, setFullMonthChartVisible] = useState(false);
 
   const handleExitApp = () => {
     BackHandler.exitApp();
@@ -32,6 +40,7 @@ const ProfileScreen = () => {
         setUserId(user.uid);
         await getUserData(user.email);
         await getCigarettesForToday(user.uid);
+        await getCigarettesData(user.uid);
       } else {
         setNombre("Usuario invitado");
         setCigarettesSmokedToday(0);
@@ -41,46 +50,71 @@ const ProfileScreen = () => {
     return unsubscribe;
   }, []);
 
-  const getMonthlySavings = async (uid) => {
+  const getCigarettesData = async (uid) => {
     try {
       const currentDate = new Date();
       const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-  
-      // Referencia a la colección `CigaretteHistory`
+
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
-  
-      // Consulta para obtener los documentos del mes actual
+
       const q = query(
         cigarettesCollectionRef,
         where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
         where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
       );
       const querySnapshot = await getDocs(q);
-  
-      // Sumar los cigarrillos fumados en el mes
+
+      const data = Array(lastDayOfMonth.getDate()).fill(0);
+      querySnapshot.forEach((doc) => {
+        const date = new Date(doc.data().fecha);
+        const day = date.getDate();
+        data[day - 1] = doc.data().cigarettesSmoked || 0;
+      });
+
+      setCigarettesData(data);
+      setLast7DaysData(data.slice(-7).reverse()); // Reverse the last 7 days data
+    } catch (error) {
+      console.error("Error al obtener datos de los cigarrillos:", error);
+    }
+  };
+
+  const getMonthlySavings = async (uid) => {
+    try {
+      const currentDate = new Date();
+      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+      const userDocRef = doc(db, "usuarios", uid);
+      const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
+
+      const q = query(
+        cigarettesCollectionRef,
+        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
+        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
+      );
+      const querySnapshot = await getDocs(q);
+
       let totalCigarettesSmoked = 0;
       querySnapshot.forEach((doc) => {
         totalCigarettesSmoked += doc.data().cigarettesSmoked || 0;
       });
-  
-      // Datos del usuario para el cálculo
+
       const userDoc = await getDocs(query(collection(db, "usuarios"), where("uid", "==", uid)));
       if (!userDoc.empty) {
         const userData = userDoc.docs[0].data();
         const cigarrillosPorDía = parseInt(userData.cigarrillosPorDía, 10);
         const cigarrillosPorPaquete = parseInt(userData.cigarrillosPorPaquete, 10);
         const precioPorPaquete = parseFloat(userData.precioPorPaquete);
-  
-        // Cálculos
+
         const precioPorCigarrillo = precioPorPaquete / cigarrillosPorPaquete;
         const diasEnElMes = lastDayOfMonth.getDate();
         const totalCigarettesExpected = cigarrillosPorDía * diasEnElMes;
-  
+
         const dineroAhorrado = (totalCigarettesExpected - totalCigarettesSmoked) * precioPorCigarrillo;
-  
-        setMonthlySavings(dineroAhorrado.toFixed(2)); // Actualizar el estado con el ahorro calculado
+
+        setMonthlySavings(dineroAhorrado.toFixed(2));
       } else {
         console.error("No se encontraron datos del usuario.");
       }
@@ -96,7 +130,6 @@ const ProfileScreen = () => {
   }, [userId]);
 
   useEffect(() => {
-    // Inicia el cronómetro
     const loadStartTime = async () => {
       try {
         const savedStartTime = await AsyncStorage.getItem("startTime");
@@ -193,6 +226,55 @@ const ProfileScreen = () => {
     return `${h}h ${m}m`;
   };
 
+  const last7DaysChartData = {
+    labels: Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return date.toLocaleDateString('es-ES', { weekday: 'short' });
+    }).reverse(),
+    datasets: [
+      {
+        data: last7DaysData,
+        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+  };
+
+  const chartData = {
+    labels: Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }, (_, i) => i + 1),
+    datasets: [
+      {
+        data: cigarettesData,
+        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+  };
+
+  const chartConfig = {
+    backgroundColor: "transparent", // Fondo transparente
+    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
+    strokeWidth: 2,
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false,
+    propsForDots: {
+      r: "3",
+      strokeWidth: "1",
+      stroke: "#ffa726",
+    },
+    propsForBackgroundLines: {
+      stroke: "transparent",
+    },
+    yAxisLabel: '',
+    yAxisSuffix: '',
+    yAxisInterval: Math.max(0,cigarettesSmokedToday), // Define el intervalo del eje Y basado en cigarettesSmokedToday
+  };
+
+  const handleChartPress = () => {
+    setFullMonthChartVisible(true);
+  };
+
   return (
     <View style={styles.container}>
       {/* Animated Background */}
@@ -212,7 +294,10 @@ const ProfileScreen = () => {
           <Ionicons name="exit-outline" size={24} color="#F2F2F2" />
         </TouchableOpacity>
         <Animatable.Text animation="bounceIn" style={styles.welcomeText}>¡Hola, {nombre}!</Animatable.Text>
-        <Animatable.View animation="fadeInUp" style={styles.formContainer}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContentContainer}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <Ionicons name="time" size={40} color="#FF6F61" />
@@ -236,19 +321,35 @@ const ProfileScreen = () => {
               <Text style={styles.statValue}>{streakDays} días</Text>
             </View>
             <View style={styles.statBox}>
-            <Ionicons name="cash" size={40} color="#FF6F61" />
+              <Ionicons name="cash" size={40} color="#FF6F61" />
               <Text style={styles.statLabel}>
-            {monthlySavings >= 0 ? "Ahorro del mes" : "Dinero gastado"}
-            </Text>
-            <Text style={[styles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
-             ${Math.abs(monthlySavings)}
-            </Text>
+                {monthlySavings >= 0 ? "Ahorro del mes" : "Dinero gastado"}
+              </Text>
+              <Text style={[styles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
+                ${Math.abs(monthlySavings)}
+              </Text>
             </View>
           </View>
           <Animatable.Text animation="fadeIn" duration={1000} style={styles.motivationalText}>
             {motivationalMessage}
           </Animatable.Text>
-        </Animatable.View>
+          <Text style={styles.chartTitle}>Cigarros fumados últimos 7 días</Text>
+          <View style={styles.chartContainer}>
+            <TouchableOpacity onPress={handleChartPress}>
+              <LineChart
+                data={last7DaysChartData}
+                width={screenWidth * 0.8} // Ajustar al ancho del statBox
+                height={220}
+                chartConfig={chartConfig}
+                bezier
+                style={styles.chart}
+                segments={6} // Number of horizontal grid lines
+                fromZero={true} // Start Y axis from zero
+                transparent={true} // Fondo transparente para el gráfico
+              />
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </Animatable.View>
       <View style={styles.navBar}>
         <TouchableOpacity style={styles.navButton} onPress={() => router.push("./historial")}>
@@ -263,22 +364,27 @@ const ProfileScreen = () => {
           <Ionicons name="person" size={24} color="#F2F2F2" />
         </TouchableOpacity>
       </View>
+      <FullMonthChart
+        visible={isFullMonthChartVisible}
+        onClose={() => setFullMonthChartVisible(false)}
+        data={chartData}
+      />
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#7595BF",
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 30,
   },
   animatedCircle1: {
     position: "absolute",
     width: 300,
     height: 300,
-    backgroundColor: "#072040", // Contrast Black
+    backgroundColor: "#072040",
     borderRadius: 150,
     opacity: 0.2,
     top: -50,
@@ -296,30 +402,33 @@ const styles = StyleSheet.create({
   },
   rectangle: {
     width: "90%",
+    height: "70%",
     backgroundColor: "#072040",
     borderRadius: 20,
     padding: 20,
-    paddingTop: 60, // Add padding at the top for the greeting and sign out button
+    paddingTop: 60,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 10,
     alignItems: "center",
-    marginBottom: 80, // Add space for nav bar
+    marginBottom: 80,
   },
   welcomeText: {
     color: "#F2F2F2",
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 10, // Add margin bottom to separate from the stats
+    marginBottom: 10,
   },
-  formContainer: {
-    width: "100%",
+  scrollContentContainer: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingBottom: 20,
   },
   statsContainer: {
-    width: "100%",
+    width: "90%",
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 20,
@@ -392,23 +501,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  historyItem: {
-    backgroundColor: "#fff",
-    padding: 10,
-    marginBottom: 5,
-    borderRadius: 10,
-    elevation: 3,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  historyDate: {
-    fontSize: 14,
-    color: "#555",
-  },
-  historyCount: {
-    fontSize: 14,
+  chartTitle: {
+    fontSize: 18,
+    color: "#F2F2F2",
     fontWeight: "bold",
-    color: "#FF6F61",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  chartContainer: {
+    width: "90%",
+    alignItems: "center",
+  },
+  chart: {
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)", // Fondo igual al de los cuadros de estadísticas
   },
 });
 
