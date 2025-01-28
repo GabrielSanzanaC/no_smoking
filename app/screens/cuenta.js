@@ -18,7 +18,7 @@ const BackgroundCircles = () => {
         const randomY = Math.random() * 2 - 1;
         const duration = Math.random() * 3000 + 2000;
         const moveAnimation = Animated.loop(
-          Animated.sequence([
+          Animated.sequence([ 
             Animated.timing(circle, {
               toValue: 1,
               duration: duration,
@@ -106,12 +106,16 @@ const AccountDetailsScreen = () => {
   const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
   const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
   const [totalMoneySpentSinceAccountCreation, setTotalMoneySpentSinceAccountCreation] = useState(0);
+  const [timeLostInDays, setTimeLostInDays] = useState(0);  // Estado para almacenar el tiempo perdido en días
+  const [timeLostInHours, setTimeLostInHours] = useState(0); // Estado para almacenar las horas perdidas
+  const [timeLostInMinutes, setTimeLostInMinutes] = useState(0); // Estado para almacenar los minutos perdidos
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setEmail(user.email);
         getUserData(user.email);
+        getTotalCigarettesSmoked(user.email); // Obtener el total de cigarrillos fumados
       } else {
         setNombre("Usuario invitado");
         setEmail("No disponible");
@@ -121,6 +125,7 @@ const AccountDetailsScreen = () => {
     return unsubscribe;
   }, []);
 
+  // Obtener datos del usuario desde Firebase
   const getUserData = async (email) => {
     try {
       const q = query(collection(db, "usuarios"), where("email", "==", email));
@@ -138,13 +143,54 @@ const AccountDetailsScreen = () => {
     }
   };
 
+  // Función para obtener el total de cigarrillos fumados y dinero gastado
+  const getTotalCigarettesSmoked = async (email) => {
+    try {
+      const userQuery = query(collection(db, "usuarios"), where("email", "==", email));
+      const userSnapshot = await getDocs(userQuery);
+  
+      if (!userSnapshot.empty) {
+        const userDoc = userSnapshot.docs[0];  // Obtenemos el documento del usuario
+        const cigaretteHistoryRef = collection(userDoc.ref, "CigaretteHistory"); // Referencia a la subcolección CigaretteHistory
+  
+        const cigaretteHistorySnapshot = await getDocs(cigaretteHistoryRef);
+  
+        let totalCigarettes = 0;
+        let totalMoneySpent = 0;
+  
+        cigaretteHistorySnapshot.forEach((doc) => {
+          const data = doc.data();
+          totalCigarettes += data.cigarettesSmoked || 0; // Sumar los cigarrillos fumados
+          totalMoneySpent += (data.cigarettesSmoked || 0) * (data.pricePerCigarette || 0); // Sumar el dinero gastado
+        });
+  
+        setTotalCigarettesSmoked(totalCigarettes);
+        setTotalMoneySpentSinceSmoking(totalMoneySpent); // Guardamos el dinero total gastado
+
+        // Calcular el tiempo perdido basado en cigarrillos fumados (7 minutos por cigarro)
+        const timeLostInMinutesTotal = totalCigarettes * 7;
+        const days = Math.floor(timeLostInMinutesTotal / 1440); // Número de días completos
+        const hours = Math.floor((timeLostInMinutesTotal % 1440) / 60); // Número de horas restantes
+        const minutes = timeLostInMinutesTotal % 60; // Restantes minutos
+
+        setTimeLostInDays(days);
+        setTimeLostInHours(hours);
+        setTimeLostInMinutes(minutes); // Guardamos los minutos restantes
+      } else {
+        console.log("Usuario no encontrado");
+      }
+    } catch (error) {
+      console.error("Error al obtener cigarrillos fumados y dinero gastado:", error);
+    }
+  };
+
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("es-CL", { style: "currency", currency: moneda }).format(amount);
   };
 
   return (
     <View style={styles.container}>
-      <BackgroundCircles /> {/* Added BackgroundCircles component here */}
+      <BackgroundCircles /> {/* Background Circles Component */}
 
       <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
         <View style={styles.profileTextContainer}>
@@ -158,13 +204,9 @@ const AccountDetailsScreen = () => {
         </TouchableOpacity>
       </Animatable.View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} 
-  showsHorizontalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
         <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
-          <Image
-            source={{ uri: "https://example.com/user.jpg" }}
-            style={styles.profileImage}
-          />
+          <Image source={{ uri: "https://example.com/user.jpg" }} style={styles.profileImage} />
           <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
           <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
           <TouchableOpacity style={styles.editButton}>
@@ -182,9 +224,13 @@ const AccountDetailsScreen = () => {
             <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
             <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
           </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+          <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
             <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
             <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+            <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
+            <Text style={styles.statValue}>{timeLostInDays} días, {timeLostInHours} horas y {timeLostInMinutes} minutos</Text>
           </Animatable.View>
         </Animatable.View>
       </ScrollView>
