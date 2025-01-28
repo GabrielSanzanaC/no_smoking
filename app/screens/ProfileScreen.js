@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
@@ -7,6 +7,12 @@ import { collection, query, where, getDocs, doc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
+import { LineChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
+import FullMonthChart from "./FullMonthChart"; 
+
+const screenWidth = Dimensions.get("window").width;
+
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -20,6 +26,10 @@ const ProfileScreen = () => {
   const [startTime, setStartTime] = useState(Date.now());
   const [motivationalMessage, setMotivationalMessage] = useState("");
   const [intervalId, setIntervalId] = useState(null);
+  const [cigarettesData, setCigarettesData] = useState([]);
+  const [last7DaysData, setLast7DaysData] = useState([]);
+  const [isFullMonthChartVisible, setFullMonthChartVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleExitApp = () => {
     setIsModalVisible(true); // Muestra el modal de confirmación
