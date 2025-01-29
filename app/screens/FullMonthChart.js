@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import Svg, { Text as SvgText } from "react-native-svg"; // Importar Svg y SvgText
+
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -65,15 +67,29 @@ const FullMonthChart = ({ visible, onClose, data }) => {
           <Text style={styles.modalTitle}>Cigarros fumados en el mes</Text>
           <View style={styles.chartContainer}>
             <ScrollView horizontal>
-              <LineChart
-                data={normalizedData}
-                width={screenWidth * 2} // Aumenta el ancho para permitir el desplazamiento horizontal
-                height={250}
-                chartConfig={chartConfig}
-                bezier
-                style={styles.chart}
-                transparent={true} // Fondo transparente para el gráfico
-              />
+               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Svg height="150" width="30">
+                    <SvgText
+                      x="20"
+                      y="100"
+                      fill="white"
+                      fontSize="14"
+                      rotation="-90"
+                      origin="20, 100"
+                    >
+                      Cigarros
+                    </SvgText>
+                  </Svg>
+                  <LineChart
+                    data={normalizedData}
+                    width={screenWidth * 2} // Aumenta el ancho para permitir el desplazamiento horizontal
+                    height={250}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    transparent={true} // Fondo transparente para el gráfico
+                  />
+                </View>
             </ScrollView>
           </View>
           <TouchableOpacity

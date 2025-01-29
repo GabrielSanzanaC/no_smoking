@@ -9,10 +9,10 @@ import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
+import Svg, { Text as SvgText } from "react-native-svg"; // Importar Svg y SvgText
 import FullMonthChart from "./FullMonthChart"; 
 
 const screenWidth = Dimensions.get("window").width;
-
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -42,7 +42,6 @@ const ProfileScreen = () => {
   const cancelExit = () => {
     setIsModalVisible(false); // Cierra el modal
   };
-  
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -140,8 +139,6 @@ const ProfileScreen = () => {
     }
   }, [userId]);
 
-
-  
   useEffect(() => {
     const loadStartTime = async () => {
       try {
@@ -265,6 +262,12 @@ const ProfileScreen = () => {
     ],
   };
 
+  const maxCigarettes = Math.max(...last7DaysData, ...cigarettesData);
+  const segments =maxCigarettes < 10 
+  ? Array.from({ length: 11 }, (_, i) => i)  // Crea un array de 0 a 10
+  : Array.from({ length: Math.ceil(maxCigarettes / 5) + 1 }, (_, i) => i * 5);  // Crea un array de múltiplos de 5 hasta maxCigarettes
+
+
   const chartConfig = {
     backgroundColor: "transparent", // Fondo transparente
     color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
@@ -281,6 +284,7 @@ const ProfileScreen = () => {
     },
     yAxisLabel: '',
     yAxisSuffix: '',
+    yAxisInterval: segments,
     yAxisInterval: (0,cigarettesSmokedToday), // Define el intervalo del eje Y basado en cigarettesSmokedToday
     decimalPlaces: 0,
   };
@@ -288,7 +292,7 @@ const ProfileScreen = () => {
   const handleChartPress = () => {
     setFullMonthChartVisible(true);
   };
-
+  
   return (
     <View style={styles.container}>
         {/* Animated Background */}
@@ -371,18 +375,33 @@ const ProfileScreen = () => {
           <Text style={styles.chartTitle}>Cigarros fumados últimos 7 días</Text>
           <View style={styles.chartContainer}>
             <TouchableOpacity onPress={handleChartPress}>
-              <LineChart
-                data={last7DaysChartData}
-                width={screenWidth * 0.8} // Ajustar al ancho del statBox
-                height={220}
-                chartConfig={chartConfig}
-                bezier
-                style={styles.chart}
-                segments={6} // Number of horizontal grid lines
-                fromZero={true} // Start Y axis from zero
-                transparent={true} // Fondo transparente para el gráfico
-              />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Svg height="130" width="18">
+                  <SvgText
+                    x="20"
+                    y="100"
+                    fill="white"
+                    fontSize="12"
+                    rotation="-90"
+                    origin="10, 100"
+                  >
+                    N° de Cigarros
+                  </SvgText>
+                </Svg>
+                <LineChart
+                  data={last7DaysChartData}
+                  width={screenWidth * 0.75} // Ajustar al ancho del statBox
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chart}
+                  //segments={segments} // Number of horizontal grid lines
+                  fromZero={true} // Start Y axis from zero
+                  transparent={true} // Fondo transparente para el gráfico
+                />
+              </View>
             </TouchableOpacity>
+            <Text style={styles.chartInfo}>Toca el gráfico para más detalles</Text>
           </View>
         </ScrollView>
       </Animatable.View>
@@ -407,6 +426,7 @@ const ProfileScreen = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -538,12 +558,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   chartContainer: {
-    width: "90%",
+    width: "70%",
     alignItems: "center",
+    left: 5
   },
   chart: {
     borderRadius: 20,
     backgroundColor: "rgba(255, 255, 255, 0.15)", // Fondo igual al de los cuadros de estadísticas
+  },
+  chartInfo: {
+    fontSize: 12,
+    color: "#F2F2F2",
+    textAlign: "center",
+    marginTop: 5,
   },
   navButtonLeft: {
     position: "absolute",
