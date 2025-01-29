@@ -58,10 +58,7 @@ const BackgroundCircles = () => {
                 backgroundColor: color,
                 borderColor: "#ffffff", // Borde blanco
                 borderWidth: 2, // Ancho del borde
-                shadowColor: "#000", // Sombra
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
+                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
                 top: Math.random() * 100 + "%",
                 left: Math.random() * 100 + "%",
                 transform: [
@@ -179,8 +176,6 @@ const SettingsScreen = () => {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false} // Esto hace que la barra de desplazamiento sea invisible
     >
-      <BackgroundCircles /> {/* Fondo con círculos animados */}
-
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.push("./cuenta")} style={styles.headerButton}>
           <Ionicons name="arrow-back-outline" size={24} color="white" />

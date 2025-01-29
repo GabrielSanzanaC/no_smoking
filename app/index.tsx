@@ -229,12 +229,14 @@ const App = () => {
 
   const handleRememberMeChange = async () => {
     setRememberMe(!rememberMe);
+    console.log("Remember Me checked:", !rememberMe); // Verifica si el valor cambia
     if (!rememberMe) {
       await AsyncStorage.setItem('rememberedEmail', email);
     } else {
       await AsyncStorage.removeItem('rememberedEmail');
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -284,7 +286,10 @@ const App = () => {
             <Animatable.View animation="fadeIn" style={styles.checkboxContainer}>
               <Checkbox
                 value={rememberMe}
-                onChange={handleRememberMeChange}
+                onValueChange={(newValue) => {
+                  setRememberMe(newValue);
+                  console.log("Checkbox value:", newValue); // Verifica el valor
+                }}
                 color={rememberMe ? "#FF6F61" : undefined}
               />
               <Text style={styles.checkboxLabel}>Recuérdame</Text>
@@ -347,10 +352,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#072040", // Contrast Black
     borderRadius: 20,
     padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
     elevation: 10,
     alignItems: "center", // Centra horizontalmente el contenido dentro del rectángulo
   },

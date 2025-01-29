@@ -58,10 +58,7 @@ const BackgroundCircles = () => {
                 backgroundColor: color,
                 borderColor: "#ffffff",
                 borderWidth: 2,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
+                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
                 top: Math.random() * 100 + "%",
                 left: Math.random() * 100 + "%",
                 transform: [

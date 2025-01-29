@@ -59,10 +59,7 @@ const BackgroundCircles = () => {
                 backgroundColor: color,
                 borderColor: '#ffffff',
                 borderWidth: 2,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
                 top: Math.random() * 100 + '%',
                 left: Math.random() * 100 + '%',
                 transform: [
@@ -314,10 +311,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#059E9E',
     alignItems: 'center',
     elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+    boxShadow: "0 2px 3px rgba(0, 0, 0, 0.3)",
   },
   nextButtonText: {
     color: "white",

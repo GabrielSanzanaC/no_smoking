@@ -56,10 +56,7 @@ const BackgroundCircles = () => {
                 backgroundColor: color,
                 borderColor: '#ffffff', // Borde blanco
                 borderWidth: 2, // Ancho del borde
-                shadowColor: '#000', // Sombra
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
                 top: Math.random() * 100 + '%',
                 left: Math.random() * 100 + '%',
                 transform: [
@@ -307,10 +304,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     borderRadius: 10,
     backgroundColor: "#ffffff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
     elevation: 2,
     alignItems: "center",
     marginTop: 20,
@@ -355,10 +349,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#ffffff",
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
     elevation: 2,
     justifyContent: "center", // Centrar contenido verticalmente
     alignItems: "flex-start", // Centrar contenido horizontalmente
@@ -382,10 +373,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     backgroundColor: "#ffffff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
     elevation: 2,
   },
   recordText: {
