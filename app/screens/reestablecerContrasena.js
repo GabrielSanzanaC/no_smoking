@@ -3,96 +3,8 @@ import { StyleSheet, Text, View, TouchableOpacity, TextInput, Animated } from "r
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { reauthenticateWithCredential, updatePassword, EmailAuthProvider } from "firebase/auth";
+import BackgroundShapes from '../../components/BackgroundShapes';
 import { auth } from "../../FirebaseConfig"; // Asegúrate de que 'auth' esté exportado correctamente
-
-// Componente de las pelotas moviéndose
-const BackgroundCircles = () => {
-  const circles = Array.from({ length: 15 });
-  const circleRefs = useRef([]);
-
-  useEffect(() => {
-    const moveCircles = () => {
-      circleRefs.current.forEach((circle) => {
-        const randomX = Math.random() * 2 - 1;
-        const randomY = Math.random() * 2 - 1;
-        const duration = Math.random() * 3000 + 2000;
-        const moveAnimation = Animated.loop(
-          Animated.sequence([
-            Animated.timing(circle, {
-              toValue: 1,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-            Animated.timing(circle, {
-              toValue: 0,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        moveAnimation.start();
-      });
-    };
-
-    moveCircles();
-  }, []);
-
-  return (
-    <View style={styles.backgroundContainer}>
-      {circles.map((_, index) => {
-        const circleAnimation = useRef(new Animated.Value(0)).current;
-        circleRefs.current[index] = circleAnimation;
-
-        const size = Math.random() * 50 + 50;
-        const opacity = Math.random() * 0.5 + 0.3;
-        const color = `rgba(7, 32, 64, ${opacity})`;
-
-        return (
-          <Animated.View
-            key={index}
-            style={[
-              styles.circle,
-              {
-                width: size,
-                height: size,
-                backgroundColor: color,
-                borderColor: "#ffffff",
-                borderWidth: 2,
-                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-                transform: [
-                  {
-                    translateX: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
-                    }),
-                  },
-                  {
-                    translateY: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
-                    }),
-                  },
-                  {
-                    rotate: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ["0deg", `${Math.random() * 360}deg`],
-                    }),
-                  },
-                ],
-                opacity: circleAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 0.7],
-                }),
-              },
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-};
 
 const ResetPasswordScreen = () => {
   const router = useRouter();
@@ -135,8 +47,8 @@ const ResetPasswordScreen = () => {
 
   return (
     <View style={styles.container}>
-      <BackgroundCircles /> {/* Agregado el componente de las pelotas aquí */}
-
+      {/* Animated Background */}
+      <BackgroundShapesMemo />
       <TouchableOpacity onPress={() => router.push("./settingsScreen")} style={styles.backButton}>
         <Ionicons name="arrow-back-outline" size={24} color="white" />
         <Text style={styles.backText}>Volver</Text>
@@ -186,6 +98,10 @@ const ResetPasswordScreen = () => {
   );  
 };
 
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
+
 const styles = StyleSheet.create({
   backButton: {
     flexDirection: "row", // Para que el ícono y el texto estén en una fila
@@ -202,6 +118,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#7595BF",
     padding: 20,
     justifyContent: "center",
+    zIndex: -1,
   },
   headerContainer: {
     marginBottom: 20,
