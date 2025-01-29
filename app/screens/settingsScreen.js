@@ -4,101 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
 import { signOut, deleteUser } from "firebase/auth";
+import BackgroundShapes from '../../components/BackgroundShapes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const BackgroundCircles = () => {
-  const circles = Array.from({ length: 15 }); // Aumentar la cantidad de círculos
-  const circleRefs = useRef([]);
-
-  useEffect(() => {
-    const moveCircles = () => {
-      circleRefs.current.forEach((circle) => {
-        const randomX = Math.random() * 2 - 1; // Movimiento aleatorio en X
-        const randomY = Math.random() * 2 - 1; // Movimiento aleatorio en Y
-        const duration = Math.random() * 3000 + 2000; // Duración aleatoria entre 2000 y 5000 ms
-        const moveAnimation = Animated.loop(
-          Animated.sequence([ 
-            Animated.timing(circle, {
-              toValue: 1,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-            Animated.timing(circle, {
-              toValue: 0,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        moveAnimation.start();
-      });
-    };
-
-    moveCircles();
-  }, []);
-
-  return (
-    <View style={styles.backgroundContainer}>
-      {circles.map((_, index) => {
-        const circleAnimation = useRef(new Animated.Value(0)).current;
-        circleRefs.current[index] = circleAnimation;
-
-        const size = Math.random() * 50 + 50; // Tamaño aleatorio entre 50 y 100
-        const opacity = Math.random() * 0.5 + 0.3; // Opacidad aleatoria entre 0.3 y 0.8
-        const color = `rgba(7, 32, 64, ${opacity})`;
-
-        return (
-          <Animated.View
-            key={index}
-            style={[
-              styles.circle,
-              {
-                width: size,
-                height: size,
-                backgroundColor: color,
-                borderColor: "#ffffff", // Borde blanco
-                borderWidth: 2, // Ancho del borde
-                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-                transform: [
-                  {
-                    translateX: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [
-                        0,
-                        Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1),
-                      ],
-                    }),
-                  },
-                  {
-                    translateY: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [
-                        0,
-                        Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1),
-                      ],
-                    }),
-                  },
-                  {
-                    rotate: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ["0deg", `${Math.random() * 360}deg`],
-                    }),
-                  },
-                ],
-                opacity: circleAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 0.7],
-                }),
-              },
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-};
 
 const SettingsScreen = () => {
   const router = useRouter();
@@ -171,109 +78,121 @@ const SettingsScreen = () => {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false} // Esto hace que la barra de desplazamiento sea invisible
-    >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("./cuenta")} style={styles.headerButton}>
-          <Ionicons name="arrow-back-outline" size={24} color="white" />
-          <Text style={styles.headerText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Cambiar contraseña */}
-      <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
-        <Ionicons name="lock-closed-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Restablecer contraseña</Text>
-      </TouchableOpacity>
-
-      {/* Cambiar tema */}
-      <View style={styles.option}>
-        <Text style={styles.optionText}>Modo oscuro</Text>
-        <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
-      </View>
-
-      {/* Cambiar idioma */}
-      <TouchableOpacity style={styles.button} onPress={handleChangeLanguage}>
-        <Ionicons name="language-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Cambiar idioma</Text>
-      </TouchableOpacity>
-
-      {/* Activar/Desactivar notificaciones */}
-      <View style={styles.option}>
-        <Text style={styles.optionText}>Notificaciones</Text>
-        <Switch value={notifications} onValueChange={toggleNotifications} />
-      </View>
-
-      {/* Soporte técnico */}
-      <TouchableOpacity style={styles.button} onPress={handleSupport}>
-        <Ionicons name="help-circle-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Soporte técnico</Text>
-      </TouchableOpacity>
-
-      {/* Mostrar políticas de privacidad */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => setPrivacyModalVisible(true)}
+    <View style={styles.fullScreenContainer}>
+      {/* Animated Background */}
+      <BackgroundShapesMemo />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false} // Esto hace que la barra de desplazamiento sea invisible
       >
-        <Ionicons name="document-text-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Políticas de privacidad</Text>
-      </TouchableOpacity>
-
-      {/* Modal de políticas de privacidad */}
-      <Modal
-        visible={isPrivacyModalVisible}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Políticas de privacidad</Text>
-            <Text style={styles.modalText}>
-              Aquí van los detalles sobre cómo manejamos tus datos y respetamos
-              tu privacidad.
-            </Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setPrivacyModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Cerrar</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.push("./cuenta")} style={styles.headerButton}>
+            <Ionicons name="arrow-back-outline" size={24} color="white" />
+            <Text style={styles.headerText}>Perfil</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
 
-      {/* Eliminar cuenta */}
-      <TouchableOpacity
-        style={[styles.button, styles.deleteButton]}
-        onPress={handleDeleteAccount}
-      >
-        <Ionicons name="trash-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Eliminar cuenta</Text>
-      </TouchableOpacity>
+        {/* Cambiar contraseña */}
+        <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
+          <Ionicons name="lock-closed-outline" size={16} color="white" />
+          <Text style={styles.buttonText}>Restablecer contraseña</Text>
+        </TouchableOpacity>
 
-      {/* Cerrar sesión */}
-      <TouchableOpacity
-        style={[styles.button, styles.signOutButton]}
-        onPress={handleSignOut}
-      >
-        <Ionicons name="exit-outline" size={16} color="white" />
-        <Text style={styles.buttonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
+        {/* Cambiar tema */}
+        <View style={styles.option}>
+          <Text style={styles.optionText}>Modo oscuro</Text>
+          <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
+        </View>
 
-      {/* Versión de la aplicación */}
-      <Text style={styles.versionText}>Versión: 1.0.0</Text>
-    </ScrollView>
-    
+        {/* Cambiar idioma */}
+        <TouchableOpacity style={styles.button} onPress={handleChangeLanguage}>
+          <Ionicons name="language-outline" size={16} color="white" />
+          <Text style={styles.buttonText}>Cambiar idioma</Text>
+        </TouchableOpacity>
+
+        {/* Activar/Desactivar notificaciones */}
+        <View style={styles.option}>
+          <Text style={styles.optionText}>Notificaciones</Text>
+          <Switch value={notifications} onValueChange={toggleNotifications} />
+        </View>
+
+        {/* Soporte técnico */}
+        <TouchableOpacity style={styles.button} onPress={handleSupport}>
+          <Ionicons name="help-circle-outline" size={16} color="white" />
+          <Text style={styles.buttonText}>Soporte técnico</Text>
+        </TouchableOpacity>
+
+        {/* Mostrar políticas de privacidad */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => setPrivacyModalVisible(true)}
+        >
+          <Ionicons name="document-text-outline" size={16} color="white" />
+          <Text style={styles.buttonText}>Políticas de privacidad</Text>
+        </TouchableOpacity>
+
+        {/* Modal de políticas de privacidad */}
+        <Modal
+          visible={isPrivacyModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Políticas de privacidad</Text>
+              <Text style={styles.modalText}>
+                Aquí van los detalles sobre cómo manejamos tus datos y respetamos
+                tu privacidad.
+              </Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setPrivacyModalVisible(false)}
+              >
+                <Text style={styles.closeButtonText}>Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Eliminar cuenta */}
+        <TouchableOpacity
+          style={[styles.button, styles.deleteButton]}
+          onPress={handleDeleteAccount}
+        >
+          <Ionicons name="trash-outline" size={16} color="white" />
+          <Text style={styles.buttonText}>Eliminar cuenta</Text>
+        </TouchableOpacity>
+
+        {/* Cerrar sesión */}
+        <TouchableOpacity
+          style={[styles.button, styles.signOutButton]}
+          onPress={handleSignOut}
+        >
+          <Ionicons name="exit-outline" size={16} color="white" />
+          <Text style={styles.buttonText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+
+        {/* Versión de la aplicación */}
+        <Text style={styles.versionText}>Versión: 1.0.0</Text>
+      </ScrollView>
+    </View>
   );
 };
 
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
+
 const styles = StyleSheet.create({
+  fullScreenContainer: {
+    flex: 1, // Asegura que ocupe toda la pantalla
+    justifyContent: 'flex-start', // Alinea el contenido en la parte superior
+    backgroundColor: '#7595BF',
+    zIndex: -1,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#7595BF", // Fondo oscuro
     padding: 20,
   },
   header: {
@@ -366,19 +285,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     marginTop: 20,
-  },
-  backgroundContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-  },
-  circle: {
-    position: "absolute",
-    borderRadius: 50,
-    opacity: 0.5,
   },
 });
 
