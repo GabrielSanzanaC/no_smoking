@@ -3,94 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Animated } from 're
 import { useRouter } from 'expo-router';
 import { collection, getDocs, doc } from 'firebase/firestore';
 import { auth, db } from '../../FirebaseConfig'; // Asegúrate de que la ruta sea correcta
-
-const BackgroundCircles = () => {
-  const circles = Array.from({ length: 15 }); // Aumentar la cantidad de círculos
-  const circleRefs = useRef([]);
-
-  useEffect(() => {
-    const moveCircles = () => {
-      circleRefs.current.forEach((circle) => {
-        const randomX = Math.random() * 2 - 1; // Movimiento aleatorio en X
-        const randomY = Math.random() * 2 - 1; // Movimiento aleatorio en Y
-        const duration = Math.random() * 3000 + 2000; // Duración aleatoria entre 2000 y 5000 ms
-        const moveAnimation = Animated.loop(
-          Animated.sequence([
-            Animated.timing(circle, {
-              toValue: 1,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-            Animated.timing(circle, {
-              toValue: 0,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        moveAnimation.start();
-      });
-    };
-
-    moveCircles();
-  }, []);
-
-  return (
-    <View style={styles.backgroundContainer}>
-      {circles.map((_, index) => {
-        const circleAnimation = useRef(new Animated.Value(0)).current;
-        circleRefs.current[index] = circleAnimation;
-
-        const size = Math.random() * 50 + 50; // Tamaño aleatorio entre 50 y 100
-        const opacity = Math.random() * 0.5 + 0.3; // Opacidad aleatoria entre 0.3 y 0.8
-        const color = `rgba(7, 32, 64, ${opacity})`;
-
-        return (
-          <Animated.View
-            key={index}
-            style={[
-              styles.circle,
-              {
-                width: size,
-                height: size,
-                backgroundColor: color,
-                borderColor: '#ffffff', // Borde blanco
-                borderWidth: 2, // Ancho del borde
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                top: Math.random() * 100 + '%',
-                left: Math.random() * 100 + '%',
-                transform: [
-                  {
-                    translateX: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
-                    }),
-                  },
-                  {
-                    translateY: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
-                    }),
-                  },
-                  {
-                    rotate: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0deg', `${Math.random() * 360}deg`],
-                    }),
-                  },
-                ],
-                opacity: circleAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 0.7],
-                }),
-              },
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-};
+import BackgroundShapes from '../../components/BackgroundShapes';
 
 const HistoryScreen = () => {
   const router = useRouter();
@@ -170,13 +83,15 @@ const HistoryScreen = () => {
           Animated.timing(fadeAnim, {
             toValue: 1,
             duration: 300,
-            useNativeDriver: true,
+            useNativeDriver: true,  // Mantener el uso de driver nativo
           }).start();
+          
           Animated.timing(heightAnim, {
-            toValue: hasRecords ? 100 : 0,
+            toValue: hasRecords ? 1 : 0, // Animar con scaleY para simular el cambio de altura
             duration: 300,
-            useNativeDriver: false,
+            useNativeDriver: true,  // Mantener el uso de driver nativo
           }).start();
+          
         }}
       >
         {isSelected && <View style={styles.selectedCircle} />}
@@ -193,16 +108,24 @@ const HistoryScreen = () => {
     const dateKey = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
     const dailyRecords = Array.isArray(history[dateKey]) ? history[dateKey] : [];
     const totalCigars = dailyRecords.reduce((total, record) => total + record.cigarettesSmoked, 0);
+    
     return (
-      <Animated.View style={[styles.recordsContainer, { opacity: fadeAnim, height: heightAnim }]}>
+      <Animated.View 
+        style={[
+          styles.recordsContainer, 
+          { opacity: fadeAnim, transform: [{ scaleY: heightAnim }] } // Using scaleY for height animation
+        ]}
+      >
         <Text style={styles.totalCigarsText}>Total de cigarros: {totalCigars}</Text>
       </Animated.View>
     );
   };
+  
 
   return (
     <View style={styles.container}>
-      <BackgroundCircles />
+      {/* Animated Background */}
+      <BackgroundShapesMemo />
       <View style={styles.header}>
         <TouchableOpacity onPress={handlePreviousMonth}>
           <Text style={styles.buttonText}>{"<"}</Text>
@@ -223,12 +146,14 @@ const HistoryScreen = () => {
         keyExtractor={(item) => item.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
-        pagingEnabled={true}
-        snapToInterval={60}
-        snapToAlignment="center"
+        snapToInterval={70} // Ajusta este valor al ancho total de cada elemento
+        snapToAlignment="start" // Alinea los elementos al inicio
         decelerationRate="fast"
+        bounces={false} // Desactiva el rebote para evitar movimientos inesperados
+      
         style={styles.list}
       />
+
 
       {showRecords && renderRecords()}
 
@@ -239,6 +164,10 @@ const HistoryScreen = () => {
     </View>
   );
 };
+
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
 
 const styles = StyleSheet.create({
   scrollToTopButton: {
@@ -266,6 +195,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#7595BF",
     position: "relative",
+    zIndex: -1,
   },
   backgroundContainer: {
     position: "absolute",
@@ -274,11 +204,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: -1,
-  },
-  circle: {
-    position: "absolute",
-    borderRadius: 50,
-    opacity: 0.5,
   },
   header: {
     flexDirection: "row",
@@ -296,8 +221,9 @@ const styles = StyleSheet.create({
     color: "beige",
   },
   list: {
-    flexGrow: 0,
-  },
+    flexGrow: 0, // Para que la lista no crezca más de lo necesario
+    width: "100%", // Asegura que ocupe el 100% del contenedor
+  },  
   dayContainer: {
     width: 60,
     padding: 15,
