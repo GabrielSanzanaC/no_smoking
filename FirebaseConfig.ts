@@ -2,6 +2,8 @@
 import { initializeApp } from "firebase/app";
 import { initializeAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -23,6 +25,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = initializeAuth(app);
 export const db = getFirestore(app);
 export const logout = signOut(auth);
+export const storage = getStorage(app);
 
 // Function to register user
 export const registerUser = async (nombre: string, email: string, password: string) => {
