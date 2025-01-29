@@ -6,94 +6,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { db } from '../../FirebaseConfig';
 import { collection, doc, getDocs, query, setDoc, where, serverTimestamp, updateDoc } from 'firebase/firestore';
-
-const BackgroundCircles = () => {
-  const circles = Array.from({ length: 15 });
-  const circleRefs = useRef([]);
-
-  useEffect(() => {
-    const moveCircles = () => {
-      circleRefs.current.forEach((circle) => {
-        const randomX = Math.random() * 2 - 1;
-        const randomY = Math.random() * 2 - 1;
-        const duration = Math.random() * 3000 + 2000;
-        const moveAnimation = Animated.loop(
-          Animated.sequence([
-            Animated.timing(circle, {
-              toValue: 1,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-            Animated.timing(circle, {
-              toValue: 0,
-              duration: duration,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        moveAnimation.start();
-      });
-    };
-
-    moveCircles();
-  }, []);
-
-  return (
-    <View style={styles.backgroundContainer}>
-      {circles.map((_, index) => {
-        const circleAnimation = useRef(new Animated.Value(0)).current;
-        circleRefs.current[index] = circleAnimation;
-
-        const size = Math.random() * 50 + 50;
-        const opacity = Math.random() * 0.5 + 0.3;
-        const color = `rgba(7, 32, 64, ${opacity})`;
-
-        return (
-          <Animated.View
-            key={index}
-            style={[
-              styles.circle,
-              {
-                width: size,
-                height: size,
-                backgroundColor: color,
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                top: Math.random() * 100 + '%',
-                left: Math.random() * 100 + '%',
-                transform: [
-                  {
-                    translateX: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
-                    }),
-                  },
-                  {
-                    translateY: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, Math.random() * 100 * (Math.random() < 0.5 ? 1 : -1)],
-                    }),
-                  },
-                  {
-                    rotate: circleAnimation.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0deg', `${Math.random() * 360}deg`],
-                    }),
-                  },
-                ],
-                opacity: circleAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 0.7],
-                }),
-              },
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-};
+import BackgroundShapes from '../../components/BackgroundShapes';
 
 export default function DailyQuestion() {
   const [moodRating, setMoodRating] = useState(3); // Estado inicial del estado de ánimo
@@ -171,7 +84,7 @@ export default function DailyQuestion() {
 
   return (
     <View style={styles.container}>
-      <BackgroundCircles /> {/* Componente de círculos de fondo */}
+      <BackgroundShapesMemo />
 
       {/* Indicador de pasos */}
       <View style={styles.stepContainer}>
@@ -245,6 +158,10 @@ export default function DailyQuestion() {
   );
 }
 
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -252,6 +169,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#7595BF',
     padding: 20,
+    zIndex: -1,
   },
   stepContainer: {
     flexDirection: 'row',

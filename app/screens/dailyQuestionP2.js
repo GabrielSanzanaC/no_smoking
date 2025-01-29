@@ -2,39 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
-
-const BackgroundCircles = () => {
-  const circles = Array.from({ length: 15 });
-
-  return (
-    <View style={styles.backgroundContainer}>
-      {circles.map((_, index) => {
-        const size = Math.random() * 50 + 50;
-        const opacity = Math.random() * 0.5 + 0.3;
-        const color = `rgba(7, 32, 64, ${opacity})`;
-
-        return (
-          <View
-            key={index}
-            style={[
-              styles.circle,
-              {
-                width: size,
-                height: size,
-                backgroundColor: color,
-                borderColor: "#ffffff",
-                borderWidth: 2,
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-              },
-            ]}
-          />
-        );
-      })}
-    </View>
-  );
-};
+import BackgroundShapes from '../../components/BackgroundShapes';
 
 export default function DailyQuestionCombined() {
   const [selectedOptionP3, setSelectedOptionP3] = useState(null); // Opción de ubicación
@@ -77,7 +45,7 @@ export default function DailyQuestionCombined() {
   return (
     <View style={styles.fullScreenContainer}>
       {/* Componente de fondo fuera del ScrollView */}
-      <BackgroundCircles />
+      <BackgroundShapesMemo />
 
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Indicador de pasos */}
@@ -153,11 +121,16 @@ export default function DailyQuestionCombined() {
   );
 }
 
+const BackgroundShapesMemo = React.memo(() => {
+  return <BackgroundShapes />;
+});
+
 const styles = StyleSheet.create({
   fullScreenContainer: {
     flex: 1, // Asegura que ocupe toda la pantalla
     justifyContent: 'flex-start', // Alinea el contenido en la parte superior
     backgroundColor: '#7595BF',
+    zIndex: -1,
   },
   container: {
     flexGrow: 1,
