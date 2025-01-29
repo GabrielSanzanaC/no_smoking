@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, Timestamp } from "firebase/firestore";
 import { auth, db } from "../FirebaseConfig";
 
 interface GuardarUsuarioProps {
@@ -34,17 +34,11 @@ export const GuardarUsuario = async ({ email, password, user, reasons, age, year
 
     // Crear subcolección Motivos dentro del documento del usuario
     await addDoc(collection(db, "usuarios", uid, "Motivos"), { motivos: reasons });
-
-    // Obtener solo la fecha (sin la hora)
-    const fechaCreacion = new Date().toISOString().split('T')[0]; // Formato "YYYY-MM-DD"
     
-    // Agregar subcolección CigaretteHistory con fecha de creación y cigarrillos fumados en ese día
-    await addDoc(collection(db, "usuarios", uid, "CigaretteHistory"), {
-      fecha: fechaCreacion,
-      cigarettesSmoked: 0, // Inicializamos con 0 cigarrillos fumados
+     // Crear subcolección TiempoSinFumar e inicializar con tiempo en 0
+     await addDoc(collection(db, "usuarios", uid, "TiempoSinFumar"), {
+      ultimoRegistro: Timestamp.now(),
     });
-
-    console.log('Usuario y su historial de cigarrillos guardados exitosamente.');
 
   } catch (err: unknown) {
     if (err instanceof Error) {
