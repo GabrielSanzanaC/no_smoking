@@ -159,8 +159,8 @@ export default function CreateAccountScreen() {
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
       <View style={styles.container}>
-        <View style={styles.overlay}>
-        <BackgroundShapesMemo />
+      <BackgroundShapesMemo />
+        
           {questionStep === 1 && (
             <View style={styles.questionContainer}>
               <Text style={styles.title}>Seleccione su país y tipo de moneda</Text>
@@ -273,7 +273,6 @@ export default function CreateAccountScreen() {
             <Text style={styles.buttonText}>{questionStep === 7 ? 'Ir a Perfil' : 'Continuar'}</Text>
           </TouchableOpacity>
         </View>
-      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -290,15 +289,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#7595BF',
-    borderRadius: 15,
-    width: '100%',
   },
   questionContainer: {
     alignItems: 'center',
