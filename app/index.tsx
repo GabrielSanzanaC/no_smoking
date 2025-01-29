@@ -18,7 +18,7 @@ WebBrowser.maybeCompleteAuthSession();
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
-  const [user, setUser] = useState(""); // Estado para el nombre del usuario
+  const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [userError, setUserError] = useState(false);
@@ -41,13 +41,15 @@ const App = () => {
       try {
         const loggedIn = await AsyncStorage.getItem("isLoggedIn");
         const userData = await AsyncStorage.getItem("userData"); // Recuperar datos del usuario
-
+  
         if (loggedIn === "true" && userData) {
           const { email, password } = JSON.parse(userData); // Extraer email y contraseña
-
+          setEmail(email); 
+          setPassword(password);
+          setRememberMe(true);
           // Intentar iniciar sesión automáticamente
           await signInWithEmailAndPassword(auth, email, password);
-
+  
           // Redirigir al perfil si el inicio de sesión fue exitoso
           router.push({
             pathname: "./screens/ProfileScreen",
@@ -57,9 +59,10 @@ const App = () => {
         console.error("Error during auto login:", err);
       }
     };
-
+  
     checkLoginStatus();
   }, []);
+  
 
   /*useEffect(() => {
     if (response?.type === 'success') {
@@ -83,7 +86,8 @@ const App = () => {
     }
   }, [response]);
   */
-  
+
+  const isFormValid = email.trim() !== "" && password.trim() !== "";
 
   const handleLogin = async () => {
     let hasError = false;
@@ -111,14 +115,6 @@ const App = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Guardar estado de sesión y datos del usuario
-      await AsyncStorage.setItem("isLoggedIn", "true");
-      await AsyncStorage.setItem(
-        "userData",
-        JSON.stringify({ email: user.email, uid: user.uid, password }) // Guardar contraseña también
-      );
-
       setError("");
       router.push("./screens/ProfileScreen");
     } catch (err: unknown) {
@@ -228,12 +224,17 @@ const App = () => {
   };
 
   const handleRememberMeChange = async () => {
-    setRememberMe(!rememberMe);
-    console.log("Remember Me checked:", !rememberMe); // Verifica si el valor cambia
+    setRememberMe(prevState => !prevState);
     if (!rememberMe) {
-      await AsyncStorage.setItem('rememberedEmail', email);
+          // Guardar estado de sesión y datos del usuario
+          await AsyncStorage.setItem("isLoggedIn", "true");
+          await AsyncStorage.setItem(
+            "userData",
+            JSON.stringify({ email: email, password: password }) // Ahora estamos accediendo a las propiedades correctamente
+          );
     } else {
-      await AsyncStorage.removeItem('rememberedEmail');
+          await AsyncStorage.setItem("isLoggedIn", "false");
+          await AsyncStorage.removeItem('userData');
     }
   };
   
@@ -283,16 +284,14 @@ const App = () => {
             />
           </Animatable.View>
           {isLogin && (
-            <Animatable.View animation="fadeIn" style={styles.checkboxContainer}>
+            <Animatable.View animation="fadeIn" style={[styles.checkboxContainer, !isFormValid && styles.disabledContainer]}>
               <Checkbox
                 value={rememberMe}
-                onValueChange={(newValue) => {
-                  setRememberMe(newValue);
-                  console.log("Checkbox value:", newValue); // Verifica el valor
-                }}
-                color={rememberMe ? "#FF6F61" : undefined}
+                onValueChange={handleRememberMeChange}
+                color={rememberMe ? "#FF6F61" : "#B0B0B0"}
+                disabled={!isFormValid}
               />
-              <Text style={styles.checkboxLabel}>Recuérdame</Text>
+              <Text style={[styles.checkboxLabel, !isFormValid && styles.disabledText]}>Recuérdame</Text>
             </Animatable.View>
           )}
           <Animatable.View animation="zoomIn">
@@ -340,6 +339,12 @@ const BackgroundShapesMemo = React.memo(() => {
 });
 
 const styles = StyleSheet.create({
+  disabledContainer: {
+    opacity: 0.1, // Reducir la opacidad del contenedor
+  },
+  disabledText: {
+    color: '#A9A9A9', // Gris para el texto deshabilitado
+  },
   container: {
     flex: 1,
     backgroundColor: "#7595BF", // Background
