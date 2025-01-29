@@ -77,8 +77,6 @@ const AccountDetailsScreen = () => {
         });
 
         setTotalCigarettesSmoked(totalCigarettes);
-        setTotalMoneySpentSinceSmoking(totalMoneySpent);
-
         const timeLostInMinutesTotal = totalCigarettes * 7;
         const days = Math.floor(timeLostInMinutesTotal / 1440);
         const hours = Math.floor((timeLostInMinutesTotal % 1440) / 60);
@@ -94,6 +92,55 @@ const AccountDetailsScreen = () => {
       console.error("Error al obtener cigarrillos fumados y dinero gastado:", error);
     }
   };
+
+  const getTotalMoneySpent = async (userId) => {
+    try {
+      const userRef = doc(db, "usuarios", userId);
+      const userSnap = await getDocs(query(collection(db, "usuarios"), where("uid", "==", userId)));
+  
+      if (!userSnap.empty) {
+        const userData = userSnap.docs[0].data();
+  
+        // Convertir cadenas a números
+        const yearsSmoking = parseInt(userData.añosFumando) || 0;
+        const cigarettesPerDay = parseInt(userData.cigarrillosPorDía) || 0;
+        const pricePerPack = parseFloat(userData.precioPorPaquete) || 0;
+        const cigarettesPerPack = parseInt(userData.cigarrillosPorPaquete) || 1; // Evita división por 0
+  
+        if (!yearsSmoking || !cigarettesPerDay || !pricePerPack || !cigarettesPerPack) {
+          console.warn("Faltan datos para calcular el gasto total.");
+          return;
+        }
+  
+        // Cálculo del dinero gastado desde que comenzó a fumar
+        const totalSpentSinceSmoking = yearsSmoking * 365 * cigarettesPerDay * (pricePerPack / cigarettesPerPack);
+  
+        // Obtener el dinero gastado desde la creación de la cuenta
+        const cigaretteHistoryRef = collection(userSnap.docs[0].ref, "CigaretteHistory");
+        const cigaretteHistorySnap = await getDocs(cigaretteHistoryRef);
+  
+        let totalSpentSinceAccountCreation = 0;
+  
+        cigaretteHistorySnap.forEach((doc) => {
+          const data = doc.data();
+          totalSpentSinceAccountCreation += (parseInt(data.cigarettesSmoked) || 0) * (pricePerPack / cigarettesPerPack);
+        });
+  
+        // Actualizar estados
+        setTotalMoneySpentSinceSmoking(totalSpentSinceSmoking);
+        setTotalMoneySpentSinceAccountCreation(totalSpentSinceAccountCreation);
+      }
+    } catch (error) {
+      console.error("Error al calcular el gasto total:", error);
+    }
+  };
+  
+  // Llamar a la función en useEffect cuando el usuario esté autenticado
+  useEffect(() => {
+    if (auth.currentUser) {
+      getTotalMoneySpent(auth.currentUser.uid);
+    }
+  }, []);
 
   const handlePhotoPick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
