@@ -62,10 +62,7 @@ const BackgroundCircles = () => {
                 backgroundColor: color,
                 borderColor: "#ffffff",
                 borderWidth: 2,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
+                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
                 top: Math.random() * 100 + "%",
                 left: Math.random() * 100 + "%",
                 transform: [
@@ -318,10 +315,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     marginBottom: 20,
     marginTop: 0, // Agregado para dar espacio desde la parte superior (debajo del header)
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
     elevation: 8,
   },
   profileImageContainer: {
@@ -372,10 +366,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 100,
     marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
     elevation: 8,
   },
   statTitle: {
