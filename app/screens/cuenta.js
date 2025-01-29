@@ -4,9 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Animatable from "react-native-animatable";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { auth, db } from "../../FirebaseConfig";
+import { collection, getDocs, query, where, updateDoc, doc } from "firebase/firestore";
+import { auth, db, storage } from "../../FirebaseConfig";
+import * as ImagePicker from "expo-image-picker";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
+// Componente para círculos animados
 const BackgroundCircles = () => {
   const circles = Array.from({ length: 15 });
   const circleRefs = useRef([]);
@@ -51,7 +54,7 @@ const BackgroundCircles = () => {
         return (
           <Animated.View
             key={index}
-            style={[
+            style={[ 
               styles.circle,
               {
                 width: size,
@@ -106,35 +109,36 @@ const AccountDetailsScreen = () => {
   const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
   const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
   const [totalMoneySpentSinceAccountCreation, setTotalMoneySpentSinceAccountCreation] = useState(0);
-  const [timeLostInDays, setTimeLostInDays] = useState(0);  // Estado para almacenar el tiempo perdido en días
-  const [timeLostInHours, setTimeLostInHours] = useState(0); // Estado para almacenar las horas perdidas
-  const [timeLostInMinutes, setTimeLostInMinutes] = useState(0); // Estado para almacenar los minutos perdidos
+  const [timeLostInDays, setTimeLostInDays] = useState(0);
+  const [timeLostInHours, setTimeLostInHours] = useState(0);
+  const [timeLostInMinutes, setTimeLostInMinutes] = useState(0);
+  const [photoURL, setPhotoURL] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setEmail(user.email);
-        getUserData(user.email);
-        getTotalCigarettesSmoked(user.email); // Obtener el total de cigarrillos fumados
+        getUserData(user.uid); // Cambiado a UID
+        getTotalCigarettesSmoked(user.uid); // Cambiado a UID
       } else {
         setNombre("Usuario invitado");
         setEmail("No disponible");
       }
     });
-
     return unsubscribe;
   }, []);
 
-  // Obtener datos del usuario desde Firebase
+
   const getUserData = async (email) => {
     try {
-      const q = query(collection(db, "usuarios"), where("email", "==", email));
+      const q = query(collection(db, "usuarios"), where("uid", "==", email));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
         setMoneda(userData.moneda || "CLP");
+        setPhotoURL(userData.photoURL);  // Cargar la foto desde Firestore
       } else {
         setNombre("Usuario desconocido");
       }
@@ -143,39 +147,37 @@ const AccountDetailsScreen = () => {
     }
   };
 
-  // Función para obtener el total de cigarrillos fumados y dinero gastado
   const getTotalCigarettesSmoked = async (email) => {
     try {
-      const userQuery = query(collection(db, "usuarios"), where("email", "==", email));
+      const userQuery = query(collection(db, "usuarios"), where("uid", "==", email));
       const userSnapshot = await getDocs(userQuery);
-  
+
       if (!userSnapshot.empty) {
-        const userDoc = userSnapshot.docs[0];  // Obtenemos el documento del usuario
-        const cigaretteHistoryRef = collection(userDoc.ref, "CigaretteHistory"); // Referencia a la subcolección CigaretteHistory
-  
+        const userDoc = userSnapshot.docs[0];
+        const cigaretteHistoryRef = collection(userDoc.ref, "CigaretteHistory");
+
         const cigaretteHistorySnapshot = await getDocs(cigaretteHistoryRef);
-  
+
         let totalCigarettes = 0;
         let totalMoneySpent = 0;
-  
+
         cigaretteHistorySnapshot.forEach((doc) => {
           const data = doc.data();
-          totalCigarettes += data.cigarettesSmoked || 0; // Sumar los cigarrillos fumados
-          totalMoneySpent += (data.cigarettesSmoked || 0) * (data.pricePerCigarette || 0); // Sumar el dinero gastado
+          totalCigarettes += data.cigarettesSmoked || 0;
+          totalMoneySpent += (data.cigarettesSmoked || 0) * (data.pricePerCigarette || 0);
         });
-  
-        setTotalCigarettesSmoked(totalCigarettes);
-        setTotalMoneySpentSinceSmoking(totalMoneySpent); // Guardamos el dinero total gastado
 
-        // Calcular el tiempo perdido basado en cigarrillos fumados (7 minutos por cigarro)
+        setTotalCigarettesSmoked(totalCigarettes);
+        setTotalMoneySpentSinceSmoking(totalMoneySpent);
+
         const timeLostInMinutesTotal = totalCigarettes * 7;
-        const days = Math.floor(timeLostInMinutesTotal / 1440); // Número de días completos
-        const hours = Math.floor((timeLostInMinutesTotal % 1440) / 60); // Número de horas restantes
-        const minutes = timeLostInMinutesTotal % 60; // Restantes minutos
+        const days = Math.floor(timeLostInMinutesTotal / 1440);
+        const hours = Math.floor((timeLostInMinutesTotal % 1440) / 60);
+        const minutes = timeLostInMinutesTotal % 60;
 
         setTimeLostInDays(days);
         setTimeLostInHours(hours);
-        setTimeLostInMinutes(minutes); // Guardamos los minutos restantes
+        setTimeLostInMinutes(minutes);
       } else {
         console.log("Usuario no encontrado");
       }
@@ -184,13 +186,49 @@ const AccountDetailsScreen = () => {
     }
   };
 
+  const handlePhotoPick = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 4],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      uploadImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri) => {
+    const user = auth.currentUser;
+    try {
+      const userRef = doc(db, "usuarios", user.uid);
+      const blob = await fetch(uri).then((res) => res.blob());
+      const photoRef = ref(storage, `profile_pictures/${user.uid}.jpg`);
+      
+      await uploadBytes(photoRef, blob);
+      const newPhotoURL = await getDownloadURL(photoRef);
+      
+      await updateDoc(userRef, { photoURL: newPhotoURL });
+      setPhotoURL(newPhotoURL);
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (photoURL) {
+      console.log("URL de la foto que se está mostrando:", photoURL);
+    }
+  }, [photoURL]);
+
   const formatMoney = (amount) => {
     return new Intl.NumberFormat("es-CL", { style: "currency", currency: moneda }).format(amount);
   };
 
   return (
     <View style={styles.container}>
-      <BackgroundCircles /> {/* Background Circles Component */}
+      <BackgroundCircles />
 
       <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
         <View style={styles.profileTextContainer}>
@@ -204,12 +242,16 @@ const AccountDetailsScreen = () => {
         </TouchableOpacity>
       </Animatable.View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
-        <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
-          <Image source={{ uri: "https://example.com/user.jpg" }} style={styles.profileImage} />
+    <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+      <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
+        {/* Mostrar imagen de perfil */}
+        <Image 
+            source={{ uri: photoURL ? `${photoURL}?ts=${Date.now()}` : null }} 
+            style={styles.profileImage} 
+          />
           <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
           <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
-          <TouchableOpacity style={styles.editButton}>
+          <TouchableOpacity style={styles.editButton} onPress={handlePhotoPick}>
             <Ionicons name="camera-outline" size={16} color="white" />
             <Text style={styles.editButtonText}>Cambiar foto</Text>
           </TouchableOpacity>
@@ -282,11 +324,17 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
+  profileImageContainer: {
+    position: "absolute",
+    top: -45,  // Ajusta la distancia según lo que necesites
+    left: "50%",
+    transform: [{ translateX: -45 }],  // Centra la imagen
+    zIndex: 1, // Asegúrate de que esté sobre el nombre
+  },
   profileImage: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    marginBottom: 10,
     borderWidth: 2,
     borderColor: "#4F59FF",
   },
