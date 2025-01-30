@@ -50,7 +50,7 @@ const ProfileScreen = () => {
       if (user) {
         setUserEmail(user.email);
         setUserId(user.uid);
-        await getUserData(user.email);
+        await getUserData(user.uid);
         await getCigarettesForToday(user.uid);
         await getCigarettesData(user.uid);
         await calculateTimeWithoutSmoking(user.uid);
@@ -124,6 +124,7 @@ const ProfileScreen = () => {
       const lastLogin = data.lastLogin;
   
       if (lastLogin === todayDate) {
+        setStreakDays(data.streak);
         console.log("La racha no cambia, ya es el mismo día.");
       } else {
         if (lastLogin === getYesterday(todayDate)) {
@@ -287,13 +288,12 @@ const ProfileScreen = () => {
 
   const getUserData = async (email) => {
     try {
-      const q = query(collection(db, "usuarios"), where("email", "==", email));
+      const q = query(collection(db, "usuarios"), where("uid", "==", email));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
         setNombre(userData.nombre || "Usuario");
-        setStreakDays(userData.streakDays || 0);
         setMonthlySavings(userData.monthlySavings || 0);
       } else {
         setNombre("Usuario");
