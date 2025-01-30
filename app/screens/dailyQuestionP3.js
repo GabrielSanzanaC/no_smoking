@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { db } from '../../FirebaseConfig';
-import { collection, doc, getDocs, query, setDoc, where, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, setDoc, where, serverTimestamp, updateDoc, Timestamp } from 'firebase/firestore';
 import BackgroundShapes from '../../components/BackgroundShapes';
 
 export default function DailyQuestion() {
@@ -36,12 +36,15 @@ export default function DailyQuestion() {
     const currentDate = getCurrentDate();
     const userDocRef = doc(db, "usuarios", userId);
     const cigaretteHistoryRef = collection(userDocRef, "CigaretteHistory");
+    const TiempoSinFumarRef = collection(userDocRef, "TiempoSinFumar");
 
     try {
       const q = query(cigaretteHistoryRef, where("fecha", "==", currentDate));
+      const queryTiempo = await getDocs(TiempoSinFumarRef);
       const querySnapshot = await getDocs(q);
 
       let cigaretteDocRef;
+      let tiempoDoc;
       const cigarettesNumber = parseInt(cigarettes, 10);  // Convertimos 'cigarettes' a número
 
       if (isNaN(cigarettesNumber)) {
@@ -61,6 +64,14 @@ export default function DailyQuestion() {
           fecha: currentDate,
           cigarettesSmoked: cigarettesNumber, // Guardamos como número
         });
+      }
+
+      if (!queryTiempo.empty) {
+        tiempoDoc = queryTiempo.docs[0]; // Solo asignamos si hay datos
+        await updateDoc(tiempoDoc.ref, { ultimoRegistro: Timestamp.now() });
+      } else {
+        // Si no hay documentos en "TiempoSinFumar", creamos uno nuevo
+        await addDoc(TiempoSinFumarRef, { ultimoRegistro: Timestamp.now() });
       }
 
       const datosPorCigarroRef = collection(cigaretteDocRef, "datosPorCigarro");
