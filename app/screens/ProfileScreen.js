@@ -387,17 +387,6 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
         {/* Animated Background */}
-        <Animatable.View
-        animation="pulse"
-        iterationCount="infinite"
-        duration={500}
-        style={styles.animatedCircle1}
-      />
-      <Animatable.View
-        animation="pulse"
-        iterationCount="infinite"
-        style={styles.animatedCircle2}
-      />
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
       <Modal
           animationType="fade"
@@ -524,26 +513,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingBottom: 30,
-  },
-  animatedCircle1: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    backgroundColor: "#072040",
-    borderRadius: 150,
-    opacity: 0.2,
-    top: -50,
-    left: -50,
-  },
-  animatedCircle2: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    backgroundColor: "#1F82BF",
-    borderRadius: 100,
-    opacity: 0.3,
-    bottom: -50,
-    right: -50,
   },
   rectangle: {
     width: "90%",

@@ -4,40 +4,9 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { GuardarUsuario } from "../../components/GuardarUsuario";
 import DropDownPicker from 'react-native-dropdown-picker';
 import BackgroundShapes from '../../components/BackgroundShapes';
+import { styles } from "../../constants/styles";
+import countryCurrencyOptions from '../../components/CountriesData';
 
-const countryCurrencyOptions = [
-  { label: 'Chile (CLP)', value: 'CLP' },
-  { label: 'United States (USD)', value: 'USD' },
-  { label: 'Argentina (ARS)', value: 'ARS' },
-  { label: 'Brazil (BRL)', value: 'BRL' },
-  { label: 'Canada (CAD)', value: 'CAD' },
-  { label: 'China (CNY)', value: 'CNY' },
-  { label: 'Eurozone (EUR)', value: 'EUR' },
-  { label: 'India (INR)', value: 'INR' },
-  { label: 'Japan (JPY)', value: 'JPY' },
-  { label: 'Mexico (MXN)', value: 'MXN' },
-  { label: 'Russia (RUB)', value: 'RUB' },
-  { label: 'South Africa (ZAR)', value: 'ZAR' },
-  { label: 'Australia (AUD)', value: 'AUD' },
-  { label: 'New Zealand (NZD)', value: 'NZD' },
-  { label: 'United Kingdom (GBP)', value: 'GBP' },
-  { label: 'South Korea (KRW)', value: 'KRW' },
-  { label: 'Switzerland (CHF)', value: 'CHF' },
-  { label: 'Turkey (TRY)', value: 'TRY' },
-  { label: 'Norway (NOK)', value: 'NOK' },
-  { label: 'Sweden (SEK)', value: 'SEK' },
-  { label: 'Denmark (DKK)', value: 'DKK' },
-  { label: 'Poland (PLN)', value: 'PLN' },
-  { label: 'Saudi Arabia (SAR)', value: 'SAR' },
-  { label: 'Indonesia (IDR)', value: 'IDR' },
-  { label: 'Thailand (THB)', value: 'THB' },
-  { label: 'Malaysia (MYR)', value: 'MYR' },
-  { label: 'Singapore (SGD)', value: 'SGD' },
-  { label: 'Hong Kong (HKD)', value: 'HKD' },
-  { label: 'Philippines (PHP)', value: 'PHP' },
-  { label: 'Israel (ILS)', value: 'ILS' },
-  // Agrega más países y monedas según sea necesario
-];
 
 export default function CreateAccountScreen() {
   const router = useRouter();
@@ -162,8 +131,8 @@ export default function CreateAccountScreen() {
       <BackgroundShapesMemo />
         
           {questionStep === 1 && (
-            <View style={styles.questionContainer}>
-              <Text style={styles.title}>Seleccione su país y tipo de moneda</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>Seleccione su país y tipo de moneda</Text>
               <DropDownPicker
                 open={open}
                 value={currency}
@@ -179,8 +148,8 @@ export default function CreateAccountScreen() {
           )}
 
           {questionStep === 2 && (
-            <View style={styles.questionContainer}>
-              <Text style={styles.title}>¿Por qué quieres dejar de fumar?</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>¿Por qué quieres dejar de fumar?</Text>
               <View style={styles.optionsContainer}>
                 {['Mi salud', 'Mi familia', 'Mejorar mi condición física', 'Ahorrar dinero', 'Mejorar mi respiración', 'Aumentar mi energía'].map((option, index) => (
                   <TouchableOpacity
@@ -196,8 +165,8 @@ export default function CreateAccountScreen() {
           )}
 
           {questionStep === 3 && (
-            <View style={styles.questionContainer}>
-              <Text style={styles.title}>¿Cuántos años tienes?</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>¿Cuántos años tienes?</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Edad"
@@ -205,7 +174,7 @@ export default function CreateAccountScreen() {
                 value={age}
                 onChangeText={setAge}
               />
-              <Text style={styles.title}>¿Cuántos años llevas fumando?</Text>
+              <Text style={styles.titleText}>¿Cuántos años llevas fumando?</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Años fumando"
@@ -217,8 +186,8 @@ export default function CreateAccountScreen() {
           )}
 
           {questionStep === 4 && (
-            <View style={styles.questionContainer}>
-              <Text style={styles.title}>¿Cuántos cigarrillos fumas al día?</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>¿Cuántos cigarrillos fumas al día?</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Cigarrillos al día"
@@ -230,8 +199,8 @@ export default function CreateAccountScreen() {
           )}
 
           {questionStep === 5 && (
-            <View style={styles.questionContainer}>
-              <Text style={styles.title}>¿Cuántos cigarrillos tenía la cajetilla?</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>¿Cuántos cigarrillos tenía la cajetilla?</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Cigarrillos por cajetilla"
@@ -243,8 +212,8 @@ export default function CreateAccountScreen() {
           )}
 
           {questionStep === 6 && (
-            <View style={styles.questionContainer}>
-              <Text style={styles.title}>¿Cuánto costaba la cajetilla?</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>¿Cuánto costaba la cajetilla?</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Precio de la cajetilla ($)"
@@ -256,8 +225,8 @@ export default function CreateAccountScreen() {
           )}
 
           {questionStep === 7 && (
-            <View style={styles.resultContainer}>
-              <Text style={styles.title}>¡Felicidades por dar el primer paso!</Text>
+            <View style={styles.centeredContainer}>
+              <Text style={styles.titleText}>¡Felicidades por dar el primer paso!</Text>
               <Text style={styles.resultText}>
                 Si dejas de fumar, podrías ahorrar aproximadamente:
               </Text>
@@ -282,94 +251,3 @@ const BackgroundShapesMemo = React.memo(() => {
 });
 
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#7595BF', // Fondo oscuro para toda la pantalla
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  questionContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  input: {
-    backgroundColor: '#F2F2F2',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-    width: '80%',
-  },
-  button: {
-    width: '80%',
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: '#059E9E',
-    alignItems: 'center',
-    elevation: 5,
-    boxShadow: '0px 2px 3px rgba(0, 0, 0, 0.3)',
-  },
-  buttonText: {
-    color: "white",
-    marginLeft: 5,
-    fontWeight: "600",
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-evenly',
-    marginBottom: 20,
-  },
-  optionButton: {
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 10,
-    margin: 5,
-    width: '40%',
-    alignItems: 'center',
-  },
-  selectedOption: {
-    backgroundColor: '#05F89E', // Azul cuando selecciona una opción
-  },
-  optionText: {
-    color: '#000',
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  resultContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  resultText: {
-    color: '#fff',
-    fontSize: 18,
-    textAlign: 'center',
-  },
-  resultAmount: {
-    color: '#E3E34B', // Verde para los resultados (2021)
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginVertical: 10,
-  },
-  dropdown: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 4,
-  },
-  dropdownContainer: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderColor: 'gray',
-    borderWidth: 1,
-  },
-});

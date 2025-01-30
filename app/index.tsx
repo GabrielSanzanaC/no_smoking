@@ -11,6 +11,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from "@expo/vector-icons";
 import BackgroundShapes from '../components/BackgroundShapes';
+import { styles } from "../constants/styles";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -236,9 +237,9 @@ const App = () => {
       <BackgroundShapesMemo />
 
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
-        <Animatable.View animation="zoomIn" style={styles.logoContainer}>
+        <Animatable.View animation="zoomIn" style={styles.centeredContainer}>
           <Ionicons name="logo-no-smoking" size={50} color="#F2F2F2" />
-          <Animatable.Text animation="bounceIn" style={styles.welcomeText}>
+          <Animatable.Text animation="bounceIn" style={styles.titleText}>
             ¡Bienvenido a Deja de Fumar!
           </Animatable.Text>
         </Animatable.View>
@@ -323,112 +324,6 @@ const App = () => {
 
 const BackgroundShapesMemo = React.memo(() => {
   return <BackgroundShapes />;
-});
-
-const styles = StyleSheet.create({
-  disabledContainer: {
-    opacity: 0.1,
-  },
-  disabledText: {
-    color: '#A9A9A9',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#7595BF",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: -1,
-  },
-  rectangle: {
-    width: "90%",
-    backgroundColor: "#072040",
-    borderRadius: 20,
-    padding: 20,
-    boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
-    elevation: 10,
-    alignItems: "center",
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  welcomeText: {
-    color: "#F2F2F2",
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  formContainer: {
-    width: "100%",
-  },
-  input: {
-    backgroundColor: "beige",
-    color: "black",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#059E9E",
-    width: "100%",
-  },
-  button: {
-    backgroundColor: "#059E9E",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 15,
-    width: "100%",
-  },
-  buttonText: {
-    color: "#F2F2F2",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  switchButton: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  switchButtonText: {
-    color: "#F2F2F2",
-    textDecorationLine: "underline",
-    fontSize: 14,
-  },
-  socialButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  socialButton: {
-    backgroundColor: "#1F82BF",
-    padding: 12,
-    borderRadius: 10,
-    flex: 1,
-    alignItems: "center",
-    marginHorizontal: 5,
-  },
-  socialButtonText: {
-    color: "#F2F2F2",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  checkboxLabel: {
-    color: "#F2F2F2",
-    marginLeft: 10,
-    fontSize: 14,
-  },
-  errorInput: {
-    borderColor: "red",
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    marginBottom: 10,
-    fontSize: 14,
-  },
 });
 
 export default App;
