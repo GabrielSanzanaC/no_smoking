@@ -24,6 +24,7 @@ const FullMonthChart = ({ visible, onClose, data }) => {
     },
     decimalPlaces: 0,
   };
+  
 
   // Función para validar y normalizar datos
   const normalizeData = (data) => {
@@ -41,7 +42,7 @@ const FullMonthChart = ({ visible, onClose, data }) => {
       return value;
     });
   };
-  
+   
   // Verificar que data y data.datasets sean válidos antes de usarlos
   if (!data || !data.datasets || !Array.isArray(data.datasets)) {
     console.warn("Data o datasets no son válidos:", data);

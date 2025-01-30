@@ -3,14 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollVie
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, Timestamp} from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
-import Svg, { Text as SvgText } from "react-native-svg"; // Importar Svg y SvgText
-import FullMonthChart from "./FullMonthChart"; 
+import Svg, { Text as SvgText } from "react-native-svg";
+import FullMonthChart from "./FullMonthChart";
+import moment from "moment";  // Importar moment.js
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -28,21 +29,21 @@ const ProfileScreen = () => {
   const [intervalId, setIntervalId] = useState(null);
   const [isFullMonthChartVisible, setFullMonthChartVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [cigarettesData, setCigarettesData] = useState(Array(31).fill(0)); // Valor predeterminado de 31 días
-  const [last7DaysData, setLast7DaysData] = useState(Array(7).fill(0)); // Valor predeterminado para los últimos 7 días
+  const [cigarettesData, setCigarettesData] = useState(Array(31).fill(0));
+  const [last7DaysData, setLast7DaysData] = useState(Array(7).fill(0));
 
   const handleExitApp = () => {
-    setIsModalVisible(true); // Muestra el modal de confirmación
+    setIsModalVisible(true);
   };
 
   const confirmExit = () => {
-    BackHandler.exitApp(); // Cierra la aplicación
+    BackHandler.exitApp();
   };
-  
+
   const cancelExit = () => {
-    setIsModalVisible(false); // Cierra el modal
+    setIsModalVisible(false);
   };
-  
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -51,6 +52,8 @@ const ProfileScreen = () => {
         await getUserData(user.email);
         await getCigarettesForToday(user.uid);
         await getCigarettesData(user.uid);
+        await calculateTimeWithoutSmoking(user.uid);
+
       } else {
         setNombre("Usuario invitado");
         setCigarettesSmokedToday(0);
@@ -62,47 +65,104 @@ const ProfileScreen = () => {
 
   const getCigarettesData = async (uid) => {
     try {
-      const currentDate = new Date();
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
-      const q = query(
-        cigarettesCollectionRef,
-        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
-        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
-      );
+      const q = query(cigarettesCollectionRef);
       const querySnapshot = await getDocs(q);
 
-      const data = Array(lastDayOfMonth.getDate()).fill(0);
+      const data = {};
       querySnapshot.forEach((doc) => {
-        const date = new Date(doc.data().fecha);
-        const day = date.getDate();
-        data[day - 1] = doc.data().cigarettesSmoked || 0;
+        const date = moment(doc.data().fecha);
+        const dayOfMonth = date.date();
+        const cigarettesSmoked = doc.data().cigarettesSmoked || 0;
+
+        if (!data[dayOfMonth]) {
+          data[dayOfMonth] = 0;
+        }
+        data[dayOfMonth] += cigarettesSmoked;
       });
 
-      setCigarettesData(data);
-      setLast7DaysData(data.slice(-7).reverse()); // Reverse the last 7 days data
+      const currentDate = moment();
+      const last7Days = Array(7).fill(0);
+
+      for (let i = 0; i < 7; i++) {
+        const date = currentDate.clone().subtract(i, 'days');
+        const dayOfMonth = date.date();
+        if (data[dayOfMonth]) {
+          last7Days[6 - i] = data[dayOfMonth];
+        }
+      }
+
+      setLast7DaysData(last7Days);
+
+      const daysInMonth = currentDate.daysInMonth();
+      const monthData = Array(daysInMonth).fill(0);
+
+      for (let i = 0; i < daysInMonth; i++) {
+        if (data[i + 1]) {
+          monthData[i] = data[i + 1];
+        }
+      }
+
+      setCigarettesData(monthData);
     } catch (error) {
       console.error("Error al obtener datos de los cigarrillos:", error);
     }
   };
 
+  const calculateTimeWithoutSmoking = async (uid) => {
+    try {
+      const userDocRef = doc(db, "usuarios", uid);
+      const TiempoSinFumarRef = collection(userDocRef, "TiempoSinFumar");
+      // Aquí obtenemos todos los documentos dentro de la colección TiempoSinFumar
+      const querySnapshot = await getDocs(TiempoSinFumarRef);
+      if (!querySnapshot.empty) {
+        // Tomamos el primer documento de la colección
+        const tiempoDoc = querySnapshot.docs[0];
+        const ultimoRegistro = tiempoDoc.data()?.ultimoRegistro;
+        if (ultimoRegistro) {
+          const currentTime = Timestamp.now();
+          const difference = currentTime.seconds - ultimoRegistro.seconds;
+          setTimeWithoutSmoking(difference);
+          // Actualizar el cronómetro cada segundo
+          const interval = setInterval(() => {
+            setTimeWithoutSmoking(prevTime => prevTime + 1);
+          }, 1000);
+          setIntervalId(interval); // Guardamos el ID del intervalo para poder cancelarlo más tarde
+        } else {
+          setTimeWithoutSmoking(0);
+        }
+      } else {
+        console.error("No se encontró el documento en la colección.");
+      }
+    } catch (error) {
+      console.error("Error al calcular el tiempo sin fumar:", error);
+    }
+  };
+  useEffect(() => {
+    // Limpiar el intervalo cuando el componente se desmonte
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [intervalId]);
+  
+
   const getMonthlySavings = async (uid) => {
     try {
-      const currentDate = new Date();
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const currentDate = moment();
+      const firstDayOfMonth = currentDate.clone().startOf('month');
+      const lastDayOfMonth = currentDate.clone().endOf('month');
 
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
       const q = query(
         cigarettesCollectionRef,
-        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
-        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
+        where("fecha", ">=", firstDayOfMonth.format("YYYY-MM-DD")),
+        where("fecha", "<=", lastDayOfMonth.format("YYYY-MM-DD"))
       );
       const querySnapshot = await getDocs(q);
 
@@ -119,7 +179,7 @@ const ProfileScreen = () => {
         const precioPorPaquete = parseFloat(userData.precioPorPaquete);
 
         const precioPorCigarrillo = precioPorPaquete / cigarrillosPorPaquete;
-        const diasEnElMes = lastDayOfMonth.getDate();
+        const diasEnElMes = lastDayOfMonth.date();
         const totalCigarettesExpected = cigarrillosPorDía * diasEnElMes;
 
         const dineroAhorrado = (totalCigarettesExpected - totalCigarettesSmoked) * precioPorCigarrillo;
@@ -140,29 +200,6 @@ const ProfileScreen = () => {
   }, [userId]);
 
   useEffect(() => {
-    const loadStartTime = async () => {
-      try {
-        const savedStartTime = await AsyncStorage.getItem("startTime");
-        if (savedStartTime) {
-          setStartTime(parseInt(savedStartTime, 10));
-        }
-      } catch (error) {
-        console.error("Error al cargar la marca de tiempo:", error);
-      }
-    };
-
-    loadStartTime();
-
-    const id = setInterval(() => {
-      setTimeWithoutSmoking(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-
-    setIntervalId(id);
-
-    return () => clearInterval(id);
-  }, [startTime]);
-
-  useEffect(() => {
     const dailyMessage = () => {
       const messages = [
         "Cada día sin fumar es una victoria.",
@@ -175,7 +212,7 @@ const ProfileScreen = () => {
 
     const checkAndUpdateMessage = async () => {
       const lastShownDate = await AsyncStorage.getItem("lastShownDate");
-      const currentDate = new Date().toISOString().split("T")[0];
+      const currentDate = moment().format("YYYY-MM-DD");
 
       if (lastShownDate !== currentDate) {
         const newMessage = dailyMessage();
@@ -211,7 +248,7 @@ const ProfileScreen = () => {
 
   const getCigarettesForToday = async (uid) => {
     try {
-      const currentDate = new Date().toISOString().split("T")[0];
+      const currentDate = moment().format("YYYY-MM-DD");
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
@@ -236,12 +273,15 @@ const ProfileScreen = () => {
     return `${h}h ${m}m`;
   };
 
+  const getLast7DaysLabels = () => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = moment().subtract(i, 'days');
+      return date.format('ddd');
+    }).reverse();
+  };
+
   const last7DaysChartData = {
-    labels: Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      return date.toLocaleDateString('es-ES', { weekday: 'short' });
-    }).reverse(),
+    labels: getLast7DaysLabels(),
     datasets: [
       {
         data: last7DaysData,
@@ -252,7 +292,7 @@ const ProfileScreen = () => {
   };
 
   const chartData = {
-    labels: Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }, (_, i) => i + 1),
+    labels: Array.from({ length: moment().endOf('month').date() }, (_, i) => i + 1),
     datasets: [
       {
         data: cigarettesData,
@@ -262,16 +302,10 @@ const ProfileScreen = () => {
     ],
   };
 
-  const maxCigarettes = Math.max(...last7DaysData, ...cigarettesData);
-  const segments =maxCigarettes < 10 
-  ? Array.from({ length: 11 }, (_, i) => i)  // Crea un array de 0 a 10
-  : Array.from({ length: Math.ceil(maxCigarettes / 5) + 1 }, (_, i) => i * 5);  // Crea un array de múltiplos de 5 hasta maxCigarettes
-
-
   const chartConfig = {
     backgroundColor: "transparent", // Fondo transparente
     color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2,
+    strokeWidth: 2, // Grosor de las líneas
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
     propsForDots: {
@@ -282,10 +316,10 @@ const ProfileScreen = () => {
     propsForBackgroundLines: {
       stroke: "transparent",
     },
+    
     yAxisLabel: '',
     yAxisSuffix: '',
-    yAxisInterval: segments,
-    yAxisInterval: (0,cigarettesSmokedToday), // Define el intervalo del eje Y basado en cigarettesSmokedToday
+    yAxisInterval: 1, // Define el intervalo del eje Y
     decimalPlaces: 0,
   };
 
@@ -395,7 +429,6 @@ const ProfileScreen = () => {
                   chartConfig={chartConfig}
                   bezier
                   style={styles.chart}
-                  //segments={segments} // Number of horizontal grid lines
                   fromZero={true} // Start Y axis from zero
                   transparent={true} // Fondo transparente para el gráfico
                 />
@@ -558,9 +591,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   chartContainer: {
-    width: "70%",
+    width: "60%",
     alignItems: "center",
-    left: 5
+    letf: 5,
   },
   chart: {
     borderRadius: 20,

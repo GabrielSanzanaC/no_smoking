@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, Timestamp} from "firebase/firestore";
 import { auth, db } from "../FirebaseConfig";
 
 interface GuardarUsuarioProps {
@@ -44,7 +44,10 @@ export const GuardarUsuario = async ({ email, password, user, reasons, age, year
       cigarettesSmoked: 0, // Inicializamos con 0 cigarrillos fumados
     });
 
-    console.log('Usuario y su historial de cigarrillos guardados exitosamente.');
+    // Crear subcolección TiempoSinFumar e inicializar con tiempo en 0
+    await addDoc(collection(db, "usuarios", uid, "TiempoSinFumar"), {
+      ultimoRegistro: Timestamp.now(),
+    });
 
   } catch (err: unknown) {
     if (err instanceof Error) {
