@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollVie
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, doc, Timestamp} from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
@@ -53,7 +53,6 @@ const ProfileScreen = () => {
         await getCigarettesForToday(user.uid);
         await getCigarettesData(user.uid);
         await calculateTimeWithoutSmoking(user.uid);
-
       } else {
         setNombre("Usuario invitado");
         setCigarettesSmokedToday(0);
@@ -115,20 +114,26 @@ const ProfileScreen = () => {
     try {
       const userDocRef = doc(db, "usuarios", uid);
       const TiempoSinFumarRef = collection(userDocRef, "TiempoSinFumar");
+
       // Aquí obtenemos todos los documentos dentro de la colección TiempoSinFumar
       const querySnapshot = await getDocs(TiempoSinFumarRef);
+
       if (!querySnapshot.empty) {
         // Tomamos el primer documento de la colección
         const tiempoDoc = querySnapshot.docs[0];
+
         const ultimoRegistro = tiempoDoc.data()?.ultimoRegistro;
+
         if (ultimoRegistro) {
           const currentTime = Timestamp.now();
           const difference = currentTime.seconds - ultimoRegistro.seconds;
           setTimeWithoutSmoking(difference);
+
           // Actualizar el cronómetro cada segundo
           const interval = setInterval(() => {
             setTimeWithoutSmoking(prevTime => prevTime + 1);
           }, 1000);
+
           setIntervalId(interval); // Guardamos el ID del intervalo para poder cancelarlo más tarde
         } else {
           setTimeWithoutSmoking(0);
@@ -140,6 +145,7 @@ const ProfileScreen = () => {
       console.error("Error al calcular el tiempo sin fumar:", error);
     }
   };
+
   useEffect(() => {
     // Limpiar el intervalo cuando el componente se desmonte
     return () => {
@@ -198,6 +204,7 @@ const ProfileScreen = () => {
       getMonthlySavings(userId);
     }
   }, [userId]);
+
 
   useEffect(() => {
     const dailyMessage = () => {
