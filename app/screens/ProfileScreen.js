@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollVie
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, setDoc, updateDoc, doc, getDoc, Timestamp } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { Dimensions } from "react-native";
 import Svg, { Text as SvgText } from "react-native-svg";
 import FullMonthChart from "./FullMonthChart";
 import moment from "moment";  // Importar moment.js
+
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -31,7 +32,7 @@ const ProfileScreen = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [cigarettesData, setCigarettesData] = useState(Array(31).fill(0));
   const [last7DaysData, setLast7DaysData] = useState(Array(7).fill(0));
-
+  
   const handleExitApp = () => {
     setIsModalVisible(true);
   };
@@ -49,10 +50,11 @@ const ProfileScreen = () => {
       if (user) {
         setUserEmail(user.email);
         setUserId(user.uid);
-        await getUserData(user.uid);
+        await getUserData(user.email);
         await getCigarettesForToday(user.uid);
         await getCigarettesData(user.uid);
         await calculateTimeWithoutSmoking(user.uid);
+        await updateStreak(user.uid);
       } else {
         setNombre("Usuario invitado");
         setCigarettesSmokedToday(0);
@@ -108,6 +110,54 @@ const ProfileScreen = () => {
     } catch (error) {
       console.error("Error al obtener datos de los cigarrillos:", error);
     }
+  };
+  
+  const updateStreak = async (uid) => {
+    const streakRef = doc(db, "usuarios", uid, "racha", "latest");
+    const docSnap = await getDoc(streakRef);
+  
+    const today = new Date();
+    const todayDate = today.toISOString().split('T')[0]; // Obtener solo la fecha (yyyy-mm-dd)
+  
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const lastLogin = data.lastLogin;
+  
+      if (lastLogin === todayDate) {
+        console.log("La racha no cambia, ya es el mismo día.");
+      } else {
+        if (lastLogin === getYesterday(todayDate)) {
+          const newStreak = (data.streak || 0) + 1;
+          await updateDoc(streakRef, {
+            streak: newStreak,
+            lastLogin: todayDate,
+          });
+          console.log(`Racha incrementada: ${newStreak} días.`);
+          setStreakDays(newStreak);  // Actualiza el estado de la racha
+        } else {
+          await updateDoc(streakRef, {
+            streak: 1,
+            lastLogin: todayDate,
+          });
+          console.log("Racha reiniciada.");
+          setStreakDays(1);  // Reinicia el estado de la racha
+        }
+      }
+    } else {
+      await setDoc(streakRef, {
+        streak: 1,
+        lastLogin: todayDate,
+      });
+      console.log("Primer login, racha iniciada.");
+      setStreakDays(1);  // Inicializa la racha
+    }
+  };
+  
+  // Función para obtener la fecha del día anterior
+  const getYesterday = (date) => {
+    const dateObj = new Date(date);
+    dateObj.setDate(dateObj.getDate() - 1);
+    return dateObj.toISOString().split('T')[0]; // Solo la fecha (yyyy-mm-dd)
   };
 
   const calculateTimeWithoutSmoking = async (uid) => {
@@ -237,7 +287,7 @@ const ProfileScreen = () => {
 
   const getUserData = async (email) => {
     try {
-      const q = query(collection(db, "usuarios"), where("uid", "==", email));
+      const q = query(collection(db, "usuarios"), where("email", "==", email));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
