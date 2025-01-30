@@ -9,10 +9,11 @@ import * as Animatable from "react-native-animatable";
 import { Ionicons } from "@expo/vector-icons";
 import { LineChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
-import FullMonthChart from "./FullMonthChart"; 
+import Svg, { Text as SvgText } from "react-native-svg";
+import FullMonthChart from "./FullMonthChart";
+import moment from "moment";  // Importar moment.js
 
 const screenWidth = Dimensions.get("window").width;
-
 
 const ProfileScreen = () => {
   const router = useRouter();
@@ -28,22 +29,21 @@ const ProfileScreen = () => {
   const [intervalId, setIntervalId] = useState(null);
   const [isFullMonthChartVisible, setFullMonthChartVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [cigarettesData, setCigarettesData] = useState(Array(31).fill(0)); // Valor predeterminado de 31 días
-  const [last7DaysData, setLast7DaysData] = useState(Array(7).fill(0)); // Valor predeterminado para los últimos 7 días
+  const [cigarettesData, setCigarettesData] = useState(Array(31).fill(0));
+  const [last7DaysData, setLast7DaysData] = useState(Array(7).fill(0));
 
   const handleExitApp = () => {
-    setIsModalVisible(true); // Muestra el modal de confirmación
+    setIsModalVisible(true);
   };
 
   const confirmExit = () => {
-    BackHandler.exitApp(); // Cierra la aplicación
+    BackHandler.exitApp();
   };
-  
+
   const cancelExit = () => {
-    setIsModalVisible(false); // Cierra el modal
+    setIsModalVisible(false);
   };
-  
-  
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -64,29 +64,47 @@ const ProfileScreen = () => {
 
   const getCigarettesData = async (uid) => {
     try {
-      const currentDate = new Date();
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
-      const q = query(
-        cigarettesCollectionRef,
-        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
-        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
-      );
+      const q = query(cigarettesCollectionRef);
       const querySnapshot = await getDocs(q);
 
-      const data = Array(lastDayOfMonth.getDate()).fill(0);
+      const data = {};
       querySnapshot.forEach((doc) => {
-        const date = new Date(doc.data().fecha);
-        const day = date.getDate();
-        data[day - 1] = doc.data().cigarettesSmoked || 0;
+        const date = moment(doc.data().fecha);
+        const dayOfMonth = date.date();
+        const cigarettesSmoked = doc.data().cigarettesSmoked || 0;
+
+        if (!data[dayOfMonth]) {
+          data[dayOfMonth] = 0;
+        }
+        data[dayOfMonth] += cigarettesSmoked;
       });
 
-      setCigarettesData(data);
-      setLast7DaysData(data.slice(-7).reverse()); // Reverse the last 7 days data
+      const currentDate = moment();
+      const last7Days = Array(7).fill(0);
+
+      for (let i = 0; i < 7; i++) {
+        const date = currentDate.clone().subtract(i, 'days');
+        const dayOfMonth = date.date();
+        if (data[dayOfMonth]) {
+          last7Days[6 - i] = data[dayOfMonth];
+        }
+      }
+
+      setLast7DaysData(last7Days);
+
+      const daysInMonth = currentDate.daysInMonth();
+      const monthData = Array(daysInMonth).fill(0);
+
+      for (let i = 0; i < daysInMonth; i++) {
+        if (data[i + 1]) {
+          monthData[i] = data[i + 1];
+        }
+      }
+
+      setCigarettesData(monthData);
     } catch (error) {
       console.error("Error al obtener datos de los cigarrillos:", error);
     }
@@ -140,17 +158,17 @@ const ProfileScreen = () => {
 
   const getMonthlySavings = async (uid) => {
     try {
-      const currentDate = new Date();
-      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const currentDate = moment();
+      const firstDayOfMonth = currentDate.clone().startOf('month');
+      const lastDayOfMonth = currentDate.clone().endOf('month');
 
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
       const q = query(
         cigarettesCollectionRef,
-        where("fecha", ">=", firstDayOfMonth.toISOString().split("T")[0]),
-        where("fecha", "<=", lastDayOfMonth.toISOString().split("T")[0])
+        where("fecha", ">=", firstDayOfMonth.format("YYYY-MM-DD")),
+        where("fecha", "<=", lastDayOfMonth.format("YYYY-MM-DD"))
       );
       const querySnapshot = await getDocs(q);
 
@@ -167,7 +185,7 @@ const ProfileScreen = () => {
         const precioPorPaquete = parseFloat(userData.precioPorPaquete);
 
         const precioPorCigarrillo = precioPorPaquete / cigarrillosPorPaquete;
-        const diasEnElMes = lastDayOfMonth.getDate();
+        const diasEnElMes = lastDayOfMonth.date();
         const totalCigarettesExpected = cigarrillosPorDía * diasEnElMes;
 
         const dineroAhorrado = (totalCigarettesExpected - totalCigarettesSmoked) * precioPorCigarrillo;
@@ -201,7 +219,7 @@ const ProfileScreen = () => {
 
     const checkAndUpdateMessage = async () => {
       const lastShownDate = await AsyncStorage.getItem("lastShownDate");
-      const currentDate = new Date().toISOString().split("T")[0];
+      const currentDate = moment().format("YYYY-MM-DD");
 
       if (lastShownDate !== currentDate) {
         const newMessage = dailyMessage();
@@ -237,7 +255,7 @@ const ProfileScreen = () => {
 
   const getCigarettesForToday = async (uid) => {
     try {
-      const currentDate = new Date().toISOString().split("T")[0];
+      const currentDate = moment().format("YYYY-MM-DD");
       const userDocRef = doc(db, "usuarios", uid);
       const cigarettesCollectionRef = collection(userDocRef, "CigaretteHistory");
 
@@ -262,12 +280,15 @@ const ProfileScreen = () => {
     return `${h}h ${m}m`;
   };
 
+  const getLast7DaysLabels = () => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = moment().subtract(i, 'days');
+      return date.format('ddd');
+    }).reverse();
+  };
+
   const last7DaysChartData = {
-    labels: Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      return date.toLocaleDateString('es-ES', { weekday: 'short' });
-    }).reverse(),
+    labels: getLast7DaysLabels(),
     datasets: [
       {
         data: last7DaysData,
@@ -278,7 +299,7 @@ const ProfileScreen = () => {
   };
 
   const chartData = {
-    labels: Array.from({ length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() }, (_, i) => i + 1),
+    labels: Array.from({ length: moment().endOf('month').date() }, (_, i) => i + 1),
     datasets: [
       {
         data: cigarettesData,
@@ -291,7 +312,7 @@ const ProfileScreen = () => {
   const chartConfig = {
     backgroundColor: "transparent", // Fondo transparente
     color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2,
+    strokeWidth: 2, // Grosor de las líneas
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
     propsForDots: {
@@ -302,16 +323,17 @@ const ProfileScreen = () => {
     propsForBackgroundLines: {
       stroke: "transparent",
     },
+    
     yAxisLabel: '',
     yAxisSuffix: '',
-    yAxisInterval: (0,cigarettesSmokedToday), // Define el intervalo del eje Y basado en cigarettesSmokedToday
+    yAxisInterval: 1, // Define el intervalo del eje Y
     decimalPlaces: 0,
   };
 
   const handleChartPress = () => {
     setFullMonthChartVisible(true);
   };
-
+  
   return (
     <View style={styles.container}>
         {/* Animated Background */}
@@ -394,18 +416,32 @@ const ProfileScreen = () => {
           <Text style={styles.chartTitle}>Cigarros fumados últimos 7 días</Text>
           <View style={styles.chartContainer}>
             <TouchableOpacity onPress={handleChartPress}>
-              <LineChart
-                data={last7DaysChartData}
-                width={screenWidth * 0.8} // Ajustar al ancho del statBox
-                height={220}
-                chartConfig={chartConfig}
-                bezier
-                style={styles.chart}
-                segments={6} // Number of horizontal grid lines
-                fromZero={true} // Start Y axis from zero
-                transparent={true} // Fondo transparente para el gráfico
-              />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Svg height="130" width="18">
+                  <SvgText
+                    x="20"
+                    y="100"
+                    fill="white"
+                    fontSize="12"
+                    rotation="-90"
+                    origin="10, 100"
+                  >
+                    N° de Cigarros
+                  </SvgText>
+                </Svg>
+                <LineChart
+                  data={last7DaysChartData}
+                  width={screenWidth * 0.75} // Ajustar al ancho del statBox
+                  height={220}
+                  chartConfig={chartConfig}
+                  bezier
+                  style={styles.chart}
+                  fromZero={true} // Start Y axis from zero
+                  transparent={true} // Fondo transparente para el gráfico
+                />
+              </View>
             </TouchableOpacity>
+            <Text style={styles.chartInfo}>Toca el gráfico para más detalles</Text>
           </View>
         </ScrollView>
       </Animatable.View>
@@ -430,6 +466,7 @@ const ProfileScreen = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -561,12 +598,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   chartContainer: {
-    width: "90%",
+    width: "60%",
     alignItems: "center",
+    letf: 5,
   },
   chart: {
     borderRadius: 20,
     backgroundColor: "rgba(255, 255, 255, 0.15)", // Fondo igual al de los cuadros de estadísticas
+  },
+  chartInfo: {
+    fontSize: 12,
+    color: "#F2F2F2",
+    textAlign: "center",
+    marginTop: 5,
   },
   navButtonLeft: {
     position: "absolute",

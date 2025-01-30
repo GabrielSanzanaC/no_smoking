@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Animated, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from "@expo/vector-icons";
 import { Easing } from 'react-native-reanimated';
@@ -38,74 +38,76 @@ export default function dailyQuestionP1() {
   };
 
   return (
-    <View style={styles.container}>
-      <BackgroundShapesMemo />
-     
-      {/* Profile Button */}
-      <TouchableOpacity 
-        onPress={() => router.push("./ProfileScreen")} 
-        style={styles.profileButton}
-      >
-        <Ionicons name="arrow-back-outline" size={24} color="white" />
-        <Text style={styles.profileText}>Inicio</Text>
-      </TouchableOpacity>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <View style={styles.container}>
+        <BackgroundShapesMemo />
+      
+        {/* Profile Button */}
+        <TouchableOpacity 
+          onPress={() => router.push("./ProfileScreen")} 
+          style={styles.profileButton}
+        >
+          <Ionicons name="arrow-back-outline" size={24} color="white" />
+          <Text style={styles.profileText}>Inicio</Text>
+        </TouchableOpacity>
 
-      <View style={styles.stepContainer}>
-        {['01', '02', '03'].map((step, index) => (
-          <View
-            key={index}
-            style={[styles.stepCircle, index === 0 && styles.activeStepCircle]}
-          >
-            <Text style={styles.stepText}>{step}</Text>
-          </View>
-        ))}
-      </View>
-
-      <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
-      <View style={styles.taskContainer}>
-        {emotions.map((emotion) => (
-          <TouchableOpacity
-            key={emotion.id}
-            style={[styles.taskButton, selectedEmotion === emotion.id && styles.selectedTaskButton]}
-            onPress={() => handlePress(emotion.id)}
-          >
-            <Animated.Text
-              style={[styles.taskIcon, selectedEmotion === emotion.id && { transform: [{ scale }] }]}
+        <View style={styles.stepContainer}>
+          {['01', '02', '03'].map((step, index) => (
+            <View
+              key={index}
+              style={[styles.stepCircle, index === 0 && styles.activeStepCircle]}
             >
-              {emotion.icon}
-            </Animated.Text>
-            <Text style={styles.taskLabel}>{emotion.label}</Text>
-          </TouchableOpacity>
-        ))}
+              <Text style={styles.stepText}>{step}</Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={styles.title}>¿Cómo te sientes hoy?</Text>
+        <View style={styles.taskContainer}>
+          {emotions.map((emotion) => (
+            <TouchableOpacity
+              key={emotion.id}
+              style={[styles.taskButton, selectedEmotion === emotion.id && styles.selectedTaskButton]}
+              onPress={() => handlePress(emotion.id)}
+            >
+              <Animated.Text
+                style={[styles.taskIcon, selectedEmotion === emotion.id && { transform: [{ scale }] }]}
+              >
+                {emotion.icon}
+              </Animated.Text>
+              <Text style={styles.taskLabel}>{emotion.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.inputLabel}>¿Cuántos cigarros has fumado hoy?</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Cantidad de cigarros"
+          placeholderTextColor="#888"
+          keyboardType="numeric"
+          value={cigarettes}
+          onChangeText={setCigarettes}
+        />
+
+        <TouchableOpacity
+          style={[styles.nextButton, { opacity: selectedEmotion && cigarettes ? 1 : 0.5 }]}
+          onPress={() => {
+            if (selectedEmotion && cigarettes) {
+              router.push({
+                pathname: './dailyQuestionP2',
+                params: { emotion: selectedEmotion, cigarettes },
+              });
+            }
+          }}
+          disabled={!selectedEmotion || !cigarettes}
+        >
+          <Text style={styles.nextButtonText}>Siguiente</Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={styles.inputLabel}>¿Cuántos cigarros has fumado hoy?</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Cantidad de cigarros"
-        placeholderTextColor="#888"
-        keyboardType="numeric"
-        value={cigarettes}
-        onChangeText={setCigarettes}
-      />
-
-      <TouchableOpacity
-        style={[styles.nextButton, { opacity: selectedEmotion && cigarettes ? 1 : 0.5 }]}
-        onPress={() => {
-          if (selectedEmotion && cigarettes) {
-            router.push({
-              pathname: './dailyQuestionP2',
-              params: { emotion: selectedEmotion, cigarettes },
-            });
-          }
-        }}
-        disabled={!selectedEmotion || !cigarettes}
-      >
-        <Text style={styles.nextButtonText}>Siguiente</Text>
-      </TouchableOpacity>
-    </View>
+    </TouchableWithoutFeedback>
   );
-}
+};
 
 const BackgroundShapesMemo = React.memo(() => {
   return <BackgroundShapes />;

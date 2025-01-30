@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Image, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Alert, } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
@@ -12,21 +12,23 @@ import * as WebBrowser from 'expo-web-browser';
 import { Ionicons } from "@expo/vector-icons";
 import BackgroundShapes from '../components/BackgroundShapes';
 
-
 WebBrowser.maybeCompleteAuthSession();
+
+const initialState = {
+  email: "",
+  user: "",
+  password: "",
+  error: "",
+  userError: false,
+  emailError: false,
+  passwordError: false,
+  rememberMe: false,
+};
 
 const App = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
-  const [user, setUser] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [userError, setUserError] = useState(false);
-  const [emailError, setEmailError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [formData, setFormData] = useState(initialState);
   const router = useRouter();
-
 
   /*const [request, response, promptAsync] = Google.useAuthRequest({
     //expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -40,20 +42,18 @@ const App = () => {
     const checkLoginStatus = async () => {
       try {
         const loggedIn = await AsyncStorage.getItem("isLoggedIn");
-        const userData = await AsyncStorage.getItem("userData"); // Recuperar datos del usuario
+        const userData = await AsyncStorage.getItem("userData");
   
         if (loggedIn === "true" && userData) {
-          const { email, password } = JSON.parse(userData); // Extraer email y contraseña
-          setEmail(email); 
-          setPassword(password);
-          setRememberMe(true);
-          // Intentar iniciar sesión automáticamente
+          const { email, password } = JSON.parse(userData);
+          setFormData((prevState) => ({
+            ...prevState,
+            email,
+            password,
+            rememberMe: true,
+          }));
           await signInWithEmailAndPassword(auth, email, password);
-  
-          // Redirigir al perfil si el inicio de sesión fue exitoso
-          router.push({
-            pathname: "./screens/ProfileScreen",
-          });
+          router.push({ pathname: "./screens/ProfileScreen" });
         }
       } catch (err) {
         console.error("Error during auto login:", err);
@@ -62,7 +62,6 @@ const App = () => {
   
     checkLoginStatus();
   }, []);
-  
 
   /*useEffect(() => {
     if (response?.type === 'success') {
@@ -84,89 +83,91 @@ const App = () => {
           Alert.alert("Error", error.message);
         });
     }
-  }, [response]);
-  */
+  }, [response]);*/
 
-  const isFormValid = email.trim() !== "" && password.trim() !== "";
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setFormData((prevState) => ({
+        ...prevState,
+        emailError: true,
+        error: "El correo no puede estar vacío.",
+      }));
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setFormData((prevState) => ({
+        ...prevState,
+        emailError: true,
+        error: "El formato del correo no es válido.",
+      }));
+      return false;
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        emailError: false,
+      }));
+      return true;
+    }
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password.trim()) {
+      setFormData((prevState) => ({
+        ...prevState,
+        passwordError: true,
+        error: "La contraseña no puede estar vacía.",
+      }));
+      return false;
+    } else if (password.length < 6) {
+      setFormData((prevState) => ({
+        ...prevState,
+        passwordError: true,
+        error: "La contraseña debe tener al menos 6 caracteres.",
+      }));
+      return false;
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        passwordError: false,
+      }));
+      return true;
+    }
+  };
 
   const handleLogin = async () => {
-    let hasError = false;
-
-    if (!email.trim()) {
-      setEmailError(true);
-      setError("Por favor ingresa tu correo.");
-      hasError = true;
-    } else {
-      setEmailError(false);
-    }
-
-    if (!password.trim()) {
-      setPasswordError(true);
-      setError("Por favor ingresa tu contraseña.");
-      hasError = true;
-    } else {
-      setPasswordError(false);
-    }
-
-    if (hasError) {
+    const { email, password } = formData;
+    if (!validateEmail(email) || !validatePassword(password)) {
       return;
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      setError("");
+      await signInWithEmailAndPassword(auth, email, password);
+      setFormData((prevState) => ({ ...prevState, error: "" }));
       router.push("./screens/ProfileScreen");
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        if ((err as any).code === "auth/user-not-found") {
-          setError("No se encontró un usuario con este correo.");
-        } else if ((err as any).code === "auth/wrong-password") {
-          setError("Contraseña incorrecta.");
-        } else {
-          setError("Hubo un problema al iniciar sesión.");
-        }
-      } else {
-        console.error("Error desconocido:", err);
-        setError("Ocurrió un error inesperado.");
+      let errorMessage = "Hubo un problema al iniciar sesión.";
+      if ((err as any).code === "auth/user-not-found") {
+        errorMessage = "No se encontró un usuario con este correo.";
+      } else if ((err as any).code === "auth/wrong-password") {
+        errorMessage = "Contraseña incorrecta.";
       }
+      setFormData((prevState) => ({ ...prevState, error: errorMessage }));
     }
   };
 
   const handleContinue = async () => {
+    const { email, password, user } = formData;
     let hasError = false;
 
-    // Validación
     if (!user.trim()) {
-      setUserError(true);
+      setFormData((prevState) => ({ ...prevState, userError: true }));
       hasError = true;
     } else {
-      setUserError(false);
+      setFormData((prevState) => ({ ...prevState, userError: false }));
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      setEmailError(true);
-      setError("El correo no puede estar vacío.");
+    if (!validateEmail(email) || !validatePassword(password)) {
       hasError = true;
-    } else if (!emailRegex.test(email)) {
-      setEmailError(true);
-      setError("El formato del correo no es válido.");
-      hasError = true;
-    } else {
-      setEmailError(false);
-    }
-
-    if (!password.trim()) {
-      setPasswordError(true);
-      setError("La contraseña no puede estar vacía.");
-      hasError = true;
-    } else if (password.length < 6) {
-      setPasswordError(true);
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      hasError = true;
-    } else {
-      setPasswordError(false);
     }
 
     if (hasError) {
@@ -174,42 +175,37 @@ const App = () => {
     }
 
     try {
-      // Verificar si el correo ya existe en la base de datos
       const usersCollection = collection(db, "usuarios");
       const emailQuery = query(usersCollection, where("email", "==", email));
       const querySnapshot = await getDocs(emailQuery);
 
       if (!querySnapshot.empty) {
-        setError("El correo ya está registrado. Usa otro correo.");
+        setFormData((prevState) => ({ ...prevState, error: "El correo ya está registrado. Usa otro correo." }));
         return;
       }
 
-      const userProfile = {
-        user: user,
-        email: email,
-        password: password,
-      };
+      const userProfile = JSON.stringify({ user, email, password });
 
-      const userProfileString = JSON.stringify(userProfile);
-
-      setError("");
+      setFormData((prevState) => ({ ...prevState, error: "" }));
       router.push({
         pathname: '/screens/CreateAccountScreen',
-        params: { userProfile: userProfileString },
+        params: { userProfile },
       });
     } catch (err) {
-      setError("Hubo un problema al registrar el usuario.");
+      setFormData((prevState) => ({ ...prevState, error: "Hubo un problema al registrar el usuario." }));
       console.error(err);
     }
   };
 
-  // Limpiar el error al cambiar entre Login y Register
   const handleTabChange = (isLoginTab: boolean | ((prevState: boolean) => boolean)) => {
     setIsLogin(isLoginTab);
-    setError(""); // Limpiar el error al cambiar de pestaña
-    setUserError(false);
-    setEmailError(false);
-    setPasswordError(false);
+    setFormData((prevState) => ({
+      ...prevState,
+      error: "",
+      userError: false,
+      emailError: false,
+      passwordError: false,
+    }));
   };
 
   const handleKeyPress = (event: { nativeEvent: { key: string; }; }) => {
@@ -224,28 +220,21 @@ const App = () => {
   };
 
   const handleRememberMeChange = async () => {
-    setRememberMe(prevState => !prevState);
+    setFormData((prevState) => ({ ...prevState, rememberMe: !prevState.rememberMe }));
+    const { rememberMe, email, password } = formData;
     if (!rememberMe) {
-          // Guardar estado de sesión y datos del usuario
-          await AsyncStorage.setItem("isLoggedIn", "true");
-          await AsyncStorage.setItem(
-            "userData",
-            JSON.stringify({ email: email, password: password }) // Ahora estamos accediendo a las propiedades correctamente
-          );
+      await AsyncStorage.setItem("isLoggedIn", "true");
+      await AsyncStorage.setItem("userData", JSON.stringify({ email, password }));
     } else {
-          await AsyncStorage.setItem("isLoggedIn", "false");
-          await AsyncStorage.removeItem('userData');
+      await AsyncStorage.setItem("isLoggedIn", "false");
+      await AsyncStorage.removeItem('userData');
     }
   };
-  
 
   return (
     <View style={styles.container}>
-      {/* Animated Background */}
       <BackgroundShapesMemo />
 
-
-      {/* Main Content */}
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
         <Animatable.View animation="zoomIn" style={styles.logoContainer}>
           <Ionicons name="logo-no-smoking" size={50} color="#F2F2F2" />
@@ -260,8 +249,8 @@ const App = () => {
               style={styles.input}
               placeholder="Nombre de usuario"
               placeholderTextColor="black"
-              value={user}
-              onChangeText={setUser}
+              value={formData.user}
+              onChangeText={(text) => setFormData((prevState) => ({ ...prevState, user: text }))}
             />
           )}
           <Animatable.View animation="slideInRight">
@@ -269,8 +258,8 @@ const App = () => {
               style={styles.input}
               placeholder="Correo electrónico"
               placeholderTextColor="black"
-              value={email}
-              onChangeText={setEmail}
+              value={formData.email}
+              onChangeText={(text) => setFormData((prevState) => ({ ...prevState, email: text }))}
             />
           </Animatable.View>
           <Animatable.View animation="slideInLeft">
@@ -279,19 +268,19 @@ const App = () => {
               placeholder="Contraseña"
               placeholderTextColor="black"
               secureTextEntry
-              value={password}
-              onChangeText={setPassword}
+              value={formData.password}
+              onChangeText={(text) => setFormData((prevState) => ({ ...prevState, password: text }))}
             />
           </Animatable.View>
           {isLogin && (
-            <Animatable.View animation="fadeIn" style={[styles.checkboxContainer, !isFormValid && styles.disabledContainer]}>
+            <Animatable.View animation="fadeIn" style={[styles.checkboxContainer, !formData.email.trim() || !formData.password.trim() ? styles.disabledContainer : null]}>
               <Checkbox
-                value={rememberMe}
+                value={formData.rememberMe}
                 onValueChange={handleRememberMeChange}
-                color={rememberMe ? "#FF6F61" : "#B0B0B0"}
-                disabled={!isFormValid}
+                color={formData.rememberMe ? "#FF6F61" : "#B0B0B0"}
+                disabled={!formData.email.trim() || !formData.password.trim()}
               />
-              <Text style={[styles.checkboxLabel, !isFormValid && styles.disabledText]}>Recuérdame</Text>
+              <Text style={[styles.checkboxLabel, !formData.email.trim() || !formData.password.trim() ? styles.disabledText : null]}>Recuérdame</Text>
             </Animatable.View>
           )}
           <Animatable.View animation="zoomIn">
@@ -307,12 +296,10 @@ const App = () => {
           <Animatable.View animation="fadeInUp">
             <TouchableOpacity
               style={styles.switchButton}
-              onPress={() => setIsLogin(!isLogin)}
+              onPress={() => handleTabChange(!isLogin)}
             >
               <Text style={styles.switchButtonText}>
-                {isLogin
-                  ? "¿No tienes cuenta? Regístrate"
-                  : "¿Ya tienes cuenta? Inicia sesión"}
+                {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
               </Text>
             </TouchableOpacity>
           </Animatable.View>
@@ -340,41 +327,33 @@ const BackgroundShapesMemo = React.memo(() => {
 
 const styles = StyleSheet.create({
   disabledContainer: {
-    opacity: 0.1, // Reducir la opacidad del contenedor
+    opacity: 0.1,
   },
   disabledText: {
-    color: '#A9A9A9', // Gris para el texto deshabilitado
+    color: '#A9A9A9',
   },
   container: {
     flex: 1,
-    backgroundColor: "#7595BF", // Background
+    backgroundColor: "#7595BF",
     alignItems: "center",
     justifyContent: "center",
     zIndex: -1,
   },
   rectangle: {
     width: "90%",
-    backgroundColor: "#072040", // Contrast Black
+    backgroundColor: "#072040",
     borderRadius: 20,
     padding: 20,
     boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
     elevation: 10,
-    alignItems: "center", // Centra horizontalmente el contenido dentro del rectángulo
+    alignItems: "center",
   },
   logoContainer: {
     alignItems: "center",
     marginBottom: 20,
   },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 10,
-    borderRadius: 50,
-    borderWidth: 2,
-    borderColor: "#059E9E", // Buttons
-  },
   welcomeText: {
-    color: "#F2F2F2", // Text
+    color: "#F2F2F2",
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
@@ -383,25 +362,25 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   input: {
-    backgroundColor: "beige", // Contrast Light
-    color: "black", // Text
+    backgroundColor: "beige",
+    color: "black",
     padding: 12,
     borderRadius: 10,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#059E9E", // Buttons
-    width: "100%", // Asegurarse de que los inputs ocupen el ancho completo del contenedor
+    borderColor: "#059E9E",
+    width: "100%",
   },
   button: {
-    backgroundColor: "#059E9E", // Buttons
+    backgroundColor: "#059E9E",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 15,
-    width: "100%", // Asegurarse de que el botón ocupe el ancho completo del contenedor
+    width: "100%",
   },
   buttonText: {
-    color: "#F2F2F2", // Text
+    color: "#F2F2F2",
     fontWeight: "bold",
     fontSize: 16,
   },
@@ -410,7 +389,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   switchButtonText: {
-    color: "#F2F2F2", // Text
+    color: "#F2F2F2",
     textDecorationLine: "underline",
     fontSize: 14,
   },
@@ -419,7 +398,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   socialButton: {
-    backgroundColor: "#1F82BF", // Contrast Light
+    backgroundColor: "#1F82BF",
     padding: 12,
     borderRadius: 10,
     flex: 1,
@@ -427,7 +406,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   socialButtonText: {
-    color: "#F2F2F2", // Text
+    color: "#F2F2F2",
     fontWeight: "bold",
     fontSize: 14,
   },
@@ -437,12 +416,12 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   checkboxLabel: {
-    color: "#F2F2F2", // Text
+    color: "#F2F2F2",
     marginLeft: 10,
     fontSize: 14,
   },
   errorInput: {
-    borderColor: "red", // Borde rojo en caso de error
+    borderColor: "red",
   },
   errorText: {
     color: "red",
