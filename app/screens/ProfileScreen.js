@@ -366,7 +366,7 @@ const ProfileScreen = () => {
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
     propsForDots: {
-      r: "3",
+      r: "2.5",
       fill: "white",
     },
     propsForBackgroundLines: {
@@ -374,6 +374,8 @@ const ProfileScreen = () => {
       strokeWidth: 0.2,
     },
     decimalPlaces: 0,
+
+
   };
 
   const handleChartPress = () => {
@@ -466,6 +468,9 @@ const ProfileScreen = () => {
                   height={220}
                   chartConfig={chartConfig}
                   bezier
+                  yAxisInterval={1}
+                  yLabelsOffset={10}
+                  segments={8}
                   style={styles.chart}
                   fromZero={true} // Start Y axis from zero
                   transparent={true} // Fondo transparente para el gráfico

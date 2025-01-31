@@ -15,7 +15,7 @@ const FullMonthChart = ({ visible, onClose, data }) => {
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
     propsForDots: {
-      r: "3",
+      r: "2.5",
       strokeWidth: "1",
       fill: "white",
 
@@ -88,6 +88,7 @@ const FullMonthChart = ({ visible, onClose, data }) => {
                     width={screenWidth * 2} // Aumenta el ancho para permitir el desplazamiento horizontal
                     height={250}
                     chartConfig={chartConfig}
+                    segments={8}
                     bezier
                     style={styles.chart}
                     transparent={true} // Fondo transparente para el gráfico
