@@ -21,6 +21,7 @@ export default function DailyQuestionCombined() {
     { label: 'Trabajando', emoji: '💼' },
     { label: 'Estudiando', emoji: '📚' },
     { label: 'Descansando', emoji: '😌' },
+    { label: 'Participar o presenciar una discusión', emoji: '🗣' }, // Nueva opción
     { label: 'Otro', emoji: '❓' },
   ];
 

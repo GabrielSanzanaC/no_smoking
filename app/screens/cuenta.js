@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -9,53 +9,76 @@ import { auth, db, storage } from "../../FirebaseConfig";
 import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import BackgroundShapes from '../../components/BackgroundShapes';
+import loadGif from "../../assets/images/load.gif";  // Importar la imagen de carga
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
-  const [nombre, setNombre] = useState(null);
-  const [email, setEmail] = useState(null);
-  const [moneda, setMoneda] = useState("CLP");
-  const [totalCigarettesSmoked, setTotalCigarettesSmoked] = useState(0);
-  const [totalMoneySpentSinceSmoking, setTotalMoneySpentSinceSmoking] = useState(0);
-  const [totalMoneySpentSinceAccountCreation, setTotalMoneySpentSinceAccountCreation] = useState(0);
-  const [timeLostInDays, setTimeLostInDays] = useState(0);
-  const [timeLostInHours, setTimeLostInHours] = useState(0);
-  const [timeLostInMinutes, setTimeLostInMinutes] = useState(0);
-  const [photoURL, setPhotoURL] = useState(null);
+  const [state, setState] = useState({
+    nombre: null,
+    email: null,
+    moneda: "CLP",
+    totalCigarettesSmoked: 0,
+    totalMoneySpentSinceSmoking: 0,
+    totalMoneySpentSinceAccountCreation: 0,
+    timeLostInDays: 0,
+    timeLostInHours: 0,
+    timeLostInMinutes: 0,
+    photoURL: null,
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setEmail(user.email);
-        getUserData(user.uid); // Cambiado a UID
-        getTotalCigarettesSmoked(user.uid); // Cambiado a UID
+        setState(prevState => ({ ...prevState, email: user.email }));
+        getUserData(user.uid);
+        getTotalCigarettesSmoked(user.uid);
       } else {
-        setNombre("Usuario invitado");
-        setEmail("No disponible");
+        setState({
+          nombre: "Usuario invitado",
+          email: "No disponible",
+          moneda: "CLP",
+          totalCigarettesSmoked: 0,
+          totalMoneySpentSinceSmoking: 0,
+          totalMoneySpentSinceAccountCreation: 0,
+          timeLostInDays: 0,
+          timeLostInHours: 0,
+          timeLostInMinutes: 0,
+          photoURL: null,
+        });
       }
     });
     return unsubscribe;
   }, []);
 
-  const getUserData = async (uid) => {
+  const getUserData = useCallback(async (uid) => {
     try {
       const q = query(collection(db, "usuarios"), where("uid", "==", uid));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
-        setNombre(userData.nombre || "Usuario");
-        setMoneda(userData.moneda || "CLP");
-        setPhotoURL(userData.photoURL);  // Cargar la foto desde Firestore
+        setState(prevState => ({
+          ...prevState,
+          nombre: userData.nombre || "Usuario",
+          moneda: userData.moneda || "CLP",
+          photoURL: userData.photoURL,
+    
+        }));
       } else {
-        setNombre("Usuario desconocido");
+        setState(prevState => ({
+          ...prevState,
+          nombre: "Usuario desconocido"
+        }));
       }
     } catch (error) {
-      setNombre("Error al obtener datos");
+      setState(prevState => ({
+        ...prevState,
+        nombre: "Error al obtener datos"
+      }));
     }
-  };
+  }, []);
 
-  const getTotalCigarettesSmoked = async (uid) => {
+  const getTotalCigarettesSmoked = useCallback(async (uid) => {
     try {
       const userQuery = query(collection(db, "usuarios"), where("uid", "==", uid));
       const userSnapshot = await getDocs(userQuery);
@@ -75,73 +98,73 @@ const AccountDetailsScreen = () => {
           totalMoneySpent += (data.cigarettesSmoked || 0) * (data.pricePerCigarette || 0);
         });
 
-        setTotalCigarettesSmoked(totalCigarettes);
         const timeLostInMinutesTotal = totalCigarettes * 7;
         const days = Math.floor(timeLostInMinutesTotal / 1440);
         const hours = Math.floor((timeLostInMinutesTotal % 1440) / 60);
         const minutes = timeLostInMinutesTotal % 60;
 
-        setTimeLostInDays(days);
-        setTimeLostInHours(hours);
-        setTimeLostInMinutes(minutes);
+        setState(prevState => ({
+          ...prevState,
+          totalCigarettesSmoked: totalCigarettes,
+          timeLostInDays: days,
+          timeLostInHours: hours,
+          timeLostInMinutes: minutes
+        }));
       } else {
         console.log("Usuario no encontrado");
       }
     } catch (error) {
       console.error("Error al obtener cigarrillos fumados y dinero gastado:", error);
     }
-  };
+  }, []);
 
-  const getTotalMoneySpent = async (userId) => {
+  const getTotalMoneySpent = useCallback(async (userId) => {
     try {
-      const userRef = doc(db, "usuarios", userId);
       const userSnap = await getDocs(query(collection(db, "usuarios"), where("uid", "==", userId)));
-  
+
       if (!userSnap.empty) {
         const userData = userSnap.docs[0].data();
-  
-        // Convertir cadenas a números
+
         const yearsSmoking = parseInt(userData.añosFumando) || 0;
         const cigarettesPerDay = parseInt(userData.cigarrillosPorDía) || 0;
         const pricePerPack = parseFloat(userData.precioPorPaquete) || 0;
-        const cigarettesPerPack = parseInt(userData.cigarrillosPorPaquete) || 1; // Evita división por 0
-  
+        const cigarettesPerPack = parseInt(userData.cigarrillosPorPaquete) || 1;
+
         if (!yearsSmoking || !cigarettesPerDay || !pricePerPack || !cigarettesPerPack) {
           console.warn("Faltan datos para calcular el gasto total.");
           return;
         }
-  
-        // Cálculo del dinero gastado desde que comenzó a fumar
+
         const totalSpentSinceSmoking = yearsSmoking * 365 * cigarettesPerDay * (pricePerPack / cigarettesPerPack);
-  
-        // Obtener el dinero gastado desde la creación de la cuenta
+
         const cigaretteHistoryRef = collection(userSnap.docs[0].ref, "CigaretteHistory");
         const cigaretteHistorySnap = await getDocs(cigaretteHistoryRef);
-  
+
         let totalSpentSinceAccountCreation = 0;
-  
+
         cigaretteHistorySnap.forEach((doc) => {
           const data = doc.data();
           totalSpentSinceAccountCreation += (parseInt(data.cigarettesSmoked) || 0) * (pricePerPack / cigarettesPerPack);
         });
-  
-        // Actualizar estados
-        setTotalMoneySpentSinceSmoking(totalSpentSinceSmoking);
-        setTotalMoneySpentSinceAccountCreation(totalSpentSinceAccountCreation);
+
+        setState(prevState => ({
+          ...prevState,
+          totalMoneySpentSinceSmoking: totalSpentSinceSmoking,
+          totalMoneySpentSinceAccountCreation: totalSpentSinceAccountCreation
+        }));
       }
     } catch (error) {
       console.error("Error al calcular el gasto total:", error);
     }
-  };
-  
-  // Llamar a la función en useEffect cuando el usuario esté autenticado
+  }, []);
+
   useEffect(() => {
     if (auth.currentUser) {
       getTotalMoneySpent(auth.currentUser.uid);
     }
-  }, []);
+  }, [getTotalMoneySpent]);
 
-  const handlePhotoPick = async () => {
+  const handlePhotoPick = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -152,34 +175,37 @@ const AccountDetailsScreen = () => {
     if (!result.canceled) {
       uploadImage(result.assets[0].uri);
     }
-  };
+  }, []);
 
-  const uploadImage = async (uri) => {
+  const uploadImage = useCallback(async (uri) => {
     const user = auth.currentUser;
     try {
       const userRef = doc(db, "usuarios", user.uid);
       const blob = await fetch(uri).then((res) => res.blob());
       const photoRef = ref(storage, `profile_pictures/${user.uid}.jpg`);
-      
+
       await uploadBytes(photoRef, blob);
       const newPhotoURL = await getDownloadURL(photoRef);
-      
+
       await updateDoc(userRef, { photoURL: newPhotoURL });
-      setPhotoURL(newPhotoURL);
+      setState(prevState => ({
+        ...prevState,
+        photoURL: newPhotoURL
+      }));
     } catch (error) {
       console.error("Error al subir la imagen:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (photoURL) {
-      console.log("URL de la foto que se está mostrando:", photoURL);
+    if (state.photoURL) {
+      console.log("URL de la foto que se está mostrando:", state.photoURL);
     }
-  }, [photoURL]);
+  }, [state.photoURL]);
 
-  const formatMoney = (amount) => {
-    return new Intl.NumberFormat("es-CL", { style: "currency", currency: moneda }).format(amount);
-  };
+  const formatMoney = useCallback((amount) => {
+    return new Intl.NumberFormat("es-CL", { style: "currency", currency: state.moneda }).format(amount);
+  }, [state.moneda]);
 
   return (
     <View style={styles.container}>
@@ -198,42 +224,42 @@ const AccountDetailsScreen = () => {
         </TouchableOpacity>
       </Animatable.View>
 
-    <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
-      <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
-        {/* Mostrar imagen de perfil */}
-        {photoURL ? (
-          <Image source={{ uri: `${photoURL}?ts=${Date.now()}` }} style={styles.profileImage} />
-        ) : (
-          <View style={styles.profileImagePlaceholder} />
-        )}
-        <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
-        <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={handlePhotoPick}>
-          <Ionicons name="camera-outline" size={16} color="white" />
-          <Text style={styles.editButtonText}>Cambiar foto</Text>
-        </TouchableOpacity>
-      </Animatable.View>
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+        <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
+          {/* Mostrar imagen de perfil */}
+          {state.photoURL ? (
+            <Image source={{ uri: `${state.photoURL}?ts=${Date.now()}` }} style={styles.profileImage} />
+          ) : (
+            <View style={styles.profileImagePlaceholder} />
+          )}
+          <Text style={styles.cardText}>{state.nombre || "Cargando..."}</Text>
+          <Text style={styles.cardSubText}>{state.email || "Cargando..."}</Text>
+          <TouchableOpacity style={styles.editButton} onPress={handlePhotoPick}>
+            <Ionicons name="camera-outline" size={16} color="white" />
+            <Text style={styles.editButtonText}>Cambiar foto</Text>
+          </TouchableOpacity>
+        </Animatable.View>
 
-      <Animatable.View animation="fadeInUp" delay={200} duration={800} style={styles.stats}>
-        <Animatable.View animation="bounceIn" delay={300} style={styles.statCard}>
-          <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-          <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
+        <Animatable.View animation="fadeInUp" delay={200} duration={800} style={styles.stats}>
+          <Animatable.View animation="bounceIn" delay={300} style={styles.statCard}>
+            <Text style={styles.statTitle}>Cigarrillos fumados</Text>
+            <Text style={styles.statValue}>{state.totalCigarettesSmoked}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={400} style={styles.statCard}>
+            <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
+            <Text style={styles.statValue}>{formatMoney(state.totalMoneySpentSinceSmoking)}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
+            <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+            <Text style={styles.statValue}>{formatMoney(state.totalMoneySpentSinceAccountCreation)}</Text>
+          </Animatable.View>
+          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+            <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
+            <Text style={styles.statValue}>{state.timeLostInDays} días, {state.timeLostInHours} horas y {state.timeLostInMinutes} minutos</Text>
+          </Animatable.View>
         </Animatable.View>
-        <Animatable.View animation="bounceIn" delay={400} style={styles.statCard}>
-          <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
-          <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
-        </Animatable.View>
-        <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
-          <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-          <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
-        </Animatable.View>
-        <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
-          <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
-          <Text style={styles.statValue}>{timeLostInDays} días, {timeLostInHours} horas y {timeLostInMinutes} minutos</Text>
-        </Animatable.View>
-      </Animatable.View>
-    </ScrollView>
-  </View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -277,7 +303,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#072040",
     padding: 20,
-    borderRadius: 100,
+    borderRadius: 10,
     marginBottom: 20,
     marginTop: 0, // Agregado para dar espacio desde la parte superior (debajo del header)
     boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
@@ -330,7 +356,7 @@ const styles = StyleSheet.create({
   statCard: {
     backgroundColor: "#072040",
     padding: 20,
-    borderRadius: 100,
+    borderRadius: 10,
     marginBottom: 10,
     boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
     elevation: 8,
@@ -350,17 +376,9 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 30,
   },
-  backgroundContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-  },
-  circle: {
-    position: "absolute",
-    borderRadius: 50,
+  loader: {
+    width: 30,
+    height: 30,
   },
 });
 

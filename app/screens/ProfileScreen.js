@@ -366,7 +366,7 @@ const ProfileScreen = () => {
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
     propsForDots: {
-      r: "3",
+      r: "2.5",
       fill: "white",
     },
     propsForBackgroundLines: {
@@ -374,6 +374,8 @@ const ProfileScreen = () => {
       strokeWidth: 0.2,
     },
     decimalPlaces: 0,
+
+
   };
 
   const handleChartPress = () => {
@@ -429,7 +431,7 @@ const ProfileScreen = () => {
             <View style={styles.statBox}>
               <Ionicons name="checkmark-circle" size={40} color="#059E9E" />
               <Text style={styles.statLabel}>Racha de días</Text>
-              <Text style={styles.statValue}>{streakDays} días</Text>
+              <Text style={styles.statValue}>{streakDays !== null ? `${streakDays} días` : <Image source={loadGif} style={styles.loader} />}</Text>
             </View>
             <View style={styles.statBox}>
               <Ionicons name="cash" size={40} color="#FF6F61" />
@@ -437,7 +439,7 @@ const ProfileScreen = () => {
                 {monthlySavings >= 0 ? "Ahorro del mes" : "Dinero gastado"}
               </Text>
               <Text style={[styles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
-                ${Math.abs(monthlySavings)}
+                {monthlySavings ? `$${Math.abs(monthlySavings)}` : <Image source={loadGif} style={styles.loader} />}
               </Text>
             </View>
           </View>
@@ -466,6 +468,9 @@ const ProfileScreen = () => {
                   height={220}
                   chartConfig={chartConfig}
                   bezier
+                  yAxisInterval={1}
+                  yLabelsOffset={10}
+                  segments={8}
                   style={styles.chart}
                   fromZero={true} // Start Y axis from zero
                   transparent={true} // Fondo transparente para el gráfico
