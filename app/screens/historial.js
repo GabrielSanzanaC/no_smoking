@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, historialStylesheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { collection, getDocs, doc } from 'firebase/firestore';
 import { auth, db } from '../../FirebaseConfig'; // Asegúrate de que la ruta sea correcta
 import BackgroundShapes from '../../components/BackgroundShapes';
+import { historialStyles } from '../../constants/styles';
 
 const HistoryScreen = () => {
   const router = useRouter();
@@ -75,7 +76,7 @@ const HistoryScreen = () => {
     return (
       <TouchableOpacity
         key={day}
-        style={[styles.dayContainer, hasRecords && styles.hasRecords]}
+        style={[historialStyles.dayContainer, hasRecords && historialStyles.hasRecords]}
         onPress={() => {
           const [year, month, day] = dateKey.split("-").map(Number); // Extraer año, mes y día
           setSelectedDate(new Date(year, month - 1, day)); // Crear fecha correctamente
@@ -94,12 +95,12 @@ const HistoryScreen = () => {
           
         }}
       >
-        {isSelected && <View style={styles.selectedCircle} />}
-        <Text style={[styles.dayText, isSelected && styles.selectedDayText]}>{day}</Text>
-        <Text style={[styles.dayNameText, isSelected && styles.selectedDayText]}>
+        {isSelected && <View style={historialStyles.selectedCircle} />}
+        <Text style={[historialStyles.dayText, isSelected && historialStyles.selectedDayText]}>{day}</Text>
+        <Text style={[historialStyles.dayNameText, isSelected && historialStyles.selectedDayText]}>
           {new Date(currentYear, currentMonth, day).toLocaleString("default", { weekday: "short" })}
         </Text>
-        {hasRecords && <View style={styles.recordIndicator} />}
+        {hasRecords && <View style={historialStyles.recordIndicator} />}
       </TouchableOpacity>
     );
   };
@@ -112,31 +113,31 @@ const HistoryScreen = () => {
     return (
       <Animated.View 
         style={[
-          styles.recordsContainer, 
+          historialStyles.recordsContainer, 
           { opacity: fadeAnim, transform: [{ scaleY: heightAnim }] } // Using scaleY for height animation
         ]}
       >
-        <Text style={styles.totalCigarsText}>Total de cigarros: {totalCigars}</Text>
+        <Text style={historialStyles.totalCigarsText}>Total de cigarros: {totalCigars}</Text>
       </Animated.View>
     );
   };
   
 
   return (
-    <View style={styles.container}>
+    <View style={historialStyles.container}>
       {/* Animated Background */}
       <BackgroundShapesMemo />
-      <View style={styles.header}>
+      <View style={historialStyles.header}>
         <TouchableOpacity onPress={handlePreviousMonth}>
-          <Text style={styles.buttonText}>{"<"}</Text>
+          <Text style={historialStyles.buttonText}>{"<"}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerText}>
+        <Text style={historialStyles.headerText}>
           {new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" }).charAt(0).toUpperCase() +
             new Date(currentYear, currentMonth).toLocaleString("default", { month: "long" }).slice(1)}{" "}
           {currentYear}
         </Text>
         <TouchableOpacity onPress={handleNextMonth}>
-          <Text style={styles.buttonText}>{">"}</Text>
+          <Text style={historialStyles.buttonText}>{">"}</Text>
         </TouchableOpacity>
       </View>
 
@@ -151,15 +152,15 @@ const HistoryScreen = () => {
         decelerationRate="fast"
         bounces={false} // Desactiva el rebote para evitar movimientos inesperados
       
-        style={styles.list}
+        style={historialStyles.list}
       />
 
 
       {showRecords && renderRecords()}
 
-      <TouchableOpacity style={styles.scrollToTopButton} onPress={() => router.push("./ProfileScreen")}>
-        <Text style={styles.scrollToTopText}>↑</Text>
-        <Text style={styles.scrollToTopLabel}>Volver</Text>
+      <TouchableOpacity style={historialStyles.scrollToTopButton} onPress={() => router.push("./ProfileScreen")}>
+        <Text style={historialStyles.scrollToTopText}>↑</Text>
+        <Text style={historialStyles.scrollToTopLabel}>Volver</Text>
       </TouchableOpacity>
     </View>
   );
@@ -169,143 +170,6 @@ const BackgroundShapesMemo = React.memo(() => {
   return <BackgroundShapes />;
 });
 
-const styles = StyleSheet.create({
-  scrollToTopButton: {
-    position: "absolute",
-    bottom: 30,
-    left: 20, // Mover el botón a la parte inferior izquierda
-    backgroundColor: "#4CAF50",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scrollToTopText: {
-    color: "#fff",
-    fontSize: 20,
-  },
-  scrollToTopLabel: {
-    color: "#fff",
-    fontSize: 12,
-    marginTop: 5,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#7595BF",
-    position: "relative",
-    zIndex: -1,
-  },
-  backgroundContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: -1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "beige",
-  },
-  buttonText: {
-    fontSize: 24,
-    color: "beige",
-  },
-  list: {
-    flexGrow: 0, // Para que la lista no crezca más de lo necesario
-    width: "100%", // Asegura que ocupe el 100% del contenedor
-  },  
-  dayContainer: {
-    width: 60,
-    padding: 15,
-    marginHorizontal: 5,
-    borderRadius: 10,
-    backgroundColor: "#ffffff",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
-    elevation: 2,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  selectedCircle: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    backgroundColor: "#059E9E",
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -22.5 }, { translateY: -22.5 }, { rotate: "45deg" }],
-  },
-  dayText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#00796b",
-  },
-  selectedDayText: {
-    color: "#ffb300",
-  },
-  dayNameText: {
-    fontSize: 14,
-    color: "#00796b",
-  },
-  hasRecords: {
-    borderColor: "#ffeb3b",
-    borderWidth: 2,
-  },
-  recordIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#ffeb3b",
-    position: "absolute",
-    bottom: 5,
-    right: 5,
-  },
-  recordsContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-    elevation: 2,
-    justifyContent: "center", // Centrar contenido verticalmente
-    alignItems: "flex-start", // Centrar contenido horizontalmente
-    minHeight: 50, // Altura mínima para el rectángulo
-  },
-  recordItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: "#e0f7fa",
-  },
-  recordNumber: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 10,
-  },
-  recordInfo: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: "#ffffff",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-    elevation: 2,
-  },
-  recordText: {
-    fontSize: 16,
-    color: "#555",
-  },
-});
+
 
 export default HistoryScreen;

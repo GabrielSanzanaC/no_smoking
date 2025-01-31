@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Alert, Switch, Modal, Animated, ScrollView } from "react-native";
+import { settingsStylesheet, Text, View, TouchableOpacity, Alert, Switch, Modal, Animated, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { auth } from "../../FirebaseConfig";
 import { signOut, deleteUser } from "firebase/auth";
 import BackgroundShapes from '../../components/BackgroundShapes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { settingsStyles } from "../../constants/styles";
 
 const SettingsScreen = () => {
   const router = useRouter();
@@ -78,58 +79,58 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={styles.fullScreenContainer}>
+    <View style={settingsStyles.fullScreenContainer}>
       {/* Animated Background */}
       <BackgroundShapesMemo />
       <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        style={settingsStyles.container}
+        contentContainerStyle={settingsStyles.contentContainer}
         showsVerticalScrollIndicator={false} // Esto hace que la barra de desplazamiento sea invisible
       >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push("./cuenta")} style={styles.headerButton}>
+        <View style={settingsStyles.header}>
+          <TouchableOpacity onPress={() => router.push("./cuenta")} style={settingsStyles.headerButton}>
             <Ionicons name="arrow-back-outline" size={24} color="white" />
-            <Text style={styles.headerText}>Perfil</Text>
+            <Text style={settingsStyles.headerText}>Perfil</Text>
           </TouchableOpacity>
         </View>
 
         {/* Cambiar contraseña */}
-        <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
+        <TouchableOpacity style={settingsStyles.button} onPress={handlePasswordReset}>
           <Ionicons name="lock-closed-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Restablecer contraseña</Text>
+          <Text style={settingsStyles.buttonText}>Restablecer contraseña</Text>
         </TouchableOpacity>
 
         {/* Cambiar tema */}
-        <View style={styles.option}>
-          <Text style={styles.optionText}>Modo oscuro</Text>
+        <View style={settingsStyles.option}>
+          <Text style={settingsStyles.optionText}>Modo oscuro</Text>
           <Switch value={isDarkMode} onValueChange={toggleDarkMode} />
         </View>
 
         {/* Cambiar idioma */}
-        <TouchableOpacity style={styles.button} onPress={handleChangeLanguage}>
+        <TouchableOpacity style={settingsStyles.button} onPress={handleChangeLanguage}>
           <Ionicons name="language-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Cambiar idioma</Text>
+          <Text style={settingsStyles.buttonText}>Cambiar idioma</Text>
         </TouchableOpacity>
 
         {/* Activar/Desactivar notificaciones */}
-        <View style={styles.option}>
-          <Text style={styles.optionText}>Notificaciones</Text>
+        <View style={settingsStyles.option}>
+          <Text style={settingsStyles.optionText}>Notificaciones</Text>
           <Switch value={notifications} onValueChange={toggleNotifications} />
         </View>
 
         {/* Soporte técnico */}
-        <TouchableOpacity style={styles.button} onPress={handleSupport}>
+        <TouchableOpacity style={settingsStyles.button} onPress={handleSupport}>
           <Ionicons name="help-circle-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Soporte técnico</Text>
+          <Text style={settingsStyles.buttonText}>Soporte técnico</Text>
         </TouchableOpacity>
 
         {/* Mostrar políticas de privacidad */}
         <TouchableOpacity
-          style={styles.button}
+          style={settingsStyles.button}
           onPress={() => setPrivacyModalVisible(true)}
         >
           <Ionicons name="document-text-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Políticas de privacidad</Text>
+          <Text style={settingsStyles.buttonText}>Políticas de privacidad</Text>
         </TouchableOpacity>
 
         {/* Modal de políticas de privacidad */}
@@ -138,18 +139,18 @@ const SettingsScreen = () => {
           animationType="slide"
           transparent={true}
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Políticas de privacidad</Text>
-              <Text style={styles.modalText}>
+          <View style={settingsStyles.modalContainer}>
+            <View style={settingsStyles.modalContent}>
+              <Text style={settingsStyles.modalTitle}>Políticas de privacidad</Text>
+              <Text style={settingsStyles.modalText}>
                 Aquí van los detalles sobre cómo manejamos tus datos y respetamos
                 tu privacidad.
               </Text>
               <TouchableOpacity
-                style={styles.closeButton}
+                style={settingsStyles.closeButton}
                 onPress={() => setPrivacyModalVisible(false)}
               >
-                <Text style={styles.closeButtonText}>Cerrar</Text>
+                <Text style={settingsStyles.closeButtonText}>Cerrar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -157,24 +158,24 @@ const SettingsScreen = () => {
 
         {/* Eliminar cuenta */}
         <TouchableOpacity
-          style={[styles.button, styles.deleteButton]}
+          style={[settingsStyles.button, settingsStyles.deleteButton]}
           onPress={handleDeleteAccount}
         >
           <Ionicons name="trash-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Eliminar cuenta</Text>
+          <Text style={settingsStyles.buttonText}>Eliminar cuenta</Text>
         </TouchableOpacity>
 
         {/* Cerrar sesión */}
         <TouchableOpacity
-          style={[styles.button, styles.signOutButton]}
+          style={[settingsStyles.button, settingsStyles.signOutButton]}
           onPress={handleSignOut}
         >
           <Ionicons name="exit-outline" size={16} color="white" />
-          <Text style={styles.buttonText}>Cerrar sesión</Text>
+          <Text style={settingsStyles.buttonText}>Cerrar sesión</Text>
         </TouchableOpacity>
 
         {/* Versión de la aplicación */}
-        <Text style={styles.versionText}>Versión: 1.0.0</Text>
+        <Text style={settingsStyles.versionText}>Versión: 1.0.0</Text>
       </ScrollView>
     </View>
   );
@@ -184,108 +185,6 @@ const BackgroundShapesMemo = React.memo(() => {
   return <BackgroundShapes />;
 });
 
-const styles = StyleSheet.create({
-  fullScreenContainer: {
-    flex: 1, // Asegura que ocupe toda la pantalla
-    justifyContent: 'flex-start', // Alinea el contenido en la parte superior
-    backgroundColor: '#7595BF',
-    zIndex: -1,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  headerButton: {
-    flexDirection: "row", // Para que el ícono y el texto estén en una fila
-    alignItems: "center", // Centra verticalmente el ícono y el texto
-  },
-  headerText: {
-    color: "white", // Color blanco para el texto
-    fontSize: 18, // Tamaño de fuente
-    marginLeft: 8, // Espacio entre el ícono y el texto
-  },
-  button: {
-    borderWidth: 2, // Añadido el borde
-    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#059E9E", // Verde para los botones
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  deleteButton: {
-    borderWidth: 2, // Añadido el borde
-    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
-    backgroundColor: "#FF4D4D", // Botón de eliminar en rojo
-  },
-  signOutButton: {
-    borderWidth: 2, // Añadido el borde
-    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
-    backgroundColor: "#FFA500", // Botón de cerrar sesión en naranja
-  },
-  buttonText: {
-    color: "white",
-    marginLeft: 10,
-    fontWeight: "bold",
-  },
-  option: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#54DEAF", // Fondo de opciones más oscuro
-    padding: 15,
-    borderRadius: 10,
-    borderWidth: 2, // Añadido el borde
-    borderColor: "#ffffff", // Color del borde, puedes cambiarlo según tu preferencia
-    marginBottom: 15,
-  },
-  optionText: {
-    color: "white",
-    fontSize: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  modalText: {
-    fontSize: 14,
-    marginVertical: 10,
-  },
-  closeButton: {
-    backgroundColor: "#4CAF50", // Verde
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  closeButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  versionText: {
-    color: "white",
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 20,
-  },
-});
+
 
 export default SettingsScreen;

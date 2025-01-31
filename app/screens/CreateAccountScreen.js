@@ -24,6 +24,7 @@ export default function CreateAccountScreen() {
   const [cigarettesPerYear, setCigarettesPerYear] = useState(null);
   const [open, setOpen] = useState(false); // Estado para el dropdown
   const [isEffectExecuted, setIsEffectExecuted] = useState(false);
+  
 
   const toggleReason = (option) => {
     if (reasons.includes(option)) {

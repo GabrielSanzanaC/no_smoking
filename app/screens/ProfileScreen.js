@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollView, Image } from "react-native";
+import { View, Text, TouchableOpacity, profileStylesheet, BackHandler, Modal, ScrollView, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
@@ -13,6 +13,7 @@ import Svg, { Text as SvgText } from "react-native-svg";
 import FullMonthChart from "./FullMonthChart";
 import moment from "moment";  // Importar moment.js
 import loadGif from "../../assets/images/load.gif"; // Importar la imagen de carga
+import { profileStyles } from "../../constants/styles";
 
 
 
@@ -383,71 +384,71 @@ const ProfileScreen = () => {
   };
   
   return (
-    <View style={styles.container}>
+    <View style={profileStyles.container}>
         {/* Animated Background */}
-      <Animatable.View animation="fadeIn" style={styles.rectangle}>
+      <Animatable.View animation="fadeIn" style={profileStyles.rectangle}>
       <Modal
           animationType="fade"
           transparent={true}
           visible={isModalVisible}
           onRequestClose={cancelExit}
         >
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>¿Estás seguro?</Text>
-              <Text style={styles.modalMessage}>¿Quieres cerrar la aplicación?</Text>
-              <View style={styles.modalButtons}>
-                <TouchableOpacity onPress={cancelExit} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Cancelar</Text>
+          <View style={profileStyles.modalBackground}>
+            <View style={profileStyles.modalContainer}>
+              <Text style={profileStyles.modalTitle}>¿Estás seguro?</Text>
+              <Text style={profileStyles.modalMessage}>¿Quieres cerrar la aplicación?</Text>
+              <View style={profileStyles.modalButtons}>
+                <TouchableOpacity onPress={cancelExit} style={profileStyles.modalButton}>
+                  <Text style={profileStyles.modalButtonText}>Cancelar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={confirmExit} style={[styles.modalButton, styles.confirmButton]}>
-                  <Text style={styles.modalButtonText}>Salir</Text>
+                <TouchableOpacity onPress={confirmExit} style={[profileStyles.modalButton, profileStyles.confirmButton]}>
+                  <Text style={profileStyles.modalButtonText}>Salir</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
-      <TouchableOpacity style={styles.navButtonLeft} onPress={handleExitApp}>
+      <TouchableOpacity style={profileStyles.navButtonLeft} onPress={handleExitApp}>
           <Ionicons name="exit" size={24} color="#F2F2F2" />
         </TouchableOpacity>
-        <Animatable.Text animation="bounceIn" style={styles.welcomeText}>¡Hola, {nombre}!</Animatable.Text>
+        <Animatable.Text animation="bounceIn" style={profileStyles.welcomeText}>¡Hola, {nombre}!</Animatable.Text>
         <ScrollView 
-          contentContainerStyle={styles.scrollContentContainer}
+          contentContainerStyle={profileStyles.scrollContentContainer}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.statsContainer}>
-            <View style={styles.statBox}>
+          <View style={profileStyles.statsContainer}>
+            <View style={profileStyles.statBox}>
               <Ionicons name="time" size={40} color="#FF6F61" />
-              <Text style={styles.statLabel}>Tiempo sin fumar</Text>
-              <Text style={styles.statValue}>{timeWithoutSmoking ? formatTime(timeWithoutSmoking) : <Image source={loadGif} style={styles.loader} />}</Text>
+              <Text style={profileStyles.statLabel}>Tiempo sin fumar</Text>
+              <Text style={profileStyles.statValue}>{timeWithoutSmoking ? formatTime(timeWithoutSmoking) : <Image source={loadGif} style={profileStyles.loader} />}</Text>
             </View>
-            <View style={styles.statBox}>
+            <View style={profileStyles.statBox}>
               <Ionicons name="logo-no-smoking" size={40} color="#059E9E" />
-              <Text style={styles.statLabel}>Cigarros fumados hoy</Text>
-              <Text style={styles.statValue}>{cigarettesSmokedToday !== null ? cigarettesSmokedToday : <Image source={loadGif} style={styles.loader} />}</Text>
+              <Text style={profileStyles.statLabel}>Cigarros fumados hoy</Text>
+              <Text style={profileStyles.statValue}>{cigarettesSmokedToday !== null ? cigarettesSmokedToday : <Image source={loadGif} style={profileStyles.loader} />}</Text>
             </View>
           </View>
-          <View style={styles.statsContainer}>
-            <View style={styles.statBox}>
+          <View style={profileStyles.statsContainer}>
+            <View style={profileStyles.statBox}>
               <Ionicons name="checkmark-circle" size={40} color="#059E9E" />
-              <Text style={styles.statLabel}>Racha de días</Text>
-              <Text style={styles.statValue}>{streakDays !== null ? `${streakDays} días` : <Image source={loadGif} style={styles.loader} />}</Text>
+              <Text style={profileStyles.statLabel}>Racha de días</Text>
+              <Text style={profileStyles.statValue}>{streakDays ? `${streakDays} días` : <Image source={loadGif} style={profileStyles.loader} />}</Text>
             </View>
-            <View style={styles.statBox}>
+            <View style={profileStyles.statBox}>
               <Ionicons name="cash" size={40} color="#FF6F61" />
-              <Text style={styles.statLabel}>
+              <Text style={profileStyles.statLabel}>
                 {monthlySavings >= 0 ? "Ahorro del mes" : "Dinero gastado"}
               </Text>
-              <Text style={[styles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
-                {monthlySavings ? `$${Math.abs(monthlySavings)}` : <Image source={loadGif} style={styles.loader} />}
+              <Text style={[profileStyles.statValue, monthlySavings < 0 && { color: "#FF0000" }]}>
+                {monthlySavings ? `$${Math.abs(monthlySavings)}` : <Image source={loadGif} style={profileStyles.loader} />}
               </Text>
             </View>
           </View>
-          <Animatable.Text animation="fadeIn" duration={1000} style={styles.motivationalText}>
+          <Animatable.Text animation="fadeIn" duration={1000} style={profileStyles.motivationalText}>
             {motivationalMessage}
           </Animatable.Text>
-          <Text style={styles.chartTitle}>Cigarros fumados últimos 7 días</Text>
-          <View style={styles.chartContainer}>
+          <Text style={profileStyles.chartTitle}>Cigarros fumados últimos 7 días</Text>
+          <View style={profileStyles.chartContainer}>
             <TouchableOpacity onPress={handleChartPress}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Svg height="130" width="18">
@@ -471,26 +472,26 @@ const ProfileScreen = () => {
                   yAxisInterval={1}
                   yLabelsOffset={10}
                   segments={8}
-                  style={styles.chart}
+                  style={profileStyles.chart}
                   fromZero={true} // Start Y axis from zero
                   transparent={true} // Fondo transparente para el gráfico
                 />
               </View>
             </TouchableOpacity>
-            <Text style={styles.chartInfo}>Toca el gráfico para más detalles</Text>
+            <Text style={profileStyles.chartInfo}>Toca el gráfico para más detalles</Text>
           </View>
         </ScrollView>
       </Animatable.View>
-      <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./historial")}>
+      <View style={profileStyles.navBar}>
+        <TouchableOpacity style={profileStyles.navButton} onPress={() => router.push("./historial")}>
           <Ionicons name="calendar" size={24} color="#F2F2F2" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.circleButton} onPress={() => router.push("./dailyQuestionP1")}>
-          <View style={styles.circle}>
+        <TouchableOpacity style={profileStyles.circleButton} onPress={() => router.push("./dailyQuestionP1")}>
+          <View style={profileStyles.circle}>
             <Ionicons name="add-outline" size={24} color="#F2F2F2" />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./cuenta")}>
+        <TouchableOpacity style={profileStyles.navButton} onPress={() => router.push("./cuenta")}>
           <Ionicons name="person" size={24} color="#F2F2F2" />
         </TouchableOpacity>
       </View>
@@ -503,182 +504,5 @@ const ProfileScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#7595BF",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingBottom: 30,
-  },
-  rectangle: {
-    width: "90%",
-    height: "70%",
-    backgroundColor: "#072040",
-    borderRadius: 20,
-    padding: 20,
-    paddingTop: 60,
-    boxShadow: "0px 4px 10px 0px rgba(0, 0, 0, 0.4)",
-    elevation: 10,
-    alignItems: "center",
-    marginBottom: 80,
-  },
-  welcomeText: {
-    color: "#F2F2F2",
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  scrollContentContainer: {
-    flexGrow: 1,
-    alignItems: "center",
-    paddingBottom: 20,
-  },
-  statsContainer: {
-    width: "90%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  statBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    borderRadius: 20,
-    padding: 20,
-    alignItems: "center",
-    boxShadow: "0px 4px 5px rgba(0, 0, 0, 0.3)",
-    elevation: 5,
-    width: "45%",
-  },
-  statLabel: {
-    fontSize: 16,
-    color: "#ccc",
-    marginTop: 10,
-    textAlign: "center",
-  },
-  statValue: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#fff",
-    marginTop: 5,
-  },
-  motivationalText: {
-    fontSize: 20,
-    color: "#FFD700",
-    textAlign: "center",
-    marginVertical: 20,
-    fontStyle: "italic",
-  },
-  signOutButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: '#FF6F61',
-    padding: 10,
-    borderRadius: 5,
-  },
-  loader: {
-    width: 30,
-    height: 30,
-  },
-  navBar: {
-    flexDirection: "row",
-    position: "absolute",
-    bottom: 20,
-    width: "100%",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-  },
-  navButton: {
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 50,
-  },
-  circleButton: {
-    backgroundColor: "#FF6F61",
-    padding: 20,
-    borderRadius: 50,
-  },
-  circle: {
-    backgroundColor: '#FF6F61',
-    borderRadius: 35,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartTitle: {
-    fontSize: 18,
-    color: "#F2F2F2",
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  chartContainer: {
-    width: "60%",
-    alignItems: "center",
-  },
-  chart: {
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.15)", // Fondo igual al de los cuadros de estadísticas
-    marginLeft: -25, 
-  },
-  chartInfo: {
-    fontSize: 12,
-    color: "#F2F2F2",
-    textAlign: "center",
-    marginTop: 8,
-  },
-  navButtonLeft: {
-    position: "absolute",
-    top: 20, // Ajusta esto según lo necesites
-    left: 10,
-    backgroundColor: "#FF6F61",
-    padding: 10,
-    borderRadius: 50,
-  },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semitransparente
-  },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "center",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalMessage: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  modalButton: {
-    padding: 10,
-    width: "45%",
-    alignItems: "center",
-    borderRadius: 5,
-    backgroundColor: "#FF6F61", // Color del botón
-  },
-  confirmButton: {
-    backgroundColor: "#FF0000", // Botón de salir en color rojo
-  },
-  modalButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-});
 
 export default ProfileScreen;

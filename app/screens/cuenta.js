@@ -10,6 +10,8 @@ import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import BackgroundShapes from '../../components/BackgroundShapes';
 import loadGif from "../../assets/images/load.gif";  // Importar la imagen de carga
+import { accountStyles } from "../../constants/styles";
+
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
@@ -208,54 +210,54 @@ const AccountDetailsScreen = () => {
   }, [state.moneda]);
 
   return (
-    <View style={styles.container}>
+    <View style={accountStyles.container}>
       {/* Animated Background */}
       <BackgroundShapesMemo />
 
-      <Animatable.View animation="fadeInDown" duration={800} style={styles.header}>
-        <View style={styles.profileTextContainer}>
-          <TouchableOpacity onPress={() => router.push("./ProfileScreen")} style={styles.profileButton}>
+      <Animatable.View animation="fadeInDown" duration={800} style={accountStyles.header}>
+        <View style={accountStyles.profileTextContainer}>
+          <TouchableOpacity onPress={() => router.push("./ProfileScreen")} style={accountStyles.profileButton}>
             <Ionicons name="arrow-back-outline" size={24} color="white" />
-            <Text style={styles.profileText}>Inicio</Text>
+            <Text style={accountStyles.profileText}>Inicio</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => router.push("./settingsScreen")} style={styles.settingsButton}>
+        <TouchableOpacity onPress={() => router.push("./settingsScreen")} style={accountStyles.settingsButton}>
           <Ionicons name="settings-outline" size={24} color="white" />
         </TouchableOpacity>
       </Animatable.View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
-        <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
+      <ScrollView contentContainerStyle={accountStyles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+        <Animatable.View animation="zoomIn" duration={1000} style={accountStyles.card}>
           {/* Mostrar imagen de perfil */}
           {state.photoURL ? (
-            <Image source={{ uri: `${state.photoURL}?ts=${Date.now()}` }} style={styles.profileImage} />
+            <Image source={{ uri: `${state.photoURL}?ts=${Date.now()}` }} style={accountStyles.profileImage} />
           ) : (
-            <View style={styles.profileImagePlaceholder} />
+            <View style={accountStyles.profileImagePlaceholder} />
           )}
-          <Text style={styles.cardText}>{state.nombre || "Cargando..."}</Text>
-          <Text style={styles.cardSubText}>{state.email || "Cargando..."}</Text>
-          <TouchableOpacity style={styles.editButton} onPress={handlePhotoPick}>
+          <Text style={accountStyles.cardText}>{state.nombre || "Cargando..."}</Text>
+          <Text style={accountStyles.cardSubText}>{state.email || "Cargando..."}</Text>
+          <TouchableOpacity style={accountStyles.editButton} onPress={handlePhotoPick}>
             <Ionicons name="camera-outline" size={16} color="white" />
-            <Text style={styles.editButtonText}>Cambiar foto</Text>
+            <Text style={accountStyles.editButtonText}>Cambiar foto</Text>
           </TouchableOpacity>
         </Animatable.View>
 
-        <Animatable.View animation="fadeInUp" delay={200} duration={800} style={styles.stats}>
-          <Animatable.View animation="bounceIn" delay={300} style={styles.statCard}>
-            <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-            <Text style={styles.statValue}>{state.totalCigarettesSmoked}</Text>
+        <Animatable.View animation="fadeInUp" delay={200} duration={800} style={accountStyles.stats}>
+          <Animatable.View animation="bounceIn" delay={300} style={accountStyles.statCard}>
+            <Text style={accountStyles.statTitle}>Cigarrillos fumados</Text>
+            <Text style={accountStyles.statValue}>{state.totalCigarettesSmoked}</Text>
           </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={400} style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
-            <Text style={styles.statValue}>{formatMoney(state.totalMoneySpentSinceSmoking)}</Text>
+          <Animatable.View animation="bounceIn" delay={400} style={accountStyles.statCard}>
+            <Text style={accountStyles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
+            <Text style={accountStyles.statValue}>{formatMoney(state.totalMoneySpentSinceSmoking)}</Text>
           </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-            <Text style={styles.statValue}>{formatMoney(state.totalMoneySpentSinceAccountCreation)}</Text>
+          <Animatable.View animation="bounceIn" delay={600} style={accountStyles.statCard}>
+            <Text style={accountStyles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+            <Text style={accountStyles.statValue}>{formatMoney(state.totalMoneySpentSinceAccountCreation)}</Text>
           </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
-            <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
-            <Text style={styles.statValue}>{state.timeLostInDays} días, {state.timeLostInHours} horas y {state.timeLostInMinutes} minutos</Text>
+          <Animatable.View animation="bounceIn" delay={500} style={accountStyles.statCard}>
+            <Text style={accountStyles.statTitle}>Tiempo de vida perdido</Text>
+            <Text style={accountStyles.statValue}>{state.timeLostInDays} días, {state.timeLostInHours} horas y {state.timeLostInMinutes} minutos</Text>
           </Animatable.View>
         </Animatable.View>
       </ScrollView>
@@ -265,121 +267,6 @@ const AccountDetailsScreen = () => {
 
 const BackgroundShapesMemo = React.memo(() => {
   return <BackgroundShapes />;
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#7595BF",
-    padding: 0,
-    zIndex: -1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    position: "absolute",
-    top: 10, // Fijo en la parte superior
-    left: 20,
-    right: 20,
-    zIndex: 1, // Asegura que esté sobre otros elementos
-    paddingHorizontal: 20,
-  },
-  profileTextContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  profileButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  profileText: {
-    color: "white",
-    marginLeft: 5,
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  card: {
-    alignItems: "center",
-    backgroundColor: "#072040",
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    marginTop: 0, // Agregado para dar espacio desde la parte superior (debajo del header)
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
-    elevation: 8,
-  },
-  profileImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 2,
-    borderColor: "#4F59FF",
-    marginBottom: 10,
-  },
-  profileImagePlaceholder: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "#ccc",
-    marginBottom: 10,
-  },
-  cardText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  cardSubText: {
-    color: "#B0C4DE",
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  editButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#059E9E",
-    padding: 10,
-    borderRadius: 8,
-  },
-  editButtonText: {
-    color: "white",
-    marginLeft: 5,
-    fontWeight: "600",
-  },
-  scrollContainer: {
-    paddingBottom: 100,
-    marginTop: 80, // Ajuste para dejar espacio debajo del header y card
-  },
-  stats: {
-    marginBottom: 20,
-  },
-  statCard: {
-    backgroundColor: "#072040",
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 10,
-    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
-    elevation: 8,
-  },
-  statTitle: {
-    color: "#B0C4DE",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  statValue: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  settingsButton: {
-    backgroundColor: "#4F59FF",
-    padding: 10,
-    borderRadius: 30,
-  },
-  loader: {
-    width: 30,
-    height: 30,
-  },
 });
 
 export default AccountDetailsScreen;
