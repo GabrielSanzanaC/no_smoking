@@ -118,8 +118,8 @@ const ProfileScreen = () => {
     const streakRef = doc(db, "usuarios", uid, "racha", "latest");
     const docSnap = await getDoc(streakRef);
   
-    const todayDate = moment().tz('America/New_York').format('YYYY-MM-DD'); // Replace with your desired timezone
-    //const todayDate = today.toISOString().split('T')[0]; // Obtener solo la fecha (yyyy-mm-dd)
+    const today = new Date();
+    const todayDate = today.toISOString().split('T')[0]; // Obtener solo la fecha (yyyy-mm-dd)
   
     if (docSnap.exists()) {
       const data = docSnap.data();
