@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard, Alert, } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../FirebaseConfig";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
@@ -30,6 +30,7 @@ const App = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState(initialState);
   const router = useRouter();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   /*const [request, response, promptAsync] = Google.useAuthRequest({
     //expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -135,43 +136,61 @@ const App = () => {
     }
   };
 
+  const validateUser = (user: string) => {
+    if (!user.trim()) {
+      setFormData((prevState) => ({
+        ...prevState,
+        userError: true,
+        error: "El nombre de usuario no puede estar vacío.",
+      }));
+      return false;
+    }
+    else {
+      setFormData((prevState) => ({
+        ...prevState,
+        userError: false,
+      }));
+      return true;
+    }
+  };
+
   const handleLogin = async () => {
     const { email, password } = formData;
     if (!validateEmail(email) || !validatePassword(password)) {
+      setIsModalVisible(true)
       return;
     }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setFormData((prevState) => ({ ...prevState, error: "" }));
+      setIsModalVisible(false)
       router.push("./screens/ProfileScreen");
-    } catch (err: unknown) {
+    } catch (err: any) {
       let errorMessage = "Hubo un problema al iniciar sesión.";
+      console.log("Firebase Auth Error:", err.code);
       if ((err as any).code === "auth/user-not-found") {
         errorMessage = "No se encontró un usuario con este correo.";
       } else if ((err as any).code === "auth/wrong-password") {
         errorMessage = "Contraseña incorrecta.";
+      } else if ((err as any).code === "auth/invalid-credential") {
+        errorMessage = "No se encontró un usuario con este correo o la contraseña es incorrecta.";
       }
       setFormData((prevState) => ({ ...prevState, error: errorMessage }));
+      setIsModalVisible(true)
     }
   };
 
   const handleContinue = async () => {
     const { email, password, user } = formData;
-    let hasError = false;
 
-    if (!user.trim()) {
-      setFormData((prevState) => ({ ...prevState, userError: true }));
-      hasError = true;
-    } else {
-      setFormData((prevState) => ({ ...prevState, userError: false }));
-    }
+    if (!validateUser(user)) {
+      setIsModalVisible(true)
+      return;
+    } 
 
     if (!validateEmail(email) || !validatePassword(password)) {
-      hasError = true;
-    }
-
-    if (hasError) {
+      setIsModalVisible(true)
       return;
     }
 
@@ -182,6 +201,7 @@ const App = () => {
 
       if (!querySnapshot.empty) {
         setFormData((prevState) => ({ ...prevState, error: "El correo ya está registrado. Usa otro correo." }));
+        setIsModalVisible(true)
         return;
       }
 
@@ -200,6 +220,7 @@ const App = () => {
 
   const handleTabChange = (isLoginTab: boolean | ((prevState: boolean) => boolean)) => {
     setIsLogin(isLoginTab);
+    setIsModalVisible(false)
     setFormData((prevState) => ({
       ...prevState,
       error: "",
@@ -232,10 +253,11 @@ const App = () => {
     }
   };
 
+
+
   return (
     <View style={styles.container}>
       <BackgroundShapesMemo />
-
       <Animatable.View animation="fadeIn" style={styles.rectangle}>
         <Animatable.View animation="zoomIn" style={styles.centeredContainer}>
           <Ionicons name="logo-no-smoking" size={50} color="#F2F2F2" />
@@ -246,33 +268,38 @@ const App = () => {
 
         <Animatable.View animation="fadeInUp" style={styles.formContainer}>
           {!isLogin && (
-            <TextInput
-              style={styles.input}
-              placeholder="Nombre de usuario"
-              placeholderTextColor="black"
-              value={formData.user}
-              onChangeText={(text) => setFormData((prevState) => ({ ...prevState, user: text }))}
-            />
+            <>
+              <Text style={styles.label}>Nombre de usuario</Text>
+              <TextInput
+                style={[styles.input, formData.userError && styles.inputError]}
+                value={formData.user}
+                onChangeText={(text) => setFormData((prevState) => ({ ...prevState, user: text }))}
+              />
+            </>
           )}
+          
           <Animatable.View animation="slideInRight">
+            <Text style={styles.label}>Correo electrónico</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Correo electrónico"
-              placeholderTextColor="black"
+              style={[styles.input, formData.emailError && styles.inputError]}
               value={formData.email}
               onChangeText={(text) => setFormData((prevState) => ({ ...prevState, email: text }))}
             />
           </Animatable.View>
+          
           <Animatable.View animation="slideInLeft">
+            <Text style={styles.label}>Contraseña</Text>
             <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              placeholderTextColor="black"
+              style={[styles.input, formData.passwordError && styles.inputError]}
               secureTextEntry
               value={formData.password}
               onChangeText={(text) => setFormData((prevState) => ({ ...prevState, password: text }))}
             />
           </Animatable.View>
+
+
+          {formData.error ? <Text style={styles.errorText}>{formData.error}</Text> : null}
+
           {isLogin && (
             <Animatable.View animation="fadeIn" style={[styles.checkboxContainer, !formData.email.trim() || !formData.password.trim() ? styles.disabledContainer : null]}>
               <Checkbox

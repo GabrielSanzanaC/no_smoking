@@ -37,6 +37,12 @@ export const styles = StyleSheet.create({
   formContainer: {
     width: "100%",
   },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 5,
+  },
   input: {
     backgroundColor: "beige",
     color: "black",
@@ -47,6 +53,10 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
     borderColor: "#059E9E",
     width: "100%",
+  },
+  inputError: {
+    borderColor: "red",
+    borderWidth: 2,
   },
   button: {
     backgroundColor: "#059E9E",
@@ -155,5 +165,47 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 14,
   },
-  
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fondo semitransparente
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "center",
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.3)",
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    padding: 10,
+    width: "45%",
+    alignItems: "center",
+    borderRadius: 5,
+    backgroundColor: "#FF6F61", // Color del botón
+  },
+  confirmButton: {
+    backgroundColor: "#FF0000", // Botón de salir en color rojo
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
 });
