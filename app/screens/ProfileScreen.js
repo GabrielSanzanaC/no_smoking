@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Modal, ScrollView, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { auth, db } from "../../FirebaseConfig";
 import { signOut, onAuthStateChanged } from "firebase/auth";
@@ -12,6 +12,8 @@ import { Dimensions } from "react-native";
 import Svg, { Text as SvgText } from "react-native-svg";
 import FullMonthChart from "./FullMonthChart";
 import moment from "moment";  // Importar moment.js
+import loadGif from "../../assets/images/load.gif"; // Importar la imagen de carga
+
 
 
 const screenWidth = Dimensions.get("window").width;
@@ -116,8 +118,8 @@ const ProfileScreen = () => {
     const streakRef = doc(db, "usuarios", uid, "racha", "latest");
     const docSnap = await getDoc(streakRef);
   
-    const today = new Date();
-    const todayDate = today.toISOString().split('T')[0]; // Obtener solo la fecha (yyyy-mm-dd)
+    const todayDate = moment().tz('America/New_York').format('YYYY-MM-DD'); // Replace with your desired timezone
+    //const todayDate = today.toISOString().split('T')[0]; // Obtener solo la fecha (yyyy-mm-dd)
   
     if (docSnap.exists()) {
       const data = docSnap.data();
@@ -342,8 +344,7 @@ const ProfileScreen = () => {
     datasets: [
       {
         data: last7DaysData,
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-        strokeWidth: 2,
+        strokeWidth: 3,
       },
     ],
   };
@@ -353,8 +354,7 @@ const ProfileScreen = () => {
     datasets: [
       {
         data: cigarettesData,
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-        strokeWidth: 2,
+        strokeWidth: 3,
       },
     ],
   };
@@ -362,21 +362,17 @@ const ProfileScreen = () => {
   const chartConfig = {
     backgroundColor: "transparent", // Fondo transparente
     color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2, // Grosor de las líneas
+    strokeWidth: 10, // Grosor de las líneas
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
     propsForDots: {
       r: "3",
-      strokeWidth: "1",
-      stroke: "#ffa726",
+      fill: "white",
     },
     propsForBackgroundLines: {
-      stroke: "transparent",
+      stroke: "white",
+      strokeWidth: 0.2,
     },
-    
-    yAxisLabel: '',
-    yAxisSuffix: '',
-    yAxisInterval: 1, // Define el intervalo del eje Y
     decimalPlaces: 0,
   };
 
@@ -421,16 +417,12 @@ const ProfileScreen = () => {
             <View style={styles.statBox}>
               <Ionicons name="time" size={40} color="#FF6F61" />
               <Text style={styles.statLabel}>Tiempo sin fumar</Text>
-              <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
+              <Text style={styles.statValue}>{timeWithoutSmoking ? formatTime(timeWithoutSmoking) : <Image source={loadGif} style={styles.loader} />}</Text>
             </View>
             <View style={styles.statBox}>
               <Ionicons name="logo-no-smoking" size={40} color="#059E9E" />
               <Text style={styles.statLabel}>Cigarros fumados hoy</Text>
-              {cigarettesSmokedToday === null ? (
-                <View style={styles.loader} />
-              ) : (
-                <Text style={styles.statValue}>{cigarettesSmokedToday}</Text>
-              )}
+              <Text style={styles.statValue}>{cigarettesSmokedToday !== null ? cigarettesSmokedToday : <Image source={loadGif} style={styles.loader} />}</Text>
             </View>
           </View>
           <View style={styles.statsContainer}>
@@ -619,17 +611,17 @@ const styles = StyleSheet.create({
   chartContainer: {
     width: "60%",
     alignItems: "center",
-    letf: 5,
   },
   chart: {
     borderRadius: 20,
     backgroundColor: "rgba(255, 255, 255, 0.15)", // Fondo igual al de los cuadros de estadísticas
+    marginLeft: -25, 
   },
   chartInfo: {
     fontSize: 12,
     color: "#F2F2F2",
     textAlign: "center",
-    marginTop: 5,
+    marginTop: 8,
   },
   navButtonLeft: {
     position: "absolute",

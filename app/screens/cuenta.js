@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, Animated } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Animatable from "react-native-animatable";
@@ -37,10 +37,9 @@ const AccountDetailsScreen = () => {
     return unsubscribe;
   }, []);
 
-
-  const getUserData = async (email) => {
+  const getUserData = async (uid) => {
     try {
-      const q = query(collection(db, "usuarios"), where("uid", "==", email));
+      const q = query(collection(db, "usuarios"), where("uid", "==", uid));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
@@ -56,9 +55,9 @@ const AccountDetailsScreen = () => {
     }
   };
 
-  const getTotalCigarettesSmoked = async (email) => {
+  const getTotalCigarettesSmoked = async (uid) => {
     try {
-      const userQuery = query(collection(db, "usuarios"), where("uid", "==", email));
+      const userQuery = query(collection(db, "usuarios"), where("uid", "==", uid));
       const userSnapshot = await getDocs(userQuery);
 
       if (!userSnapshot.empty) {
@@ -202,38 +201,39 @@ const AccountDetailsScreen = () => {
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
       <Animatable.View animation="zoomIn" duration={1000} style={styles.card}>
         {/* Mostrar imagen de perfil */}
-        <Image 
-            source={{ uri: photoURL ? `${photoURL}?ts=${Date.now()}` : null }} 
-            style={styles.profileImage} 
-          />
-          <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
-          <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
-          <TouchableOpacity style={styles.editButton} onPress={handlePhotoPick}>
-            <Ionicons name="camera-outline" size={16} color="white" />
-            <Text style={styles.editButtonText}>Cambiar foto</Text>
-          </TouchableOpacity>
-        </Animatable.View>
+        {photoURL ? (
+          <Image source={{ uri: `${photoURL}?ts=${Date.now()}` }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.profileImagePlaceholder} />
+        )}
+        <Text style={styles.cardText}>{nombre || "Cargando..."}</Text>
+        <Text style={styles.cardSubText}>{email || "Cargando..."}</Text>
+        <TouchableOpacity style={styles.editButton} onPress={handlePhotoPick}>
+          <Ionicons name="camera-outline" size={16} color="white" />
+          <Text style={styles.editButtonText}>Cambiar foto</Text>
+        </TouchableOpacity>
+      </Animatable.View>
 
-        <Animatable.View animation="fadeInUp" delay={200} duration={800} style={styles.stats}>
-          <Animatable.View animation="bounceIn" delay={300} style={styles.statCard}>
-            <Text style={styles.statTitle}>Cigarrillos fumados</Text>
-            <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
-          </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={400} style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
-            <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
-          </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
-            <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
-            <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
-          </Animatable.View>
-          <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
-            <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
-            <Text style={styles.statValue}>{timeLostInDays} días, {timeLostInHours} horas y {timeLostInMinutes} minutos</Text>
-          </Animatable.View>
+      <Animatable.View animation="fadeInUp" delay={200} duration={800} style={styles.stats}>
+        <Animatable.View animation="bounceIn" delay={300} style={styles.statCard}>
+          <Text style={styles.statTitle}>Cigarrillos fumados</Text>
+          <Text style={styles.statValue}>{totalCigarettesSmoked}</Text>
         </Animatable.View>
-      </ScrollView>
-    </View>
+        <Animatable.View animation="bounceIn" delay={400} style={styles.statCard}>
+          <Text style={styles.statTitle}>Dinero gastado desde que comenzó a fumar</Text>
+          <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceSmoking)}</Text>
+        </Animatable.View>
+        <Animatable.View animation="bounceIn" delay={600} style={styles.statCard}>
+          <Text style={styles.statTitle}>Dinero gastado desde la creación de la cuenta</Text>
+          <Text style={styles.statValue}>{formatMoney(totalMoneySpentSinceAccountCreation)}</Text>
+        </Animatable.View>
+        <Animatable.View animation="bounceIn" delay={500} style={styles.statCard}>
+          <Text style={styles.statTitle}>Tiempo de vida perdido</Text>
+          <Text style={styles.statValue}>{timeLostInDays} días, {timeLostInHours} horas y {timeLostInMinutes} minutos</Text>
+        </Animatable.View>
+      </Animatable.View>
+    </ScrollView>
+  </View>
   );
 };
 
@@ -283,19 +283,20 @@ const styles = StyleSheet.create({
     boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.4)",
     elevation: 8,
   },
-  profileImageContainer: {
-    position: "absolute",
-    top: -45,  // Ajusta la distancia según lo que necesites
-    left: "50%",
-    transform: [{ translateX: -45 }],  // Centra la imagen
-    zIndex: 1, // Asegúrate de que esté sobre el nombre
-  },
   profileImage: {
     width: 90,
     height: 90,
     borderRadius: 45,
     borderWidth: 2,
     borderColor: "#4F59FF",
+    marginBottom: 10,
+  },
+  profileImagePlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#ccc",
+    marginBottom: 10,
   },
   cardText: {
     color: "white",

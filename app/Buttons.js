@@ -1,7 +1,7 @@
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../FirebaseConfig";
 
-export const handleLogin = async (formData, setFormData, router) => {
+const handleLogin = async (formData, setFormData, router) => {
   const { email, password } = formData;
 
   if (!validateEmail(email) || !validatePassword(password)) {
@@ -23,11 +23,15 @@ export const handleLogin = async (formData, setFormData, router) => {
   }
 };
 
-const validateEmail = (email) => {
+export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-const validatePassword = (password) => {
+export const validatePassword = (password) => {
   return password.trim().length >= 6;
 };
+
+export default handleLogin;
+
+

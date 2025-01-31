@@ -17,10 +17,12 @@ const FullMonthChart = ({ visible, onClose, data }) => {
     propsForDots: {
       r: "3",
       strokeWidth: "1",
-      stroke: "#ffa726",
+      fill: "white",
+
     },
     propsForBackgroundLines: {
-      stroke: "transparent",
+      stroke: "white",
+      strokeWidth: 0.2,
     },
     decimalPlaces: 0,
   };
@@ -78,7 +80,7 @@ const FullMonthChart = ({ visible, onClose, data }) => {
                       rotation="-90"
                       origin="20, 100"
                     >
-                      Cigarros
+                      N° de Cigarros
                     </SvgText>
                   </Svg>
                   <LineChart
@@ -132,6 +134,8 @@ const styles = StyleSheet.create({
   chart: {
     borderRadius: 20,
     backgroundColor: "rgba(255, 255, 255, 0.15)", // Fondo igual al de los cuadros de estadísticas
+    marginLeft: -30,
+
   },
   closeButton: {
     marginTop: 20,
