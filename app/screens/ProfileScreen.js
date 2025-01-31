@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { collection, query, where, getDocs, updateDoc, setDoc, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, setDoc, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../FirebaseConfig";
 
@@ -12,8 +12,14 @@ export default function ProfileScreen() {
   const [userEmail, setUserEmail] = useState(null); // Estado para almacenar el email del usuario
   const [userId, setUserId] = useState(null); // Estado para almacenar el UID del usuario autenticado
   const [timeWithoutSmoking, setTimeWithoutSmoking] = useState(0); // Tiempo sin fumar
-  const [cigarettesSmoked, setCigarettesSmoked] = useState(0); // Número de cigarros fumados
+  const [cigarettesSmokedToday, setCigarettesSmokedToday] = useState(0); // Número de cigarros fumados hoy
 
+  // Formatear fecha al formato "YYYY-MM-DD"
+  const getCurrentDate = () => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  // Obtener los datos de Firestore para el usuario
   const getUserData = async (email) => {
     try {
       const q = query(collection(db, "usuarios"), where("email", "==", email));
@@ -30,13 +36,36 @@ export default function ProfileScreen() {
     }
   };
 
+  // Obtener los cigarros fumados para el día actual
+  const getCigarettesForToday = async (uid) => {
+    try {
+      const currentDate = getCurrentDate();
+      const q = query(
+        collection(db, "cigarettesHistory"),
+        where("userId", "==", uid),
+        where("fecha", "==", currentDate)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const data = querySnapshot.docs[0].data();
+        setCigarettesSmokedToday(data.cigarettesSmoked || 0);
+      } else {
+        setCigarettesSmokedToday(0); // Si no hay datos para hoy, inicializar en 0
+      }
+    } catch (error) {
+      console.error("Error al obtener cigarros para hoy:", error);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserEmail(user.email);
         setUserId(user.uid);
-        getUserData(user.email);
-        getCigarettesSmoked(user.uid); // Obtén los cigarros fumados al cargar el componente
+        getUserData(user.email); // Cargar datos del usuario
+        getCigarettesForToday(user.uid); // Cargar cigarros fumados para el día actual
       } else {
         setNombre("Usuario invitado");
       }
@@ -45,49 +74,13 @@ export default function ProfileScreen() {
     return unsubscribe;
   }, []);
 
-  const getCigarettesSmoked = async (uid) => {
-    try {
-      const docRef = doc(db, "usuarios", uid); // Referencia al documento del usuario
-      const docSnap = await getDoc(docRef);
-  
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setCigarettesSmoked(data.cigarettesSmoked || 0); // Asigna el valor o 0 si no existe
-      } else {
-        console.log("No se encontró el documento del usuario.");
-      }
-    } catch (error) {
-      console.error("Error al obtener los cigarros fumados:", error);
-    }
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeWithoutSmoking((prevTime) => prevTime + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleGoogleContinue = () => {
-    router.push("./dailyQuestionP1"); // Navega a la pantalla
-  };
-
-  const historialContinue = () => {
-    router.push("./historial"); // Navega a la pantalla
-  };
-
-  const cuentaContinue = () => {
-    router.push("./cuenta");
-  };
-
+  // Registrar un cigarro fumado para el día actual
   const saveCigaretteToDB = async () => {
     if (!userId) return;
 
-    const currentDate = new Date().toISOString().split("T")[0]; // Formato YYYY-MM-DD
+    const currentDate = getCurrentDate();
 
     try {
-      // Busca si ya existe un registro para el usuario y la fecha actual
       const q = query(
         collection(db, "cigarettesHistory"),
         where("userId", "==", userId),
@@ -103,6 +96,7 @@ export default function ProfileScreen() {
         await updateDoc(docRef, {
           cigarettesSmoked: data.cigarettesSmoked + 1,
         });
+        setCigarettesSmokedToday(data.cigarettesSmoked + 1);
       } else {
         // Si no existe un registro, crea uno nuevo
         await setDoc(doc(collection(db, "cigarettesHistory")), {
@@ -110,28 +104,15 @@ export default function ProfileScreen() {
           fecha: currentDate,
           cigarettesSmoked: 1,
         });
-      }
-
-      // También actualiza el número total de cigarros fumados en el documento del usuario
-      const userDocRef = doc(db, "usuarios", userId);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        await updateDoc(userDocRef, {
-          cigarettesSmoked: userData.cigarettesSmoked + 1,
-        });
-        setCigarettesSmoked(userData.cigarettesSmoked + 1); // Actualiza el estado con el nuevo valor
+        setCigarettesSmokedToday(1);
       }
     } catch (error) {
-      console.error("Error al guardar datos:", error);
+      console.error("Error al guardar cigarro:", error);
     }
   };
 
   const handleSmokeButtonPress = () => {
-    setTimeWithoutSmoking(0);
-    setCigarettesSmoked((prevCount) => prevCount + 1);
-    saveCigaretteToDB(); // Guarda los datos en Firestore
+    saveCigaretteToDB();
   };
 
   const formatTime = (seconds) => {
@@ -160,7 +141,7 @@ export default function ProfileScreen() {
         <TouchableOpacity style={[styles.tab, styles.activeTab]}>
           <Text style={[styles.tabText, styles.activeTabText]}>Tablero</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tab} onPress={historialContinue}>
+        <TouchableOpacity style={styles.tab} onPress={() => router.push("./historial")}>
           <Text style={styles.tabText}>Historial</Text>
         </TouchableOpacity>
       </View>
@@ -177,7 +158,7 @@ export default function ProfileScreen() {
         <Text style={styles.cardDate}>{formattedDate}</Text>
       </View>
 
-      {/* Statistics Section */}
+      {/* Estadísticas */}
       <View style={styles.statistics}>
         <Text style={styles.sectionTitle}>Estadísticas</Text>
         <View style={styles.statsRow}>
@@ -186,21 +167,22 @@ export default function ProfileScreen() {
             <Text style={styles.statValue}>{formatTime(timeWithoutSmoking)}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statTitle}>Cigarros fumados</Text>
-            <Text style={styles.statValue}>{cigarettesSmoked}</Text>
+            <Text style={styles.statTitle}>Cigarros fumados hoy</Text>
+            <Text style={styles.statValue}>{cigarettesSmokedToday}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.smokeButton} onPress={handleSmokeButtonPress}>
           <Text style={styles.smokeButtonText}>He fumado un cigarro</Text>
         </TouchableOpacity>
       </View>
-        {/* Navigation Bar */}
-            <View style={styles.navBar}>
-        <TouchableOpacity style={styles.navButton} onPress={handleGoogleContinue}>
+
+      {/* Navegación */}
+      <View style={styles.navBar}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./dailyQuestionP1")}>
           <Ionicons name="chatbox-ellipses-outline" size={28} color="white" />
           <Text style={styles.navText}>Diario</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={cuentaContinue}>
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("./cuenta")}>
           <Ionicons name="person-outline" size={28} color="white" />
           <Text style={styles.navText}>Cuenta</Text>
         </TouchableOpacity>
@@ -208,8 +190,6 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
