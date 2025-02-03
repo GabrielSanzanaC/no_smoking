@@ -9,7 +9,6 @@ export const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#7595BF",
     alignItems: "center",
     justifyContent: "center",
     zIndex: -1,
@@ -214,7 +213,6 @@ export const accountStyles = StyleSheet.create({
   //cuenta
   container: {
     flex: 1,
-    backgroundColor: "#7595BF",
     padding: 0,
     zIndex: -1,
   },
@@ -650,7 +648,6 @@ export const settingsStyles = StyleSheet.create({
   fullScreenContainer: {
     flex: 1, // Asegura que ocupe toda la pantalla
     justifyContent: 'flex-start', // Alinea el contenido en la parte superior
-    backgroundColor: '#7595BF',
     zIndex: -1,
   },
   container: {

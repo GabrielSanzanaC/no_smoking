@@ -9,12 +9,15 @@ import { auth, db, storage } from "../../FirebaseConfig";
 import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import BackgroundShapes from '../../components/BackgroundShapes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import loadGif from "../../assets/images/load.gif";  // Importar la imagen de carga
 import { accountStyles } from "../../constants/styles";
+import theme from "../../constants/theme";
 
 
 const AccountDetailsScreen = () => {
   const router = useRouter();
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [state, setState] = useState({
     nombre: null,
     email: null,
@@ -50,6 +53,21 @@ const AccountDetailsScreen = () => {
       }
     });
     return unsubscribe;
+  }, []);
+
+  // Cargar el modo oscuro desde AsyncStorage cuando la aplicación se inicia
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem("isDarkMode");
+        if (savedTheme !== null) {
+          setIsDarkMode(JSON.parse(savedTheme)); // Convertir el valor a booleano
+        }
+      } catch (error) {
+        console.error("Error al cargar el tema:", error);
+      }
+    };
+    loadTheme();
   }, []);
 
   const getUserData = useCallback(async (uid) => {
@@ -210,7 +228,7 @@ const AccountDetailsScreen = () => {
   }, [state.moneda]);
 
   return (
-    <View style={accountStyles.container}>
+    <View style={[accountStyles.container, isDarkMode ? theme.darkBackground : theme.lightBackground]}>
       {/* Animated Background */}
       <BackgroundShapesMemo />
 

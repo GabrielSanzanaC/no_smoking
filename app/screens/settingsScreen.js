@@ -7,6 +7,7 @@ import { signOut, deleteUser } from "firebase/auth";
 import BackgroundShapes from '../../components/BackgroundShapes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { settingsStyles } from "../../constants/styles";
+import theme from "../../constants/theme";
 
 const SettingsScreen = () => {
   const router = useRouter();
@@ -14,6 +15,21 @@ const SettingsScreen = () => {
   const [language, setLanguage] = useState("es");
   const [notifications, setNotifications] = useState(true);
   const [isPrivacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+  // Cargar el modo oscuro desde AsyncStorage cuando la aplicación se inicia
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem("isDarkMode");
+        if (savedTheme !== null) {
+          setIsDarkMode(JSON.parse(savedTheme)); // Convertir el valor a booleano
+        }
+      } catch (error) {
+        console.error("Error al cargar el tema:", error);
+      }
+    };
+    loadTheme();
+  }, []);
 
   // Funciones
   const handlePasswordReset = () => {
@@ -58,9 +74,12 @@ const SettingsScreen = () => {
     );
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-    Alert.alert(`Tema cambiado a ${isDarkMode ? "claro" : "oscuro"}.`);
+  const toggleDarkMode = async () => {
+    setIsDarkMode((prevMode) => {
+      const newMode = !prevMode;
+      AsyncStorage.setItem("isDarkMode", JSON.stringify(newMode)); // Guardar nuevo estado en AsyncStorage
+      return newMode;
+    });
   };
 
   const handleChangeLanguage = () => {
@@ -79,7 +98,7 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={settingsStyles.fullScreenContainer}>
+    <View style={[settingsStyles.fullScreenContainer, isDarkMode ? theme.darkBackground : theme.lightBackground]}>
       {/* Animated Background */}
       <BackgroundShapesMemo />
       <ScrollView
