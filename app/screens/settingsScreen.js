@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { settingsStylesheet, Text, View, TouchableOpacity, Alert, Switch, Modal, Animated, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { auth } from "../../FirebaseConfig";
+import { auth, db } from "../../FirebaseConfig";
+import { doc, deleteDoc } from 'firebase/firestore';
 import { signOut, deleteUser } from "firebase/auth";
 import BackgroundShapes from '../../components/BackgroundShapes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -45,7 +46,13 @@ const SettingsScreen = () => {
             try {
               const user = auth.currentUser;
               if (user) {
+                // Eliminar el documento del usuario en Firestore
+                const userDocRef = doc(db, "usuarios", user.uid);
+                await deleteDoc(userDocRef);
+  
+                // Eliminar el usuario de la autenticación
                 await deleteUser(user);
+  
                 Alert.alert("Tu cuenta ha sido eliminada.");
                 router.push("/");
               }
